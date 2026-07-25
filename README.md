@@ -13,7 +13,6 @@ Building requires the following packages:
 clang
 lld
 
-limine # binaries, used in creation of iso image
 xorriso # to create iso image
 
 qemu # to run
