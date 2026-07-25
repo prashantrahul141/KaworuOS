@@ -30,4 +30,7 @@ i32 fdt_traverse_next_node(i32 offset);
  */
 bool fdt_get_reg(i32 node, Reg *reg, u32 reg_count);
 
+/* cpu count */
+usize fdt_cpu_count(void);
+
 #endif // _FDT_H_

@@ -10,18 +10,17 @@
 #include "sync/spinlock.h"
 
 typedef struct {
-	SpinLock lock;
 	void *fdt;
+	usize cpu_count;
 } FDT;
 
 constexpr usize CELL_UNIT_SIZE = 4;
 
-static FDT fdt = {};
+static FDT fdt = { .cpu_count = 0 };
 
 void fdt_init(void)
 {
 	INFO("Initializing flat device tree parser");
-	spinlock_init(&fdt.lock, "fdt");
 	struct limine_dtb_response *dtb_response = limine_device_tree();
 	if (nullptr == dtb_response || nullptr == dtb_response->dtb_ptr) {
 		panic("dtb is null");
@@ -50,6 +49,23 @@ void fdt_init(void)
 
 	DEBUG("fullsize = %d", total_size);
 	memcpy(fdt.fdt, dtb_ptr, total_size);
+
+	/* save cpu found */
+	i32 offset = fdt_path_offset(fdt.fdt, "/cpus");
+	if (offset < 0) {
+		panic("failed searching for cpu count");
+	}
+
+	i32 node;
+	fdt_for_each_subnode(node, fdt.fdt, offset)
+	{
+		i32 namelen;
+		const char *name = fdt_get_name(fdt.fdt, node, &namelen);
+		if (0 == strncmp(name, "cpu@", 4)) {
+			fdt.cpu_count++;
+		}
+	}
+	DEBUG("cpu counted = %d", fdt.cpu_count);
 }
 
 static const void *fdt_query_prop_value(i32 node_offset, const i8 *prop,
@@ -57,52 +73,39 @@ static const void *fdt_query_prop_value(i32 node_offset, const i8 *prop,
 {
 	return fdt_getprop(fdt.fdt, node_offset, prop, len);
 }
-
 bool fdt_get_reg_for_compat(const i8 *compat, Reg *reg, u32 reg_count)
 {
-	spinlock_acquire(&fdt.lock);
 	i32 node = fdt_query_compat(compat);
 	if (node < 0) {
 		return false;
 	}
-	spinlock_release(&fdt.lock);
 	return fdt_get_reg(node, reg, reg_count);
 }
 
 i32 fdt_query_compat(const i8 *compat)
 {
-	spinlock_acquire(&fdt.lock);
 	int node = -EINVAL;
 	while ((node = fdt_next_node(fdt.fdt, node, nullptr)) >= 0) {
 		if (fdt_node_check_compatible(fdt.fdt, node, compat) == 0) {
-			spinlock_release(&fdt.lock);
 			return node;
 		}
 	}
 
-	spinlock_release(&fdt.lock);
 	return -EINVAL;
 }
 
 i32 fdt_traverse_next_node(i32 offset)
 {
-	spinlock_acquire(&fdt.lock);
-	i32 ret = fdt_next_node(fdt.fdt, offset, nullptr);
-	spinlock_release(&fdt.lock);
-	return ret;
+	return fdt_next_node(fdt.fdt, offset, nullptr);
 }
 
 const i8 *fdt_get_compat(i32 offset, i32 *len)
 {
-	spinlock_acquire(&fdt.lock);
-	const void *ret = fdt_query_prop_value(offset, "compatible", len);
-	spinlock_release(&fdt.lock);
-	return ret;
+	return fdt_query_prop_value(offset, "compatible", len);
 }
 
 bool fdt_get_reg(i32 node, Reg *reg, u32 reg_count)
 {
-	spinlock_acquire(&fdt.lock);
 	TRACE("get reg = %d", node);
 	i32 parent = fdt_parent_offset(fdt.fdt, node);
 
@@ -119,7 +122,6 @@ bool fdt_get_reg(i32 node, Reg *reg, u32 reg_count)
 	const fdt32_t *reg_ = fdt_query_prop_value(node, "reg", &len);
 	if (len <= 0 || reg == nullptr) {
 		ERROR("len = %p (zero?), reg = %p (null?)", len, reg);
-		spinlock_release(&fdt.lock);
 		return false;
 	}
 
@@ -129,7 +131,6 @@ bool fdt_get_reg(i32 node, Reg *reg, u32 reg_count)
 	if (reg_count != actual) {
 		ERROR("Reg count = %d, actual = %d not equal", reg_count,
 		      actual);
-		spinlock_release(&fdt.lock);
 		return false;
 	}
 
@@ -151,6 +152,10 @@ bool fdt_get_reg(i32 node, Reg *reg, u32 reg_count)
 		reg[i_reg].address = (void *)address;
 		reg[i_reg].size = size;
 	}
-	spinlock_release(&fdt.lock);
 	return true;
+}
+
+usize fdt_cpu_count(void)
+{
+	return fdt.cpu_count;
 }
