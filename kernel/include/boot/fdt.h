@@ -2,11 +2,7 @@
 #define _FDT_H_
 
 #include "types.h"
-
-typedef struct {
-	usize size;
-	usize address;
-} Reg;
+#include "reg.h"
 
 /*
  * checks and saves flat device tree given by the bootloader limine

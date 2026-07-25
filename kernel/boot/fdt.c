@@ -148,7 +148,7 @@ bool fdt_get_reg(i32 node, Reg *reg, u32 reg_count)
 			       fdt32_to_cpu(reg_[offset + ac + i]);
 		}
 
-		reg[i_reg].address = address;
+		reg[i_reg].address = (void *)address;
 		reg[i_reg].size = size;
 	}
 	spinlock_release(&fdt.lock);
