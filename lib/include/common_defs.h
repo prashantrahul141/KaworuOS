@@ -21,6 +21,7 @@
 
 #define IS_ALIGNED(value, alignment) ((value) % (alignment) == 0)
 
+#define BIT(n)			(1UL << (n))
 #define SET_BIT(value, bit_idx) ((value) | ((__typeof__(value))1 << (bit_idx)))
 #define CLEAR_BIT(value, bit_idx) \
 	((value) & ~((__typeof__(value))1 << (bit_idx)))
