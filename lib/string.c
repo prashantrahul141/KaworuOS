@@ -92,6 +92,16 @@ usize strlen(const i8 *s)
 	return (usize)(p - s - 1);
 }
 
+i32 strncmp(const i8 *a, const i8 *b, u32 n)
+{
+	while (*a && (*a == *b) && --n > 0) {
+		++a;
+		++b;
+	}
+
+	return (u8)*a - (u8)*b;
+}
+
 i32 strcmp(const i8 *a, const i8 *b)
 {
 	while (*a && (*a == *b)) {
