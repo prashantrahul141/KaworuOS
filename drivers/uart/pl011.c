@@ -180,6 +180,7 @@ static const i8 *pl011_compat[] = {
 static const Driver pl011_driver = { .name = "pl011",
 				     .probe = pl011_probe,
 				     .remove = pl011_remove,
-				     .compatible = pl011_compat };
+				     .compatible = pl011_compat,
+				     .device_class = DEVICE_UART };
 
 REGISTER_DEVICE_DRIVER(pl011_driver);
