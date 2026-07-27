@@ -15,10 +15,12 @@ static const ConsoleOps framebuffer_ops = {
 	.flush = framebuffer_flush,
 };
 
+static const Driver framebuffer_driver = { .device_class = DEVICE_FRAMEBUFFER };
+
 static Device framebuffer_device = {
 	.name = "framebuffer",
+	.driver = &framebuffer_driver,
 	.console_ops = &framebuffer_ops,
-	.class = DEVICE_FRAMEBUFFER,
 };
 
 static ConsoleBackend framebuffer_backend = { .device = &framebuffer_device,
