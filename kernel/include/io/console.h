@@ -37,6 +37,11 @@ void console_register_backend(ConsoleBackend *backend, bool set_default);
 bool console_unregister(const Device *backend);
 
 /*
+ * enable/disable console buffering
+ */
+void console_set_buffering(bool buffering);
+
+/*
  * write to console
  */
 errno_t console_write(const IOEvent event);

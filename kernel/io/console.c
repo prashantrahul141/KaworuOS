@@ -21,6 +21,7 @@ typedef struct {
 	ConsoleBackend *primary;
 	Arena io_events;
 	Arena io_messages;
+	bool enable_buffering;
 } Console;
 
 static Console console = {
@@ -38,6 +39,7 @@ errno_t console_init()
 		   sizeof(io_event_buffer_storage));
 	arena_init(&console.io_messages, io_event_msg_buffer,
 		   sizeof(io_event_msg_buffer));
+	console.enable_buffering = true;
 	return EOK;
 }
 
@@ -142,6 +144,12 @@ static void write_event(IOEvent ev)
 
 errno_t console_write(IOEvent e)
 {
+	if (!console.enable_buffering) {
+		write_event(e);
+		console_flush();
+		return EOK;
+	}
+
 	/* if it cant hold anymore, like myself */
 	if (!can_fit(&e)) {
 		/* write, flush all messages & reset buffers */
@@ -150,6 +158,13 @@ errno_t console_write(IOEvent e)
 
 	write_event(e);
 	return EOK;
+}
+
+void console_set_buffering(bool buffering)
+{
+	spinlock_acquire(&console.lock);
+	console.enable_buffering = buffering;
+	spinlock_release(&console.lock);
 }
 
 errno_t console_flush()
