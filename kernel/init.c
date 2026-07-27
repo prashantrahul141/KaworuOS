@@ -12,8 +12,11 @@ void kernel_main(void)
 	kheap_init();
 	fdt_init();
 	dmanager_init();
-	dmanager_probe_all();
-	console_register(dmanager_get_by_class(DEVICE_UART), true);
+	irq_controller_init();
+	Device *uart_device = dmanager_get_by_class_and_ready(DEVICE_UART);
+	if (!IS_ERR(uart_device)) {
+		console_register(uart_device, true);
+	}
 
 	printf("\nHello from kaworu\n\n");
 
