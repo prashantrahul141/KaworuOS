@@ -24,8 +24,6 @@ static_assert(offsetof(ExceptionFrame, reserved2) == 296, "wrong offset for "
 
 void exception_handler(ExceptionFrame *frame);
 
-void irq_handler(void);
-
 void unhandled_exception_handler(ExceptionFrame *frame);
 
 #endif // _EXCEPTION_H_

@@ -108,7 +108,7 @@
 .endm
 
 .extern exception_handler
-.extern irq_handler
+.extern irq_dispatcher
 .extern unhandled_exception_handler
 
 .macro vector_entry target
@@ -284,7 +284,7 @@ curr_el_spx_sync_handler:
 
 curr_el_spx_irq_handler:
     save_registers
-    bl irq_handler
+    bl irq_dispatcher
     restore_registers
     eret
 
