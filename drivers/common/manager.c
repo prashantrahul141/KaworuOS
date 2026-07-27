@@ -25,14 +25,8 @@ void dmanager_init(void)
 {
 	INFO("Initializing driver manager");
 	spinlock_init(&dmanager.lock, "driver manager");
-}
 
-/*
- * Registers drivers with found hardware
- */
-void dmanager_probe_all(void)
-{
-	INFO("Probing devices");
+	INFO("Discovering compatible devices");
 	spinlock_acquire(&dmanager.lock);
 	/* for each fdt node */
 	for (i32 offset = fdt_traverse_next_node(-1); offset >= 0;
@@ -51,22 +45,13 @@ void dmanager_probe_all(void)
 		if (IS_ERR(driver)) {
 			continue;
 		}
-		DEBUG("trying to initialize driver = %s", driver->name);
 
 		/* create and prepopulate device */
 		Device *device = kalloc(sizeof(Device));
+		device->state = DEVICE_DISCOVERED;
 		device->name = driver->name;
 		device->fdt_node_offset = offset;
 		device->driver = driver;
-
-		/* probe driver */
-		errno_t ret = device->driver->probe(device);
-		if (EOK != ret) {
-			WARN("failed probing driver = %s, err = %s",
-			     driver->name, str_err(ret));
-			kfree(device);
-			continue;
-		}
 
 		INFO("Discovered device = %s with driver = %s", device->name,
 		     driver->name);
@@ -76,6 +61,44 @@ void dmanager_probe_all(void)
 	spinlock_release(&dmanager.lock);
 }
 
+errno_t dmanager_ready_device(Device *device)
+{
+	if (DEVICE_READY == device->state) {
+		return EOK;
+	}
+
+	switch (device->driver->device_class) {
+	case DEVICE_FRAMEBUFFER:
+	case DEVICE_UART:
+	case DEVICE_IRQCHIP: {
+		errno_t ret = device->driver->probe(device);
+		if (EOK == ret) {
+			device->state = DEVICE_READY;
+		}
+		return ret;
+	}
+	case DEVICE_UNKNOWN:
+	default: {
+		return -ENOENT;
+	}
+	}
+}
+
+Device *dmanager_get_by_class_and_ready(DeviceClass class)
+{
+	Device *device = dmanager_get_by_class(class);
+	if (IS_ERR(device)) {
+		return device;
+	}
+
+	errno_t ret = dmanager_ready_device(device);
+	if (EOK != ret) {
+		return ERR_TO_PTR(ret);
+	}
+
+	return device;
+}
+
 Device *dmanager_get_by_class(DeviceClass class)
 {
 	DEBUG("get by class = %d", class);
@@ -83,7 +106,7 @@ Device *dmanager_get_by_class(DeviceClass class)
 
 	Device *curr = dmanager.device_list;
 	while (nullptr != curr) {
-		if (curr->class == class) {
+		if (curr->driver->device_class == class) {
 			spinlock_release(&dmanager.lock);
 			return curr;
 		}
