@@ -4,6 +4,14 @@
 #include "types.h"
 #include "register.h"
 
+constexpr usize MAX_INTERRUPT_CELLS_COUNT = 8;
+
+typedef struct {
+	i32 parent;
+	i32 cells_count;
+	u32 cells[MAX_INTERRUPT_CELLS_COUNT];
+} FDTInterrupt;
+
 /*
  * checks and saves flat device tree given by the bootloader limine
  */
@@ -12,8 +20,13 @@ void fdt_init(void);
 /* find reg with compat */
 bool fdt_get_reg_for_compat(const i8 *compat, Register *reg, u32 reg_count);
 
+/* get interrupt cells for a node */
+bool fdt_get_interrupt_cells(i32 node, FDTInterrupt *fdt_interrupt,
+			     u32 fdt_interrupt_count);
+
 /*
- * Query for a node using compatiblity, returns offset, negative if not found
+ * Query for a node using compatiblity, returns offset, negative if not
+ * found
  */
 i32 fdt_query_compat(const i8 *compat);
 

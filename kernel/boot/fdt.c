@@ -104,7 +104,99 @@ const i8 *fdt_get_compat(i32 offset, i32 *len)
 	return fdt_query_prop_value(offset, "compatible", len);
 }
 
-bool fdt_get_reg(i32 node, Reg *reg, u32 reg_count)
+static i32 fdt_get_interrupt_cells_count(i32 node)
+{
+	DEBUG("searching interrupt-cells in node = %d", node);
+	/* check whether the device has an interrupt-parent property */
+	i32 len;
+	const u32 *parent_phandle =
+		fdt_query_prop_value(node, "interrupt-parent", &len);
+
+	i32 interrupt_controller = -FDT_ERR_NOTFOUND;
+	/*
+	 * if it does, that phandle points directly to the interrupt controller
+	 * node
+	 */
+	if (nullptr != parent_phandle) {
+		DEBUG("device has interrupt-parent");
+		ASSERT(len == 4, "interrupt parent length is not 4");
+		interrupt_controller = fdt_node_offset_by_phandle(
+			fdt.fdt, fdt32_to_cpu(*parent_phandle));
+	} else {
+		DEBUG("device does NOT have interrupt-parent, searching "
+		      "upwards");
+		/*
+		 * otherwise, walk up the DT hierarchy until find an
+		 * inherited interrupt-parent
+		 */
+		i32 parent = node;
+		while ((parent = fdt_parent_offset(fdt.fdt, parent)) >= 0) {
+			parent_phandle = fdt_query_prop_value(
+				parent, "interrupt-parent", &len);
+			if (nullptr != parent_phandle) {
+				ASSERT(len == 4, "interrupt parent length is "
+						 "not 4");
+				interrupt_controller =
+					fdt_node_offset_by_phandle(
+						fdt.fdt,
+						fdt32_to_cpu(*parent_phandle));
+				break;
+			}
+		}
+	}
+
+	if (interrupt_controller < 0) {
+		ERROR("interrupt controller not found for device = %d, "
+		      "err = %s",
+		      node, fdt_strerror(interrupt_controller));
+		return -FDT_ERR_NOTFOUND;
+	}
+
+	const i8 *interrupt_controller_name =
+		fdt_get_name(fdt.fdt, interrupt_controller, &len);
+	DEBUG("found interrupt-controller = %s", interrupt_controller_name);
+
+	/*
+	 * interrupt_controller must contain "interrupt-controller" and
+	 * interrupt-cells
+	 */
+	ASSERT(fdt_query_prop_value(interrupt_controller,
+				    "interrupt-controller", &len) != nullptr,
+	       "interrupt-controller does not contain "
+	       "\"interrupt-controller\"");
+
+	const u32 *interrupt_cells = fdt_query_prop_value(
+		interrupt_controller, "#interrupt-cells", &len);
+	ASSERT(interrupt_cells != nullptr, "interrupt-controller does NOT "
+					   "contain #interrupt-cells");
+	return (i32)fdt32_to_cpu(*interrupt_cells);
+}
+
+bool fdt_get_interrupt_cells(i32 node, FDTInterrupt *fdt_interrupt,
+			     u32 fdt_interrupt_count)
+{
+	i32 len;
+	const u32 *interrupts = fdt_query_prop_value(node, "interrupts", &len);
+	ASSERT(interrupts != nullptr, "device does not contain interrupts");
+
+	i32 intc_cells_count = fdt_get_interrupt_cells_count(node);
+	if (intc_cells_count < 0) {
+		ERROR("failed to get interrupt cells count");
+		return false;
+	}
+
+	usize item_count = (usize)(len / intc_cells_count);
+
+	for (usize i = 0; i < fdt_interrupt_count; i++) {
+		FDTInterrupt *this_fdt = &fdt_interrupt[i];
+		this_fdt->cells_count = intc_cells_count;
+
+		for (usize j = 0; j < item_count; j++) {
+			this_fdt->cells[j] = fdt32_to_cpu(interrupts[j]);
+		}
+	}
+	return true;
+}
 
 bool fdt_get_reg(i32 node, Register *reg, u32 reg_count)
 {
