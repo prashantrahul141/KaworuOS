@@ -1,4 +1,3 @@
-#include "pl011.h"
 #include "boot/fdt.h"
 #include "core/irq_controller.h"
 #include "io/console.h"
@@ -108,7 +107,7 @@ static void recieve_irq_handler(void *data)
 /*
  * initialize pl011
  */
-errno_t pl011_probe(Device *device)
+static errno_t pl011_probe(Device *device)
 {
 	DEBUG("probing pl011");
 	Register reg;
@@ -184,7 +183,7 @@ errno_t pl011_probe(Device *device)
 	return EOK;
 }
 
-errno_t pl011_remove(Device *device)
+static errno_t pl011_remove(Device *device)
 {
 	DEBUG("removing pl011");
 	Pl011DriverData *data =
