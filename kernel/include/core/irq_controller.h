@@ -12,8 +12,16 @@ typedef struct {
 
 void irq_controller_init(void);
 
+void irq_dispatcher(void);
+
+/*
+ * request irqs
+ */
 errno_t request_irq(u32 irq, irq_handler_t handler, void *data);
 
-void irq_dispatcher(void);
+/*
+ * stop irqs
+ */
+errno_t reject_irq(u32 irq);
 
 #endif // _IRQ_CONTROLLER_H_

@@ -64,3 +64,12 @@ errno_t request_irq(u32 irq, irq_handler_t handler, void *data)
 	spinlock_release(&irq_controller.lock);
 	return EOK;
 }
+
+errno_t reject_irq(u32 irq)
+{
+	DEBUG("rejecting irq = %d", irq);
+	spinlock_acquire(&irq_controller.lock);
+	irq_controller.irq_table[irq].handler = nullptr;
+	spinlock_release(&irq_controller.lock);
+	return EOK;
+}
