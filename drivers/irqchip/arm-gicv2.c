@@ -1,4 +1,3 @@
-#include "arm-gicv2.h"
 #include "boot/fdt.h"
 #include "common/manager.h"
 #include "common_defs.h"
@@ -160,7 +159,7 @@ static void armgicv2_probe_cpu(const Register *dist, const Register *cpu)
 	reg_write32(cpu, GICC_CTLR, val);
 }
 
-errno_t armgicv2_probe(Device *device)
+static errno_t armgicv2_probe(Device *device)
 {
 	DEBUG("probing arm-gicv2");
 
@@ -211,7 +210,7 @@ errno_t armgicv2_probe(Device *device)
 	return EOK;
 }
 
-errno_t armgicv2_remove(Device *device)
+static errno_t armgicv2_remove(Device *device)
 {
 	GicV2Data *gic_data = device->driver_data;
 	vm_mmio_unmap(gic_data->dist.address, gic_data->dist.size);
