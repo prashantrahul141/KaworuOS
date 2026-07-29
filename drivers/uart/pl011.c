@@ -1,6 +1,7 @@
 #include "pl011.h"
 #include "boot/fdt.h"
 #include "core/irq_controller.h"
+#include "io/console.h"
 #include "memlayout.h"
 #include "register.h"
 #include "error.h"
@@ -100,8 +101,7 @@ static void recieve_irq_handler(void *data)
 	Pl011DriverData *device_data =
 		ACCESS_DRIVER_DATA(Pl011DriverData, device);
 	u8 read = reg_read8(&device_data->base_addr, UARTDR);
-	// TODO: this should go to console in a different way
-	printf("%c", read);
+	console_receive_char(read);
 	reg_write8(&device_data->base_addr, UARTICR, 0);
 }
 
