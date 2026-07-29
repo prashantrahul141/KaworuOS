@@ -120,11 +120,13 @@ static inline void write_to_all_backends(const IOEvent *ev)
 
 static inline void finalize_write(void)
 {
+	spinlock_acquire(&console.write_lock);
 	IOEvent *events = (IOEvent *)arena_base(&console.io_events);
 	usize count = arena_count(&console.io_events) / sizeof(IOEvent);
 	for (usize i = 0; i < count; i++) {
 		write_to_all_backends(&events[i]);
 	}
+	spinlock_release(&console.write_lock);
 }
 
 static bool can_fit(const IOEvent *ev)
@@ -135,12 +137,15 @@ static bool can_fit(const IOEvent *ev)
 
 static void reset_buffers()
 {
+	spinlock_acquire(&console.write_lock);
 	arena_reset(&console.io_messages);
 	arena_reset(&console.io_events);
+	spinlock_release(&console.write_lock);
 }
 
 static void write_event(IOEvent ev)
 {
+	spinlock_acquire(&console.write_lock);
 	void *msg_alloc = arena_alloc(&console.io_messages, ev.len);
 	ASSERT(!IS_ERR(msg_alloc), "failed to allocate for io message");
 	memcpy(msg_alloc, ev.msg, ev.len);
@@ -148,6 +153,7 @@ static void write_event(IOEvent ev)
 	void *event_alloc = arena_alloc(&console.io_events, sizeof(IOEvent));
 	ASSERT(!IS_ERR(event_alloc), "failed to allocate for event");
 	memcpy(event_alloc, &ev, sizeof(IOEvent));
+	spinlock_release(&console.write_lock);
 }
 
 errno_t console_write(IOEvent e)
