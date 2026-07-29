@@ -10,6 +10,7 @@
 #include "mm/kmem.h"
 #include "mm/vmm.h"
 #include "mm/kheap.h"
+#include "core/irq_controller.h"
 #include "debug/printf.h"
 #include "common/manager.h"
 #include "boot/limine_responses.h"

@@ -21,10 +21,6 @@ void exception_handler(ExceptionFrame *frame)
 	}
 }
 
-void irq_handler(void)
-{
-}
-
 void unhandled_exception_handler(ExceptionFrame *frame)
 {
 	printf("Unhandled exception:\n");

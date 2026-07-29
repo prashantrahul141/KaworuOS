@@ -42,12 +42,14 @@ ASM_SOURCES = $K/arch/aarch64/exception.S \
 ASM_OBJS = $(ASM_SOURCES:=.o)
 
 C_SOURCES = $D/framebuffer/framebuffer.c \
+			$D/irqchip/arm-gicv2.c \
 			$D/common/manager.c \
 			$D/uart/pl011.c \
 			$K/arch/aarch64/exception.c \
 			$K/boot/fdt.c \
 			$K/boot/limine_responses.c \
 			$K/core/cpu.c \
+			$K/core/irq_controller.c \
 			$K/debug/printf.c \
 			$K/init.c \
 			$K/io/console.c \

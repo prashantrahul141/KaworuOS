@@ -1,7 +1,8 @@
 #include "pl011.h"
 #include "boot/fdt.h"
+#include "core/irq_controller.h"
 #include "memlayout.h"
-#include "reg.h"
+#include "register.h"
 #include "error.h"
 #include "mm/kheap.h"
 #include "mm/vmm.h"
@@ -9,7 +10,8 @@
 #include "types.h"
 
 typedef struct {
-	Reg base_addr;
+	Register base_addr;
+	u32 irq;
 } Pl011DriverData;
 
 constexpr usize BAUD_RATE = 115200;
@@ -21,6 +23,7 @@ constexpr usize UARTFR_BUSY = (1 << 3); // bit in UARTFR, if transmission is
 					// busy
 constexpr usize UARTFR_RXFE = (1 << 4); // recieve fifo is empty
 constexpr usize UARTIBRD = 0x024; // speed 1
+constexpr usize UARTFBRD = 0x028; // speed 2
 constexpr usize UARTLCR_H = 0x02C; // line control register
 constexpr usize UARTLCR_H_FEN = (1 << 4); // fifo
 constexpr usize UARTCR = 0x030; // control register
@@ -28,6 +31,7 @@ constexpr usize UARTCR_UARTEN = (1 << 0); // enable/disable uart
 constexpr usize UARTCR_TEX = (1 << 8); // recieve enable
 constexpr usize UARTCR_REX = (1 << 9); // transmit enable
 constexpr usize UARTIMSC = 0x038; // control interrupt
+constexpr usize UARTICR = 0x044; // interrupt clear register
 constexpr usize UARTDMACR = 0x048; // control dma
 
 static void wait_tx_complete(const Device *device)
@@ -66,7 +70,7 @@ static void pl011_write(Device *device, const IOEvent *event)
 static u8 pl011_read(Device *device)
 {
 	wait_rx_ready(device);
-	return (u8)reg_read8(
+	return reg_read8(
 		&ACCESS_DRIVER_DATA(Pl011DriverData, device)->base_addr,
 		UARTDR);
 }
@@ -90,13 +94,24 @@ static const ConsoleOps pl011_ops = {
 	.flush = pl011_flush,
 };
 
+static void recieve_irq_handler(void *data)
+{
+	Device *device = data;
+	Pl011DriverData *device_data =
+		ACCESS_DRIVER_DATA(Pl011DriverData, device);
+	u8 read = reg_read8(&device_data->base_addr, UARTDR);
+	// TODO: this should go to console in a different way
+	printf("%c", read);
+	reg_write8(&device_data->base_addr, UARTICR, 0);
+}
+
 /*
  * initialize pl011
  */
 errno_t pl011_probe(Device *device)
 {
 	DEBUG("probing pl011");
-	Reg reg;
+	Register reg;
 	if (!fdt_get_reg(device->fdt_node_offset, &reg, 1)) {
 		return -ENODEV;
 	}
@@ -110,7 +125,7 @@ errno_t pl011_probe(Device *device)
 	driver_data->base_addr.address =
 		vm_mmio_map((usize)reg.address, reg.size);
 	driver_data->base_addr.size = reg.size;
-	if (IS_ERR((driver_data->base_addr.address))) {
+	if (IS_ERR(driver_data->base_addr.address)) {
 		WARN("mapping failed");
 		kfree(driver_data);
 		return -ENOMEM;
@@ -128,8 +143,8 @@ errno_t pl011_probe(Device *device)
 
 	/* flush fifo */
 
-	u32 lcr = reg_read32(&driver_data->base_addr, UARTLCR_H) &
-		  (u32)~UARTLCR_H_FEN;
+	u32 lcr = reg_read32(&driver_data->base_addr, UARTLCR_H) |
+		  UARTLCR_H_FEN;
 	reg_write32(&driver_data->base_addr, UARTLCR_H, lcr);
 
 	/* configure uart */
@@ -138,11 +153,14 @@ errno_t pl011_probe(Device *device)
 	u32 ibrd, fbrd;
 	calculate_divisor(BASE_CLOCK, BAUD_RATE, &ibrd, &fbrd);
 	reg_write32(&driver_data->base_addr, UARTIBRD, ibrd);
-	reg_write32(&driver_data->base_addr, UARTFR, fbrd);
+	reg_write32(&driver_data->base_addr, UARTFBRD, fbrd);
 
-	/* mask all interrupts */
-	/* 0000 0111 1111 1111 */
-	reg_write32(&driver_data->base_addr, UARTIMSC, 0x7ff);
+	/* clear previous interrupts */
+	reg_write32(&driver_data->base_addr, UARTICR, 0x7ff);
+
+	/* mask all interrupts except rx */
+	/* 0000 0000 0001 0000 */
+	reg_write32(&driver_data->base_addr, UARTIMSC, (1 << 4));
 
 	/* disable dma */
 	reg_write32(&driver_data->base_addr, UARTDMACR, 0x0);
@@ -152,11 +170,16 @@ errno_t pl011_probe(Device *device)
 	reg_write32(&driver_data->base_addr, UARTCR,
 		    cr | UARTCR_UARTEN | UARTCR_TEX | UARTCR_REX);
 
+	/* request irq */
+	FDTInterrupt fdt_interrupt;
+	fdt_get_interrupt_cells(device->fdt_node_offset, &fdt_interrupt, 1);
+	driver_data->irq = fdt_interrupt.cells[1] + 32;
+	request_irq(driver_data->irq, recieve_irq_handler, device);
+
 	/* populate device driver */
 	device->driver_data = driver_data;
 	device->console_ops = &pl011_ops;
 	device->name = "uart";
-	device->class = DEVICE_UART;
 
 	return EOK;
 }
@@ -164,10 +187,11 @@ errno_t pl011_probe(Device *device)
 errno_t pl011_remove(Device *device)
 {
 	DEBUG("removing pl011");
+	Pl011DriverData *data =
+		(void *)ACCESS_DRIVER_DATA(Pl011DriverData, device);
 	wait_tx_complete(device);
-	vm_mmio_unmap((void *)ACCESS_DRIVER_DATA(Pl011DriverData, device)
-			      ->base_addr.address,
-		      PAGE_SIZE);
+	reject_irq(data->irq);
+	vm_mmio_unmap(data->base_addr.address, PAGE_SIZE);
 	kfree(device->driver_data);
 	return EOK;
 }

@@ -7,50 +7,50 @@
 typedef struct {
 	usize size;
 	void *address;
-} Reg;
+} Register;
 
-static inline void _assert_reg_size(const Reg *reg, usize byte_offset)
+static inline void _assert_reg_size(const Register *reg, usize byte_offset)
 {
 	ASSERT(reg->size > byte_offset, "byte offset is larger than register "
 					"size");
 }
 
-static inline u64 reg_read64(const Reg *reg, usize byte_offset)
+static inline u64 reg_read64(const Register *reg, usize byte_offset)
 {
 	_assert_reg_size(reg, byte_offset);
 	volatile u64 *addr = (void *)((u8 *)reg->address + byte_offset);
 	return *addr;
 }
 
-static inline void reg_write64(const Reg *reg, usize byte_offset, u64 data)
+static inline void reg_write64(const Register *reg, usize byte_offset, u64 data)
 {
 	_assert_reg_size(reg, byte_offset);
 	volatile u64 *addr = (void *)((u8 *)reg->address + byte_offset);
 	*addr = data;
 }
 
-static inline u32 reg_read32(const Reg *reg, usize byte_offset)
+static inline u32 reg_read32(const Register *reg, usize byte_offset)
 {
 	_assert_reg_size(reg, byte_offset);
 	volatile u32 *addr = (void *)((u8 *)reg->address + byte_offset);
 	return *addr;
 }
 
-static inline void reg_write32(const Reg *reg, usize byte_offset, u32 data)
+static inline void reg_write32(const Register *reg, usize byte_offset, u32 data)
 {
 	_assert_reg_size(reg, byte_offset);
 	volatile u32 *addr = (void *)((u8 *)reg->address + byte_offset);
 	*addr = data;
 }
 
-static inline u8 reg_read8(const Reg *reg, usize byte_offset)
+static inline u8 reg_read8(const Register *reg, usize byte_offset)
 {
 	_assert_reg_size(reg, byte_offset);
 	volatile u8 *addr = (void *)((u8 *)reg->address + byte_offset);
 	return *addr;
 }
 
-static inline void reg_write8(const Reg *reg, usize byte_offset, u8 data)
+static inline void reg_write8(const Register *reg, usize byte_offset, u8 data)
 {
 	_assert_reg_size(reg, byte_offset);
 	volatile u8 *addr = (void *)((u8 *)reg->address + byte_offset);

@@ -11,6 +11,7 @@ typedef enum : isize {
 	DEVICE_UNKNOWN = -1,
 	DEVICE_FRAMEBUFFER,
 	DEVICE_UART,
+	DEVICE_IRQCHIP
 } DeviceClass;
 
 typedef struct {
@@ -32,6 +33,14 @@ typedef struct {
 	void (*flush)(Device *backend);
 } ConsoleOps;
 
+typedef struct {
+	void (*enable)(const Device *device, u32 irq);
+	void (*disable)(const Device *device, u32 irq);
+	u32 (*get_active)(const Device *device);
+	void (*signal_eoi)(const Device *device, u32 irq);
+	u32 (*interrupts_count)(const Device *device);
+} IrqChipOps;
+
 typedef enum {
 	DEVICE_DISCOVERED = 0,
 	DEVICE_READY,
@@ -44,6 +53,7 @@ struct Device {
 	DeviceState state;
 	union {
 		const ConsoleOps *console_ops;
+		const IrqChipOps *irq_chip_ops;
 	};
 	void *driver_data;
 	i32 fdt_node_offset;
