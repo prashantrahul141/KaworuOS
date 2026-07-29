@@ -70,7 +70,8 @@ errno_t dmanager_ready_device(Device *device)
 	switch (device->driver->device_class) {
 	case DEVICE_FRAMEBUFFER:
 	case DEVICE_UART:
-	case DEVICE_IRQCHIP: {
+	case DEVICE_IRQCHIP:
+	case DEVICE_TIMER: {
 		errno_t ret = device->driver->probe(device);
 		if (EOK == ret) {
 			device->state = DEVICE_READY;
