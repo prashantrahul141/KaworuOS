@@ -51,6 +51,7 @@ static inline void __log(const i8 *level_str, const IOColor color,
 			.msg = buffer };
 	console_write(ev);
 	va_end(args);
+	console_flush();
 }
 
 #define LOG(level_str, color, fmt, ...)                                 \
@@ -77,6 +78,7 @@ static inline void __user_log(const i8 *level_str, const IOColor color,
 			.msg = buffer };
 	console_write(ev);
 	va_end(args);
+	console_flush();
 }
 
 #if LEVEL > LEVEL_TRACE
