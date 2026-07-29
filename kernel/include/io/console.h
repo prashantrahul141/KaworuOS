@@ -52,6 +52,11 @@ errno_t console_write(const IOEvent event);
 errno_t console_flush();
 
 /*
+ * read into console
+ */
+errno_t console_receive_char(i8 c);
+
+/*
  * write a single char with default properties
  */
 errno_t console_write_char(const i8 c);

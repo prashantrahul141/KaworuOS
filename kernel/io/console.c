@@ -2,6 +2,7 @@
 #include "allocator/arena.h"
 #include "debug/assert.h"
 #include "debug/log.h"
+#include "ds/ringbuffer.h"
 #include "error.h"
 #include "io/io.h"
 #include "mm/kheap.h"
@@ -10,15 +11,18 @@
 
 constexpr usize _IO_EVENT_BUFFER_COUNT = 5;
 constexpr usize _IO_EVENT_MSG_SIZE_ESTIMATE = 100;
+constexpr usize CONSOLE_RECV_RING_BUFFER_SIZE = 1024;
 
 constexpr usize IO_EVENT_BUFFER_SIZE = sizeof(IOEvent) * _IO_EVENT_BUFFER_COUNT;
 constexpr usize IO_EVENT_MSG_BUFFER_SIZE =
 	_IO_EVENT_BUFFER_COUNT * _IO_EVENT_MSG_SIZE_ESTIMATE;
 
 typedef struct {
-	SpinLock lock;
+	SpinLock write_lock;
+	SpinLock read_lock;
 	ConsoleBackend *backends;
 	ConsoleBackend *primary;
+	RingBuffer recv_rb;
 	Arena io_events;
 	Arena io_messages;
 	bool enable_buffering;
@@ -31,14 +35,18 @@ static Console console = {
 
 static u8 io_event_buffer_storage[IO_EVENT_BUFFER_SIZE];
 static u8 io_event_msg_buffer[IO_EVENT_MSG_BUFFER_SIZE];
+static u8 console_recv_buffer[CONSOLE_RECV_RING_BUFFER_SIZE];
 
 errno_t console_init()
 {
-	spinlock_init(&console.lock, "console");
+	spinlock_init(&console.write_lock, "console - write");
+	spinlock_init(&console.read_lock, "console - read");
 	arena_init(&console.io_events, io_event_buffer_storage,
 		   sizeof(io_event_buffer_storage));
 	arena_init(&console.io_messages, io_event_msg_buffer,
 		   sizeof(io_event_msg_buffer));
+	ringbuffer_init(&console.recv_rb, sizeof(u8), console_recv_buffer,
+			CONSOLE_RECV_RING_BUFFER_SIZE);
 	console.enable_buffering = true;
 	return EOK;
 }
@@ -51,13 +59,13 @@ void console_register_backend(ConsoleBackend *backend, bool set_default)
 {
 	DEBUG("registering device = %s setting default = %b",
 	      backend->device->name, set_default);
-	spinlock_acquire(&console.lock);
+	spinlock_acquire(&console.write_lock);
 	backend->next = console.backends;
 	console.backends = backend;
 	if (set_default) {
 		console.primary = backend;
 	}
-	spinlock_release(&console.lock);
+	spinlock_release(&console.write_lock);
 }
 
 void console_register(Device *device, bool set_default)
@@ -70,7 +78,7 @@ void console_register(Device *device, bool set_default)
 bool console_unregister(const Device *device)
 {
 	DEBUG("removing device = %s", device->name);
-	spinlock_acquire(&console.lock);
+	spinlock_acquire(&console.write_lock);
 	ConsoleBackend *curr = console.backends;
 	ConsoleBackend *prev = nullptr;
 	while (nullptr != curr) {
@@ -89,7 +97,7 @@ bool console_unregister(const Device *device)
 			}
 
 			curr->next = nullptr;
-			spinlock_release(&console.lock);
+			spinlock_release(&console.write_lock);
 			return true;
 		}
 
@@ -97,7 +105,7 @@ bool console_unregister(const Device *device)
 		curr = curr->next;
 	}
 
-	spinlock_release(&console.lock);
+	spinlock_release(&console.write_lock);
 	return false;
 }
 
@@ -162,9 +170,9 @@ errno_t console_write(IOEvent e)
 
 void console_set_buffering(bool buffering)
 {
-	spinlock_acquire(&console.lock);
+	spinlock_acquire(&console.write_lock);
 	console.enable_buffering = buffering;
-	spinlock_release(&console.lock);
+	spinlock_release(&console.write_lock);
 }
 
 errno_t console_flush()
@@ -189,13 +197,22 @@ errno_t console_write_char(i8 c)
 	return console_write(e);
 }
 
+errno_t console_receive_char(i8 c)
+{
+	spinlock_acquire(&console.read_lock);
+	errno_t ret = ringbuffer_push(&console.recv_rb, &c);
+	spinlock_release(&console.read_lock);
+	return ret;
+}
+
 bool console_read(u8 *out)
 {
-	if (nullptr == console.backends) {
+	spinlock_acquire(&console.read_lock);
+	if (ringbuffer_empty(&console.recv_rb)) {
+		spinlock_release(&console.read_lock);
 		return false;
 	}
-
-	*out = console.primary->device->console_ops->read(
-		console.primary->device);
+	ringbuffer_pop(&console.recv_rb, out);
+	spinlock_release(&console.read_lock);
 	return true;
 }
