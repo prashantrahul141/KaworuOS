@@ -37,7 +37,7 @@ static u8 io_event_buffer_storage[IO_EVENT_BUFFER_SIZE];
 static u8 io_event_msg_buffer[IO_EVENT_MSG_BUFFER_SIZE];
 static u8 console_recv_buffer[CONSOLE_RECV_RING_BUFFER_SIZE];
 
-errno_t console_init()
+errno_t console_init(bool buffering)
 {
 	spinlock_init(&console.write_lock, "console - write");
 	spinlock_init(&console.read_lock, "console - read");
@@ -47,7 +47,7 @@ errno_t console_init()
 		   sizeof(io_event_msg_buffer));
 	ringbuffer_init(&console.recv_rb, sizeof(u8), console_recv_buffer,
 			CONSOLE_RECV_RING_BUFFER_SIZE);
-	console.enable_buffering = true;
+	console.enable_buffering = buffering;
 	return EOK;
 }
 

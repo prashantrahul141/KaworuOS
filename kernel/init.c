@@ -3,7 +3,7 @@
 void kernel_main(void)
 {
 	limine_responses_save();
-	console_init();
+	console_init(true);
 	printf_init();
 	printf("booting...\n");
 	framebuffer_init();

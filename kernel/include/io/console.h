@@ -16,7 +16,7 @@ struct ConsoleBackend {
 /*
  * initialize given console device
  */
-errno_t console_init();
+errno_t console_init(bool buffering);
 
 /*
  * deinitialize a console device
