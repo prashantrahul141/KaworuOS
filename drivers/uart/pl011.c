@@ -170,13 +170,16 @@ errno_t pl011_probe(Device *device)
 	reg_write32(&driver_data->base_addr, UARTCR,
 		    cr | UARTCR_UARTEN | UARTCR_TEX | UARTCR_REX);
 
+	/* request irq */
+	FDTInterrupt fdt_interrupt;
+	fdt_get_interrupt_cells(device->fdt_node_offset, &fdt_interrupt, 1);
+	driver_data->irq = fdt_interrupt.cells[1] + 32;
+	request_irq(driver_data->irq, recieve_irq_handler, device);
+
 	/* populate device driver */
 	device->driver_data = driver_data;
 	device->console_ops = &pl011_ops;
 	device->name = "uart";
-
-	// WARN: TODO: parse this from fdt instead of hard coding it here.
-	request_irq(33, recieve_irq_handler, device);
 
 	return EOK;
 }
@@ -184,10 +187,11 @@ errno_t pl011_probe(Device *device)
 errno_t pl011_remove(Device *device)
 {
 	DEBUG("removing pl011");
+	Pl011DriverData *data =
+		(void *)ACCESS_DRIVER_DATA(Pl011DriverData, device);
 	wait_tx_complete(device);
-	vm_mmio_unmap((void *)ACCESS_DRIVER_DATA(Pl011DriverData, device)
-			      ->base_addr.address,
-		      PAGE_SIZE);
+	reject_irq(data->irq);
+	vm_mmio_unmap(data->base_addr.address, PAGE_SIZE);
 	kfree(device->driver_data);
 	return EOK;
 }
