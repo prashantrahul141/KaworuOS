@@ -35,8 +35,8 @@ enum {
 };
 
 typedef struct {
-	Reg dist;
-	Reg cpu;
+	Register dist;
+	Register cpu;
 	usize interrupts_count;
 } GicV2Data;
 
@@ -72,7 +72,7 @@ static void arm_gic_irq_eoi(const Device *device, u32 irq)
 	reg_write32(&data->cpu, GICC_EOIR, irq);
 }
 
-static u32 _interrupts_count(const Reg *dist)
+static u32 _interrupts_count(const Register *dist)
 {
 	u32 typer = reg_read32(dist, GICD_TYPER) & 0x1f;
 	return (typer + 1) * 32;
@@ -90,7 +90,7 @@ IrqChipOps gic_ops = { .enable = arm_gic_irq_enable,
 		       .signal_eoi = arm_gic_irq_eoi,
 		       .interrupts_count = interrupts_count };
 
-static void armgicv2_probe_dist(const Reg *dist)
+static void armgicv2_probe_dist(const Register *dist)
 {
 	u32 irqs = _interrupts_count(dist);
 
@@ -138,7 +138,7 @@ static void armgicv2_probe_dist(const Reg *dist)
 	reg_write32(dist, GICD_CTLR, 1);
 }
 
-static void armgicv2_probe_cpu(const Reg *dist, const Reg *cpu)
+static void armgicv2_probe_cpu(const Register *dist, const Register *cpu)
 {
 	reg_write32(dist, GICD_ICENABLERn, 0xffff0000);
 	reg_write32(dist, GICD_ISENABLERn, 0x0000ffff);
@@ -170,14 +170,14 @@ errno_t armgicv2_probe(Device *device)
 		return -ENOMEM;
 	}
 
-	Reg reg[2];
-	if (!fdt_get_reg(device->fdt_node_offset, (Reg *)&reg, 2)) {
+	Register reg[2];
+	if (!fdt_get_reg(device->fdt_node_offset, (Register *)&reg, 2)) {
 		kfree(gic_data);
 		return -ENODEV;
 	}
 
-	memcpy(&gic_data->dist, &reg[0], sizeof(Reg));
-	memcpy(&gic_data->cpu, &reg[1], sizeof(Reg));
+	memcpy(&gic_data->dist, &reg[0], sizeof(Register));
+	memcpy(&gic_data->cpu, &reg[1], sizeof(Register));
 
 	gic_data->dist.address =
 		vm_mmio_map((usize)gic_data->dist.address, gic_data->dist.size);

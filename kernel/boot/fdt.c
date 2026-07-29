@@ -7,7 +7,6 @@
 #include "libfdt.h"
 #include "memlayout.h"
 #include "mm/kheap.h"
-#include "sync/spinlock.h"
 
 typedef struct {
 	void *fdt;
@@ -73,7 +72,8 @@ static const void *fdt_query_prop_value(i32 node_offset, const i8 *prop,
 {
 	return fdt_getprop(fdt.fdt, node_offset, prop, len);
 }
-bool fdt_get_reg_for_compat(const i8 *compat, Reg *reg, u32 reg_count)
+
+bool fdt_get_reg_for_compat(const i8 *compat, Register *reg, u32 reg_count)
 {
 	i32 node = fdt_query_compat(compat);
 	if (node < 0) {
@@ -105,6 +105,8 @@ const i8 *fdt_get_compat(i32 offset, i32 *len)
 }
 
 bool fdt_get_reg(i32 node, Reg *reg, u32 reg_count)
+
+bool fdt_get_reg(i32 node, Register *reg, u32 reg_count)
 {
 	TRACE("get reg = %d", node);
 	i32 parent = fdt_parent_offset(fdt.fdt, node);

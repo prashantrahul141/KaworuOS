@@ -2,7 +2,7 @@
 #include "boot/fdt.h"
 #include "core/irq_controller.h"
 #include "memlayout.h"
-#include "reg.h"
+#include "register.h"
 #include "error.h"
 #include "mm/kheap.h"
 #include "mm/vmm.h"
@@ -10,7 +10,8 @@
 #include "types.h"
 
 typedef struct {
-	Reg base_addr;
+	Register base_addr;
+	u32 irq;
 } Pl011DriverData;
 
 constexpr usize BAUD_RATE = 115200;
@@ -110,7 +111,7 @@ static void recieve_irq_handler(void *data)
 errno_t pl011_probe(Device *device)
 {
 	DEBUG("probing pl011");
-	Reg reg;
+	Register reg;
 	if (!fdt_get_reg(device->fdt_node_offset, &reg, 1)) {
 		return -ENODEV;
 	}
