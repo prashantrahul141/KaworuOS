@@ -1,6 +1,7 @@
 #ifndef _ARCH64_H_
 #define _ARCH64_H_
 
+#include "common_defs.h"
 #include "types.h"
 
 /* max virtual address */
@@ -160,6 +161,64 @@ static inline void tlb_flush(void)
 	dsb(BARRIER_ISHST);
 	asm volatile("tlbi vmalle1");
 	dsb(BARRIER_ISH);
+}
+
+static inline u64 r_cntfrq_el0(void)
+{
+	u64 value;
+	asm volatile("mrs %0, CNTFRQ_EL0" : "=r"(value));
+	return value;
+}
+
+static inline u32 r_counter_timer_freq(void)
+{
+	return EXTRACT_BITS(r_cntfrq_el0(), 31, 0);
+}
+
+static inline u64 r_cntpct_el0(void)
+{
+	u64 value;
+	asm volatile("mrs %0, CNTPCT_EL0" : "=r"(value));
+	return value;
+}
+
+static inline u64 r_counter_timer_physical_count(void)
+{
+	return r_cntpct_el0();
+}
+
+static inline void w_cntp_tval_el0(u64 value)
+{
+	asm volatile("msr CNTP_TVAL_EL0, %0" : : "r"(value));
+}
+
+static inline u64 r_cntp_ctl_el0(void)
+{
+	u64 value;
+	asm volatile("mrs %0, CNTP_CTL_EL0" : "=r"(value));
+	return value;
+}
+
+static inline void w_cntp_ctl_el0(u64 value)
+{
+	asm volatile("msr CNTP_CTL_EL0, %0" : : "r"(value));
+}
+
+static inline bool r_counter_is_enabled(void)
+{
+	return r_cntp_ctl_el0() & BIT(0);
+}
+
+static inline void w_counter_enable(bool value)
+{
+	u64 old = r_cntp_ctl_el0();
+	u64 new = value ? old | BIT(0) : old & ~BIT(0);
+	w_cntp_ctl_el0(new);
+}
+
+static inline void w_cntp_cval_el0(u64 value)
+{
+	asm volatile("msr CNTP_CVAL_EL0, %0" : : "r"(value));
 }
 
 #endif // _ARCH64_H_
