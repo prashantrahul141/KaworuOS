@@ -21,7 +21,6 @@ typedef struct {
 	SpinLock write_lock;
 	SpinLock read_lock;
 	ConsoleBackend *backends;
-	ConsoleBackend *primary;
 	RingBuffer recv_rb;
 	Arena io_events;
 	Arena io_messages;
@@ -30,7 +29,6 @@ typedef struct {
 
 static Console console = {
 	.backends = nullptr,
-	.primary = nullptr,
 };
 
 static u8 io_event_buffer_storage[IO_EVENT_BUFFER_SIZE];
@@ -63,7 +61,6 @@ void console_register_backend(ConsoleBackend *backend, bool set_default)
 	backend->next = console.backends;
 	console.backends = backend;
 	if (set_default) {
-		console.primary = backend;
 	}
 	spinlock_release(&console.write_lock);
 }
@@ -84,16 +81,10 @@ bool console_unregister(const Device *device)
 	while (nullptr != curr) {
 		/* found backend */
 		if (curr->device == device) {
-			/* if this was set as default, remove it */
 			if (prev == nullptr) {
 				console.backends = curr->next;
 			} else {
 				prev->next = curr->next;
-			}
-
-			if (console.primary != nullptr &&
-			    console.primary->device == device) {
-				console.primary = nullptr;
 			}
 
 			curr->next = nullptr;
