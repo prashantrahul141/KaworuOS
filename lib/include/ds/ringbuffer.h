@@ -21,14 +21,17 @@ typedef struct {
 				   .head = 0,                                  \
 				   .tail = 0 };
 
+void ringbuffer_init(RingBuffer *rb, usize element_size, void *buffer,
+		     usize buffer_size);
+
 /*
  * push and pop for ring buffer.
  */
-errno_t ring_buffer_push(RingBuffer *rb, void *data);
-errno_t ring_buffer_pop(RingBuffer *rb, void *data);
+errno_t ringbuffer_push(RingBuffer *rb, void *data);
+errno_t ringbuffer_pop(RingBuffer *rb, void *data);
 
-bool ring_buffer_full(const RingBuffer *rb);
+bool ringbuffer_full(const RingBuffer *rb);
 
-bool ring_buffer_empty(const RingBuffer *rb);
+bool ringbuffer_empty(const RingBuffer *rb);
 
 #endif // _RING_BUFFER_H_

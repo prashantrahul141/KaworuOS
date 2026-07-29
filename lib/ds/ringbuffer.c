@@ -2,7 +2,17 @@
 #include "error.h"
 #include <string.h>
 
-errno_t ring_buffer_push(RingBuffer *rb, void *data)
+void ringbuffer_init(RingBuffer *rb, usize element_size, void *buffer,
+		     usize buffer_size)
+{
+	rb->element_size = element_size;
+	rb->head = 0;
+	rb->tail = 0;
+	rb->buffer = buffer;
+	rb->capacity = buffer_size;
+}
+
+errno_t ringbuffer_push(RingBuffer *rb, void *data)
 {
 	/* next is where head will point to after this write */
 	usize next = (rb->head + 1) % rb->capacity;
@@ -18,7 +28,7 @@ errno_t ring_buffer_push(RingBuffer *rb, void *data)
 	return EOK;
 }
 
-errno_t ring_buffer_pop(RingBuffer *rb, void *data)
+errno_t ringbuffer_pop(RingBuffer *rb, void *data)
 {
 	/* if the head == tail, we dont have any data */
 	if (rb->head == rb->tail) {
@@ -33,12 +43,12 @@ errno_t ring_buffer_pop(RingBuffer *rb, void *data)
 	return EOK;
 }
 
-bool ring_buffer_full(const RingBuffer *rb)
+bool ringbuffer_full(const RingBuffer *rb)
 {
 	return ((rb->head + 1) % rb->capacity) == rb->tail;
 }
 
-bool ring_buffer_empty(const RingBuffer *rb)
+bool ringbuffer_empty(const RingBuffer *rb)
 {
 	return rb->head == rb->tail;
 }
