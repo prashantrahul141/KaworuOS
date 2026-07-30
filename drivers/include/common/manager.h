@@ -12,7 +12,8 @@ typedef enum : isize {
 	DEVICE_FRAMEBUFFER,
 	DEVICE_UART,
 	DEVICE_IRQCHIP,
-	DEVICE_TIMER
+	DEVICE_TIMER,
+	DEVICE_SEMIHOSTING
 } DeviceClass;
 
 typedef struct {
