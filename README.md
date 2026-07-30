@@ -122,8 +122,9 @@ make run
     - [x] Arm generic timer init
     - [x] Periodic timer interrupt
 
-- [ ] Semi hosting
-    - [ ] Semi hosting subsystem
+- [x] Semi hosting
+    - [x] Semi hosting subsystem
+    - [x] Attach as a console device
 
 - [ ] Scheduler
     - [ ] Concept of task, task states
