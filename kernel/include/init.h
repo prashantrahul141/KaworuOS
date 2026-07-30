@@ -15,6 +15,7 @@
 #include "common/manager.h"
 #include "boot/limine_responses.h"
 #include "boot/fdt.h"
+#include "core/timer.h"
 #include "framebuffer/framebuffer.h"
 
 /*
