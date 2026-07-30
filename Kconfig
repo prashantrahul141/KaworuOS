@@ -13,6 +13,10 @@ config BOOT_STACK_SIZE
     help
         - Stack size that will be allocated before memory management subsystem is ready (should be 16 byte aligned)
 
+
+config TIMER_RESCHED_MS
+        int "Timer fires after every given miliseconds"
+        default 100
 endmenu
 
 menu "Building"

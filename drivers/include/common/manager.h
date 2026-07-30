@@ -11,7 +11,8 @@ typedef enum : isize {
 	DEVICE_UNKNOWN = -1,
 	DEVICE_FRAMEBUFFER,
 	DEVICE_UART,
-	DEVICE_IRQCHIP
+	DEVICE_IRQCHIP,
+	DEVICE_TIMER
 } DeviceClass;
 
 typedef struct {
@@ -41,6 +42,37 @@ typedef struct {
 	u32 (*interrupts_count)(const Device *device);
 } IrqChipOps;
 
+typedef struct {
+	/*
+	 * Enable this timer
+	 */
+	void (*enable)(Device *device);
+	/*
+	 * Disable this timer
+	 */
+	void (*disable)(Device *device);
+	/*
+	 * Frequency of this timer
+	 */
+	usize (*frequency)(const Device *device);
+	/*
+	 * Current always incrementing counter value
+	 */
+	usize (*counter)(const Device *device);
+	/*
+	 * Sets an interrupt ticks from now
+	 */
+	void (*fire_from_now)(Device *device, usize ticks);
+	/*
+	 * Sets an interrupts at a given tick
+	 */
+	void (*fire_at)(Device *device, usize ticks);
+	/*
+	 * Interrupt id
+	 */
+	u32 (*interrupt_id)(Device *device);
+} TimerOps;
+
 typedef enum {
 	DEVICE_DISCOVERED = 0,
 	DEVICE_READY,
@@ -54,6 +86,7 @@ struct Device {
 	union {
 		const ConsoleOps *console_ops;
 		const IrqChipOps *irq_chip_ops;
+		const TimerOps *timer_ops;
 	};
 	void *driver_data;
 	i32 fdt_node_offset;

@@ -185,14 +185,13 @@ bool fdt_get_interrupt_cells(i32 node, FDTInterrupt *fdt_interrupt,
 		return false;
 	}
 
-	usize item_count = (usize)(len / intc_cells_count);
-
-	for (usize i = 0; i < fdt_interrupt_count; i++) {
+	for (u32 i = 0; i < fdt_interrupt_count; i++) {
 		FDTInterrupt *this_fdt = &fdt_interrupt[i];
 		this_fdt->cells_count = intc_cells_count;
 
-		for (usize j = 0; j < item_count; j++) {
-			this_fdt->cells[j] = fdt32_to_cpu(interrupts[j]);
+		for (u32 j = 0; j < (u32)intc_cells_count; j++) {
+			this_fdt->cells[j] = fdt32_to_cpu(
+				interrupts[(i * (u32)intc_cells_count) + j]);
 		}
 	}
 	return true;

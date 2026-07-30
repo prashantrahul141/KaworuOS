@@ -17,8 +17,10 @@ void kernel_main(void)
 	if (!IS_ERR(uart_device)) {
 		console_register(uart_device, true);
 	}
+	timer_init();
 
 	printf("\nHello from kaworu\n\n");
+	console_flush();
 
 	printf_deinit();
 	console_deinit();

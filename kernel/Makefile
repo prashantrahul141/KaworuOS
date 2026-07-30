@@ -43,6 +43,7 @@ ASM_OBJS = $(ASM_SOURCES:=.o)
 
 C_SOURCES = $D/framebuffer/framebuffer.c \
 			$D/irqchip/arm-gicv2.c \
+			$D/timer/arm-timer.c \
 			$D/common/manager.c \
 			$D/uart/pl011.c \
 			$K/arch/aarch64/exception.c \
@@ -50,6 +51,7 @@ C_SOURCES = $D/framebuffer/framebuffer.c \
 			$K/boot/limine_responses.c \
 			$K/core/cpu.c \
 			$K/core/irq_controller.c \
+			$K/core/timer.c \
 			$K/debug/printf.c \
 			$K/init.c \
 			$K/io/console.c \

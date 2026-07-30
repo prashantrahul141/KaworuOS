@@ -1,9 +1,9 @@
-
 #
 # General Setup
 #
 CONFIG_PER_CPU_STACK_SIZE=16384
 CONFIG_BOOT_STACK_SIZE=16384
+CONFIG_TIMER_RESCHED_MS=100
 # end of General Setup
 
 #

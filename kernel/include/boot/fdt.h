@@ -7,7 +7,6 @@
 constexpr usize MAX_INTERRUPT_CELLS_COUNT = 8;
 
 typedef struct {
-	i32 parent;
 	i32 cells_count;
 	u32 cells[MAX_INTERRUPT_CELLS_COUNT];
 } FDTInterrupt;
