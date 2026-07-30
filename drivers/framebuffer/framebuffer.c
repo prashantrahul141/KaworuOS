@@ -36,7 +36,7 @@ errno_t framebuffer_init()
 		ERROR("failed to init framebuffer");
 		return -EINVAL;
 	}
-	console_register_backend(&framebuffer_backend, false);
+	console_register_backend(&framebuffer_backend);
 	return EOK;
 }
 

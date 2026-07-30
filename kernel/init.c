@@ -22,7 +22,7 @@ void kernel_main(void)
 #ifndef CONFIG_ENABLE_SEMIHOSTING
 	Device *uart_device = dmanager_get_by_class_and_ready(DEVICE_UART);
 	if (!IS_ERR(uart_device)) {
-		console_register(uart_device, true);
+		console_register(uart_device);
 	}
 #endif
 

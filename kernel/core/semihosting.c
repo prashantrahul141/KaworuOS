@@ -53,7 +53,7 @@ ConsoleBackend sh_console_backend = { .device = &sh_console_device };
 
 void semihosting_init(void)
 {
-	console_register_backend(&sh_console_backend, false);
+	console_register_backend(&sh_console_backend);
 }
 
 usize sh_call(SemiHostingOperations op, void *params)
