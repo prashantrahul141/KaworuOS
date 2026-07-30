@@ -17,6 +17,7 @@
 #include "boot/fdt.h"
 #include "core/timer.h"
 #include "framebuffer/framebuffer.h"
+#include "core/semihosting.h"
 
 /*
  * Kernel's entry point in C.
