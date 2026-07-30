@@ -69,6 +69,10 @@ config DEBUG_SYMBOLS
     bool "Enable debug symbols"
     default y
 
+config ENABLE_SEMIHOSTING
+    bool "Enable semihosting support"
+    default n
+
 choice LOGGING_LEVEL
     prompt "Set level of logging"
     default LOGGING_LEVEL_DEBUG
