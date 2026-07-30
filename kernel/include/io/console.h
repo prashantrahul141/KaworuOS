@@ -26,10 +26,10 @@ void console_deinit();
 /*
  * register a device to console
  */
-void console_register(Device *device, bool set_default);
+void console_register(Device *device);
 
 /* register a consolebackend directly */
-void console_register_backend(ConsoleBackend *backend, bool set_default);
+void console_register_backend(ConsoleBackend *backend);
 
 /*
  * unregister a device from console
@@ -62,7 +62,7 @@ errno_t console_receive_char(i8 c);
 errno_t console_write_char(const i8 c);
 
 /*
- * read from the default console device
+ * read internal buffer
  */
 bool console_read(u8 *out);
 

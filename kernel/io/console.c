@@ -53,23 +53,20 @@ void console_deinit()
 {
 }
 
-void console_register_backend(ConsoleBackend *backend, bool set_default)
+void console_register_backend(ConsoleBackend *backend)
 {
-	DEBUG("registering device = %s setting default = %b",
-	      backend->device->name, set_default);
+	DEBUG("registering device = %s", backend->device->name);
 	spinlock_acquire(&console.write_lock);
 	backend->next = console.backends;
 	console.backends = backend;
-	if (set_default) {
-	}
 	spinlock_release(&console.write_lock);
 }
 
-void console_register(Device *device, bool set_default)
+void console_register(Device *device)
 {
 	ConsoleBackend *backend = kalloc(sizeof(ConsoleBackend));
 	backend->device = device;
-	console_register_backend(backend, set_default);
+	console_register_backend(backend);
 }
 
 bool console_unregister(const Device *device)
