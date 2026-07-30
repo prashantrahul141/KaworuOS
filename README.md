@@ -114,14 +114,16 @@ make run
 
 - [x] Device driver manager
 
-- [ ] Interrupts
-    - [ ] GIC distributor init and cpu interface init
-    - [ ] IRQ framework
+- [x] Interrupts
+    - [x] GIC distributor init and cpu interface init
+    - [x] IRQ framework
 
-- [ ] Timer
-    - [ ] Generic timer init
-    - [ ] Periodic timer interrupt
-    - [ ] Tick counter
+- [x] Timer
+    - [x] Arm generic timer init
+    - [x] Periodic timer interrupt
+
+- [ ] Semi hosting
+    - [ ] Semi hosting subsystem
 
 - [ ] Scheduler
     - [ ] Concept of task, task states
