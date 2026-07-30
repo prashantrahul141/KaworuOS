@@ -33,6 +33,10 @@ QEMU_FLAGS := -cpu cortex-a72 \
 			-cdrom $(ISO)
 			# TODO:  -smp $(CONFIG_CPU_COUNT) \
 
+ifeq ($(CONFIG_ENABLE_SEMIHOSTING),y)
+	 QEMU_FLAGS += -semihosting
+endif
+
 GDB_FLAGS = -ex "target remote :1234" -ex "set scheduler-locking on" -ex "b start" -ex "c"
 
 all: build
