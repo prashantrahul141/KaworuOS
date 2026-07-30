@@ -71,7 +71,8 @@ errno_t dmanager_ready_device(Device *device)
 	case DEVICE_FRAMEBUFFER:
 	case DEVICE_UART:
 	case DEVICE_IRQCHIP:
-	case DEVICE_TIMER: {
+	case DEVICE_TIMER:
+	case DEVICE_SEMIHOSTING: {
 		errno_t ret = device->driver->probe(device);
 		if (EOK == ret) {
 			device->state = DEVICE_READY;

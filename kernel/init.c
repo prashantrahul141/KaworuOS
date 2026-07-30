@@ -4,6 +4,11 @@ void kernel_main(void)
 {
 	limine_responses_save();
 	console_init(true);
+
+#ifdef CONFIG_ENABLE_SEMIHOSTING
+	semihosting_init();
+#endif
+
 	printf_init();
 	printf("booting...\n");
 	framebuffer_init();
@@ -13,10 +18,14 @@ void kernel_main(void)
 	fdt_init();
 	dmanager_init();
 	irq_controller_init();
+
+#ifndef CONFIG_ENABLE_SEMIHOSTING
 	Device *uart_device = dmanager_get_by_class_and_ready(DEVICE_UART);
 	if (!IS_ERR(uart_device)) {
 		console_register(uart_device, true);
 	}
+#endif
+
 	timer_init();
 
 	printf("\nHello from kaworu\n\n");
