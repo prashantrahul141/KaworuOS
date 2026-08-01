@@ -4,9 +4,10 @@
 .section .bss
 
 .align 16
-boot_stack:
-    .skip CONFIG_BOOT_STACK_SIZE
-boot_stack_top:
+.global cpu_stack
+cpu_stack:
+    .skip ((1 << CONFIG_PER_CPU_STACK_SIZE_SHIFT) * CONFIG_CPU_COUNT)
+cpu_stack_top:
 
 .section .text.boot
 
@@ -24,8 +25,9 @@ start:
     msr SPSel, x0
     isb
 
-    /* setup boot stack */
-    ldr x0, =boot_stack_top
+    /* setup boot cpu stack */
+    ldr x0, =cpu_stack
+    add x0, x0, #(1 << CONFIG_PER_CPU_STACK_SIZE_SHIFT)
     mov sp, x0
     isb
 
