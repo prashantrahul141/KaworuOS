@@ -42,6 +42,11 @@ bool console_unregister(const Device *backend);
 void console_set_buffering(bool buffering);
 
 /*
+ * write multiple events at once
+ */
+errno_t console_write_multiple(IOEvent *events, usize events_count);
+
+/*
  * write to console
  */
 errno_t console_write(const IOEvent event);

@@ -108,13 +108,11 @@ static inline void write_to_all_backends(const IOEvent *ev)
 
 static inline void finalize_write(void)
 {
-	spinlock_acquire(&console.write_lock);
 	IOEvent *events = (IOEvent *)arena_base(&console.io_events);
 	usize count = arena_count(&console.io_events) / sizeof(IOEvent);
 	for (usize i = 0; i < count; i++) {
 		write_to_all_backends(&events[i]);
 	}
-	spinlock_release(&console.write_lock);
 }
 
 static bool can_fit(const IOEvent *ev)
@@ -125,51 +123,22 @@ static bool can_fit(const IOEvent *ev)
 
 static void reset_buffers()
 {
-	spinlock_acquire(&console.write_lock);
 	arena_reset(&console.io_messages);
 	arena_reset(&console.io_events);
-	spinlock_release(&console.write_lock);
 }
 
-static void write_event(IOEvent ev)
+static void write_event(IOEvent *ev)
 {
-	spinlock_acquire(&console.write_lock);
-	void *msg_alloc = arena_alloc(&console.io_messages, ev.len);
+	void *msg_alloc = arena_alloc(&console.io_messages, ev->len);
 	ASSERT(!IS_ERR(msg_alloc), "failed to allocate for io message");
-	memcpy(msg_alloc, ev.msg, ev.len);
-	ev.msg = msg_alloc;
+	memcpy(msg_alloc, ev->msg, ev->len);
+	ev->msg = msg_alloc;
 	void *event_alloc = arena_alloc(&console.io_events, sizeof(IOEvent));
 	ASSERT(!IS_ERR(event_alloc), "failed to allocate for event");
-	memcpy(event_alloc, &ev, sizeof(IOEvent));
-	spinlock_release(&console.write_lock);
+	memcpy(event_alloc, ev, sizeof(IOEvent));
 }
 
-errno_t console_write(IOEvent e)
-{
-	if (!console.enable_buffering) {
-		write_event(e);
-		console_flush();
-		return EOK;
-	}
-
-	/* if it cant hold anymore, like myself */
-	if (!can_fit(&e)) {
-		/* write, flush all messages & reset buffers */
-		console_flush();
-	}
-
-	write_event(e);
-	return EOK;
-}
-
-void console_set_buffering(bool buffering)
-{
-	spinlock_acquire(&console.write_lock);
-	console.enable_buffering = buffering;
-	spinlock_release(&console.write_lock);
-}
-
-errno_t console_flush()
+static errno_t _console_flush()
 {
 	finalize_write();
 	ConsoleBackend *backend = console.backends;
@@ -180,6 +149,61 @@ errno_t console_flush()
 
 	reset_buffers();
 	return EOK;
+}
+
+errno_t console_flush()
+{
+	spinlock_acquire(&console.write_lock);
+	_console_flush();
+	spinlock_release(&console.write_lock);
+	return EOK;
+}
+
+static errno_t _console_write(IOEvent *e)
+{
+	if (!console.enable_buffering) {
+		write_event(e);
+		_console_flush();
+		return EOK;
+	}
+
+	/* if it cant hold anymore, like myself */
+	if (!can_fit(e)) {
+		/* write, flush all messages & reset buffers */
+		console_flush();
+	}
+
+	write_event(e);
+	return EOK;
+}
+
+errno_t console_write_multiple(IOEvent *events, usize events_count)
+{
+	spinlock_acquire(&console.write_lock);
+	for (usize i = 0; i < events_count; i++) {
+		errno_t ret = _console_write(&events[i]);
+		if (EOK != ret) {
+			spinlock_release(&console.write_lock);
+			return ret;
+		}
+	}
+	spinlock_release(&console.write_lock);
+	return EOK;
+}
+
+errno_t console_write(IOEvent e)
+{
+	spinlock_acquire(&console.write_lock);
+	errno_t ret = _console_write(&e);
+	spinlock_release(&console.write_lock);
+	return ret;
+}
+
+void console_set_buffering(bool buffering)
+{
+	spinlock_acquire(&console.write_lock);
+	console.enable_buffering = buffering;
+	spinlock_release(&console.write_lock);
 }
 
 errno_t console_write_char(i8 c)
