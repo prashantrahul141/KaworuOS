@@ -74,6 +74,15 @@ volatile struct limine_framebuffer_response *limine_framebuffer(void)
 	return _limine_framebuffer.response;
 }
 
+/* multiprocessor */
+USED SECTION(".limine_requests") static volatile struct limine_mp_request
+	_limine_mp = { .id = LIMINE_MP_REQUEST_ID, .revision = 0 };
+
+struct limine_mp_response *limine_mp(void)
+{
+	return _limine_mp.response;
+}
+
 /* limine requests start and end markers */
 USED SECTION(".limine_requests_start") static volatile uint64_t
 	limine_requests_start_marker[] = LIMINE_REQUESTS_START_MARKER;
