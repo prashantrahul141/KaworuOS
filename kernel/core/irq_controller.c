@@ -54,14 +54,29 @@ void irq_dispatcher(void)
 							active);
 }
 
+void irq_set_handler(u32 irq, irq_handler_t handler, void *data)
+{
+	irq_controller.irq_table[irq].handler = handler;
+	irq_controller.irq_table[irq].data = data;
+}
+
+void irq_enable_irq(u32 irq)
+{
+	irq_controller.device->irq_chip_ops->enable(irq_controller.device, irq);
+}
+
+void irq_enable_cpu(void)
+{
+	irq_controller.device->irq_chip_ops->cpu_init(irq_controller.device);
+}
+
 errno_t request_irq(u32 irq, irq_handler_t handler, void *data)
 {
 	DEBUG("requesting irq = %d, data = %p", irq, data);
 	spinlock_acquire(&irq_controller.lock);
-	irq_controller.irq_table[irq].handler = handler;
-	irq_controller.irq_table[irq].data = data;
-	irq_controller.device->irq_chip_ops->enable(irq_controller.device, irq);
+	irq_set_handler(irq, handler, data);
 	spinlock_release(&irq_controller.lock);
+	irq_enable_irq(irq);
 	return EOK;
 }
 

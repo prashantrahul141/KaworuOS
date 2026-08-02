@@ -15,6 +15,19 @@ void irq_controller_init(void);
 void irq_dispatcher(void);
 
 /*
+ * set handler but do not enable irqs
+ */
+void irq_set_handler(u32 irq, irq_handler_t handler, void *data);
+
+/*
+ * enables irqs
+ */
+void irq_enable_irq(u32 irq);
+
+/* enable irqs for this cpu */
+void irq_enable_cpu(void);
+
+/*
  * request irqs
  */
 errno_t request_irq(u32 irq, irq_handler_t handler, void *data);
