@@ -4,6 +4,7 @@
 #include "aarch64/aarch64.h"
 #include "common_defs.h"
 #include "io/console.h"
+#include "core/cpu.h"
 #include "config.h"
 #include "debug/log.h"
 #include "limine.h"
