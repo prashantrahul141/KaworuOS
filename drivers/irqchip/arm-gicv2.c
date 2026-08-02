@@ -4,6 +4,7 @@
 #include "debug/log.h"
 #include "mm/kheap.h"
 #include "mm/vmm.h"
+#include "register.h"
 #include "string.h"
 
 constexpr u32 GIC_SPI_INT_BASE = 32;
@@ -83,7 +84,35 @@ static u32 interrupts_count(const Device *device)
 	return _interrupts_count(&data->dist);
 }
 
-IrqChipOps gic_ops = { .enable = arm_gic_irq_enable,
+static void cpu_init(Device *device)
+{
+	DEBUG("cpu init");
+	GicV2Data *data = ACCESS_DRIVER_DATA(GicV2Data, device);
+	const Register *dist = &data->dist;
+	const Register *cpu = &data->cpu;
+
+	reg_write32(dist, GICD_ICENABLERn, 0xffff0000);
+	reg_write32(dist, GICD_ISENABLERn, 0x0000ffff);
+
+	/*
+	 * Set priority on PPI and SGI interrupts
+	 */
+	for (u32 i = 0; i < 32; i += 4) {
+		reg_write32(dist, GICD_IPRIORITYRn + i, 0xa0a0a0a0);
+	}
+
+	reg_write32(cpu, GICC_PMR, 0xff);
+
+	/*
+	 * Enable interrupts and signal them using the IRQ signal.
+	 */
+	u32 val = reg_read32(cpu, GICC_CTLR);
+	val |= GICC_CTLR_ENABLE_MASK;
+	reg_write32(cpu, GICC_CTLR, val);
+}
+
+IrqChipOps gic_ops = { .cpu_init = cpu_init,
+		       .enable = arm_gic_irq_enable,
 		       .disable = arm_gic_irq_disable,
 		       .get_active = arm_gic_irq_get_active,
 		       .signal_eoi = arm_gic_irq_eoi,
@@ -137,28 +166,6 @@ static void armgicv2_probe_dist(const Register *dist)
 	reg_write32(dist, GICD_CTLR, 1);
 }
 
-static void armgicv2_probe_cpu(const Register *dist, const Register *cpu)
-{
-	reg_write32(dist, GICD_ICENABLERn, 0xffff0000);
-	reg_write32(dist, GICD_ISENABLERn, 0x0000ffff);
-
-	/*
-	 * Set priority on PPI and SGI interrupts
-	 */
-	for (u32 i = 0; i < 32; i += 4) {
-		reg_write32(dist, GICD_IPRIORITYRn + i, 0xa0a0a0a0);
-	}
-
-	reg_write32(cpu, GICC_PMR, 0xf0);
-
-	/*
-	 * Enable interrupts and signal them using the IRQ signal.
-	 */
-	u32 val = reg_read32(cpu, GICC_CTLR);
-	val |= GICC_CTLR_ENABLE_MASK;
-	reg_write32(cpu, GICC_CTLR, val);
-}
-
 static errno_t armgicv2_probe(Device *device)
 {
 	DEBUG("probing arm-gicv2");
@@ -197,9 +204,6 @@ static errno_t armgicv2_probe(Device *device)
 
 	/* program distributor */
 	armgicv2_probe_dist(&gic_data->dist);
-
-	/* program cpu interface */
-	armgicv2_probe_cpu(&gic_data->dist, &gic_data->cpu);
 
 	gic_data->interrupts_count = _interrupts_count(&gic_data->dist);
 	DEBUG("interrupts_count = %d", gic_data->interrupts_count);
