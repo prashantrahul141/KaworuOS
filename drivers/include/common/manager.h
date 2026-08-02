@@ -36,6 +36,7 @@ typedef struct {
 } ConsoleOps;
 
 typedef struct {
+	void (*cpu_init)(Device *device);
 	void (*enable)(const Device *device, u32 irq);
 	void (*disable)(const Device *device, u32 irq);
 	u32 (*get_active)(const Device *device);
