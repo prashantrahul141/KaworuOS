@@ -14,5 +14,9 @@ typedef struct {
 
 u32 get_cpuid(void);
 Cpu *this_cpu(void);
+void wake_secondary_cpus(void);
+
+/* only called by arch secondary_entry */
+void init_secondary_cpu(void);
 
 #endif // _CPU_H_
