@@ -44,11 +44,17 @@ void vm_init(void)
 
 	/* setup kernel paging */
 	paging_kernel_init(kernel_page_table);
-	paging_switch_kernel_table(kernel_page_table);
+	vm_set_kernel_page_table();
 
 	/* setup regions */
 	region_init(&kernel_mem_region, "kernel heap region");
 	region_init(&mmio_region, "mmio region");
+}
+
+/* set kernal page table for current cpu */
+void vm_set_kernel_page_table(void)
+{
+	paging_switch_kernel_table(kernel_page_table);
 }
 
 /*
