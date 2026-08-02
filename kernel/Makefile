@@ -38,6 +38,7 @@ D = ../drivers
 TH = ../thirdparty
 # files are in the order of what `fd` returns
 ASM_SOURCES = $K/arch/aarch64/exception.S \
+			  $K/arch/aarch64/secondary_entry.S \
 			  $K/arch/aarch64/start.S
 ASM_OBJS = $(ASM_SOURCES:=.o)
 
