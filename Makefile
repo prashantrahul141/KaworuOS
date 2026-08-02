@@ -37,7 +37,7 @@ ifeq ($(CONFIG_ENABLE_SEMIHOSTING),y)
 	 QEMU_FLAGS += -semihosting
 endif
 
-GDB_FLAGS = -ex "target remote :1234" -ex "set scheduler-locking on" -ex "b start" -ex "c"
+GDB_FLAGS = -ex "target remote :1234" -ex "set scheduler-locking step" -ex "b start" -ex "c"
 
 all: build
 
