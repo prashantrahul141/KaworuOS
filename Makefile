@@ -30,8 +30,8 @@ QEMU_FLAGS := -cpu cortex-a72 \
 			-device usb-tablet \
 			-serial stdio \
 			-drive if=pflash,unit=0,format=raw,file=$(UEFI_FIRMWARE),readonly=on \
-			-cdrom $(ISO)
-			# TODO:  -smp $(CONFIG_CPU_COUNT) \
+			-cdrom $(ISO) \
+			-smp $(CONFIG_CPU_COUNT)
 
 ifeq ($(CONFIG_ENABLE_SEMIHOSTING),y)
 	 QEMU_FLAGS += -semihosting
