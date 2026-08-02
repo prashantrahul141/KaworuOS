@@ -15,8 +15,9 @@ void timer_init(void)
 {
 	INFO("Initializing timer");
 	timer_global_init();
-	timer_cpu_init(&this_cpu()->timer);
-	timer_cpu_enable(&this_cpu()->timer);
+	CpuTimer *this_cpu_timer = &this_cpu()->timer;
+	timer_cpu_init(this_cpu_timer);
+	timer_cpu_enable(this_cpu_timer);
 }
 
 void timer_global_init(void)
@@ -27,14 +28,26 @@ void timer_global_init(void)
 	}
 
 	timer.frequency = timer.device->timer_ops->frequency(timer.device);
-	request_irq(timer.device->timer_ops->interrupt_id(timer.device),
-		    timer_tick, nullptr);
+	irq_set_handler(timer.device->timer_ops->interrupt_id(timer.device),
+			timer_tick, nullptr);
 }
 
 void timer_cpu_init(CpuTimer *cpu_timer)
 {
+	cpu_timer->ticks = 0;
 	cpu_timer->resched_after = ticks_from_miliseconds(
 		timer.frequency, CONFIG_TIMER_RESCHED_MS);
+	irq_enable_cpu();
+}
+
+void timer_cpu_enable(CpuTimer *cpu_timer)
+{
+	UNUSED_ARG(cpu_timer);
+	DEBUG("enabling timer");
+	irq_enable_irq(timer.device->timer_ops->interrupt_id(timer.device));
+	timer.device->timer_ops->fire_from_now(timer.device,
+					       cpu_timer->resched_after);
+	timer.device->timer_ops->enable(timer.device);
 }
 
 static void timer_cpu_resched(const CpuTimer *cpu_timer)
@@ -51,13 +64,4 @@ void timer_tick(void *data)
 	cpu->timer.ticks++;
 	DEBUG("TICK! cpu id = %d ticks = %d", get_cpuid(), cpu->timer.ticks);
 	timer_cpu_resched(&cpu->timer);
-}
-
-void timer_cpu_enable(CpuTimer *cpu_timer)
-{
-	UNUSED_ARG(cpu_timer);
-	DEBUG("enabling timer");
-	timer.device->timer_ops->fire_from_now(timer.device,
-					       cpu_timer->resched_after);
-	timer.device->timer_ops->enable(timer.device);
 }
