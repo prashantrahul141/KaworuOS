@@ -68,6 +68,7 @@ C_SOURCES = $D/framebuffer/framebuffer.c \
 			$L/allocator/arena.c \
 			$L/allocator/bitmap.c \
 			$L/allocator/freelist.c \
+			$L/ds/linkedlist.c \
 			$L/ds/ringbuffer.c \
 			$L/error.c \
 			$L/stdlib.c \
