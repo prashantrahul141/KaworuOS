@@ -221,4 +221,16 @@ static inline void w_cntp_cval_el0(u64 value)
 	asm volatile("msr CNTP_CVAL_EL0, %0" : : "r"(value));
 }
 
+static inline void w_tpidr_el1(u64 value)
+{
+	asm volatile("msr TPIDR_EL1, %0" : : "r"(value));
+}
+
+static inline u64 r_tpidr_el1(void)
+{
+	u64 value;
+	asm volatile("mrs %0, TPIDR_EL1" : "=r"(value));
+	return value;
+}
+
 #endif // _ARCH64_H_
