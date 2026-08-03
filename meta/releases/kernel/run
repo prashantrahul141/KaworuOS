@@ -9,4 +9,5 @@ qemu-system-aarch64 -M virt,acpi=off -cpu cortex-a72 \
 			-device usb-tablet \
 			-serial stdio \
 			-drive if=pflash,unit=0,format=raw,file="$EFI_FIRMWARE",readonly=on \
-			-cdrom "$ISO_PATH"
+			-cdrom "$ISO_PATH" \
+			-smp 4
