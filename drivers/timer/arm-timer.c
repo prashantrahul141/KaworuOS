@@ -48,6 +48,7 @@ static u32 interrupt_id(Device *device)
 		return 0;
 	}
 
+	// TODO: instead of hard coding indexes here, find them via their type.
 	return interrupt_cells[1].cells[1] + 16;
 }
 
