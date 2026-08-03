@@ -9,10 +9,11 @@
 #include "arch/aarch64/secondary_entry.h"
 #include "arch/aarch64/aarch64.h"
 #include <stdatomic.h>
+#include "config.h"
 
 volatile _Atomic u64 cpus_enabled_count = 1;
 
-static Cpu CPUS[CONFIG_CPU_COUNT];
+static Cpu CPUS[CONFIG_MAX_CPU_COUNT];
 
 u32 cpu_get_cpuid(void)
 {
