@@ -170,7 +170,7 @@ static errno_t _console_write(IOEvent *e)
 	/* if it cant hold anymore, like myself */
 	if (!can_fit(e)) {
 		/* write, flush all messages & reset buffers */
-		console_flush();
+		_console_flush();
 	}
 
 	write_event(e);
