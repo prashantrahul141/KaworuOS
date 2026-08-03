@@ -72,6 +72,12 @@ static inline void w_intrd_enable(void)
 	asm volatile("msr daifclr, #0b0011");
 }
 
+/* disable all interrupts */
+static inline void w_intrall_disable(void)
+{
+	asm volatile("msr daifset, #0b1111");
+}
+
 /* halt */
 #define hlt(imm) asm volatile("hlt #" #imm)
 
