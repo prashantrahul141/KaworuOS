@@ -12,7 +12,13 @@ config PER_CPU_STACK_SIZE_SHIFT
 config TIMER_RESCHED_MS
         int "Timer fires after every given miliseconds"
         default 100
+
+config MAX_CPU_COUNT
+    int "Max cpu kernel can hold"
+    default 8
+
 endmenu
+
 
 menu "Building"
 choice OPTIMIZATIONS
