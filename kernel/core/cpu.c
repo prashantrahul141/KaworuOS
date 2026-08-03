@@ -1,3 +1,4 @@
+#include <stdatomic.h>
 #include "core/cpu.h"
 #include "boot/limine_responses.h"
 #include "core/task.h"
@@ -8,12 +9,11 @@
 #include "types.h"
 #include "arch/aarch64/secondary_entry.h"
 #include "arch/aarch64/aarch64.h"
-#include <stdatomic.h>
 #include "config.h"
 
 volatile _Atomic u64 cpus_enabled_count = 1;
 
-static Cpu CPUS[CONFIG_MAX_CPU_COUNT];
+static Cpu CPUS[CONFIG_MAX_CPU_COUNT] = { 0 };
 
 u32 cpu_get_cpuid(void)
 {
@@ -32,6 +32,14 @@ void cpu_cache_current_cpu(void)
 	w_tpidr_el1((u64)cpu);
 }
 
+void cpu_init_idle_task(void)
+{
+	/* create idle task */
+	Task *idle_task = task_create(task_idle, nullptr);
+	this_cpu()->idle = idle_task;
+	this_cpu()->current = idle_task;
+}
+
 void init_secondary_cpu(void)
 {
 	/* save this cpu's Cpu struct in register */
@@ -40,12 +48,17 @@ void init_secondary_cpu(void)
 	/* set kernel paging for this cpu */
 	vm_set_kernel_page_table();
 
-	CpuTimer *this_cpu_timer = &this_cpu()->timer;
+	Cpu *cpu = this_cpu();
+	cpu->cpuid = cpu_get_cpuid();
+
+	CpuTimer *this_cpu_timer = &cpu->timer;
 	timer_cpu_init(this_cpu_timer);
 	timer_cpu_enable(this_cpu_timer);
 
 	/* increment count of secondary cpus enabled */
 	atomic_fetch_add(&cpus_enabled_count, 1);
+
+	cpu_init_idle_task();
 
 	/* TODO: more per cpu init here before unmasking interrupts */
 

@@ -1,6 +1,7 @@
 #ifndef _CPU_H_
 #define _CPU_H_
 
+#include "core/task.h"
 #include "core/timer.h"
 #include "types.h"
 #include "config.h"
@@ -10,11 +11,17 @@ typedef struct {
 	i32 count;
 	bool intrd_was_enabled;
 	CpuTimer timer;
+	Task *current;
+	Task *idle;
+	// RunQueue;
 } Cpu;
 
 u32 cpu_get_cpuid(void);
 Cpu *this_cpu(void);
 void wake_secondary_cpus(void);
+
+/* creates idle task for this cpu */
+void cpu_init_idle_task(void);
 
 /* saves current cpu struct mem address in TPIDR_EL1 */
 void cpu_cache_current_cpu(void);
