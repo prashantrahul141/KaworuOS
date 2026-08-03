@@ -73,25 +73,13 @@ static inline void w_intrd_enable(void)
 }
 
 /* halt */
-#define hlt(imm)                            \
-	do {                                \
-		asm volatile("hlt #" #imm); \
-		UNREACHABLE();              \
-	} while (0)
+#define hlt(imm) asm volatile("hlt #" #imm)
 
 /* wfe */
-#define wfe()                        \
-	do {                         \
-		asm volatile("wfe"); \
-		UNREACHABLE();       \
-	} while (0)
+#define wfe() asm volatile("wfe")
 
 /* wfi */
-#define wfi()                        \
-	do {                         \
-		asm volatile("wfi"); \
-		UNREACHABLE();       \
-	} while (0)
+#define wfi() asm volatile("wfi")
 
 /* read sctlr register */
 static inline u64 r_sctlr(void)
