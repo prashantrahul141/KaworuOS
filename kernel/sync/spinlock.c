@@ -24,7 +24,7 @@ void spinlock_acquire(SpinLock *sp)
 	if (holding(sp)) {
 		panic("failed to acquire lock, already holding it.\n\tcpuid = "
 		      "%d\n\tname = %s\n",
-		      get_cpuid(), sp->name);
+		      cpu_get_cpuid(), sp->name);
 	}
 #endif
 
@@ -54,7 +54,7 @@ void spinlock_release(SpinLock *sp)
 	if (!holding(sp)) {
 		panic("failed to release lock, not holding it.\n\tcpuid = "
 		      "%d\n\tname = %s\n",
-		      get_cpuid(), sp->name);
+		      cpu_get_cpuid(), sp->name);
 	}
 #endif
 

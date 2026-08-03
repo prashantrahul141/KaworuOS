@@ -1,5 +1,6 @@
 #include "core/cpu.h"
 #include "boot/limine_responses.h"
+#include "core/task.h"
 #include "core/timer.h"
 #include "debug/log.h"
 #include "limine.h"
@@ -13,19 +14,28 @@ volatile _Atomic u64 cpus_enabled_count = 1;
 
 static Cpu CPUS[CONFIG_CPU_COUNT];
 
-u32 get_cpuid(void)
+u32 cpu_get_cpuid(void)
 {
 	return r_mpidr_el1() & 0xFF;
 }
 
 Cpu *this_cpu(void)
 {
-	u32 id = get_cpuid();
-	return &CPUS[id];
+	return (Cpu *)r_tpidr_el1();
+}
+
+void cpu_cache_current_cpu(void)
+{
+	u32 id = cpu_get_cpuid();
+	Cpu *cpu = &CPUS[id];
+	w_tpidr_el1((u64)cpu);
 }
 
 void init_secondary_cpu(void)
 {
+	/* save this cpu's Cpu struct in register */
+	cpu_cache_current_cpu();
+
 	/* set kernel paging for this cpu */
 	vm_set_kernel_page_table();
 

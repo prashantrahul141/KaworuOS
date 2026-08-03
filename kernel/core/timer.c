@@ -62,6 +62,7 @@ void timer_tick(void *data)
 	Cpu *cpu = this_cpu();
 	// TODO: do something useful
 	cpu->timer.ticks++;
-	DEBUG("TICK! cpu id = %d ticks = %d", get_cpuid(), cpu->timer.ticks);
+	DEBUG("TICK! cpu id = %d ticks = %d", cpu_get_cpuid(),
+	      cpu->timer.ticks);
 	timer_cpu_resched(&cpu->timer);
 }

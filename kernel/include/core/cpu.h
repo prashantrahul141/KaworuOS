@@ -12,9 +12,12 @@ typedef struct {
 	CpuTimer timer;
 } Cpu;
 
-u32 get_cpuid(void);
+u32 cpu_get_cpuid(void);
 Cpu *this_cpu(void);
 void wake_secondary_cpus(void);
+
+/* saves current cpu struct mem address in TPIDR_EL1 */
+void cpu_cache_current_cpu(void);
 
 /* only called by arch secondary_entry */
 void init_secondary_cpu(void);
