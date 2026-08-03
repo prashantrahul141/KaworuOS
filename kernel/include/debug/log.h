@@ -25,35 +25,37 @@
 #endif
 
 constexpr usize individual_buffer_sizes = (1 << 10);
+constexpr usize level_buffer_size = 20;
 
 static inline void __log(const i8 *level_str, const IOColor color,
 			 const i8 *file, const i8 *func, usize line,
 			 const i8 *fmt, ...)
 {
-	i8 buffers[3][individual_buffer_sizes];
+	i8 level_buffer[level_buffer_size];
 	IOEvent events[3];
-	usize wrote = vsnprintf((i8 *)buffers[0], individual_buffer_sizes,
-				"[ %s ]", level_str);
+	usize wrote = vsnprintf(level_buffer, sizeof(level_buffer), "[ %s ]",
+				level_str);
 	events[0].bg = color;
 	events[0].fg = IO_DEFAULT_COLOR_BG;
 	events[0].len = wrote;
-	events[0].msg = (i8 *)&buffers[0];
+	events[0].msg = level_buffer;
 
-	wrote = vsnprintf((i8 *)buffers[1], individual_buffer_sizes,
+	i8 buffers[2][individual_buffer_sizes];
+	wrote = vsnprintf((i8 *)buffers[0], individual_buffer_sizes,
 			  " %s:%s:%d: ", file, func, line);
 	events[1].bg = IO_DEFAULT_COLOR_BG;
 	events[1].fg = color;
 	events[1].len = wrote;
-	events[1].msg = buffers[1];
+	events[1].msg = buffers[0];
 
 	va_list args;
 	va_start(args, fmt);
-	wrote = __vsnprintf((i8 *)buffers[2], individual_buffer_sizes, fmt,
+	wrote = __vsnprintf((i8 *)buffers[1], individual_buffer_sizes, fmt,
 			    args);
 	events[2].bg = IO_DEFAULT_COLOR_BG;
 	events[2].fg = color;
 	events[2].len = wrote;
-	events[2].msg = buffers[2];
+	events[2].msg = buffers[1];
 	va_end(args);
 
 	console_write_multiple(events, 3);
@@ -67,23 +69,26 @@ static inline void __log(const i8 *level_str, const IOColor color,
 static inline void __user_log(const i8 *level_str, const IOColor color,
 			      const i8 *fmt, ...)
 {
-	i8 buffer[2048];
-	usize wrote = vsnprintf(buffer, 2048, "[ %s ]", level_str);
-	IOEvent ev = { .bg = color,
-		       .fg = IO_DEFAULT_COLOR_BG,
-		       .len = wrote,
-		       .msg = buffer };
-	console_write(ev);
+	IOEvent events[2];
+	i8 level_buffer[level_buffer_size];
+	usize wrote = vsnprintf(level_buffer, sizeof(level_buffer), "[ %s ]",
+				level_str);
+	events[0].bg = color;
+	events[0].fg = IO_DEFAULT_COLOR_BG;
+	events[0].len = wrote;
+	events[0].msg = level_buffer;
 
+	i8 buffer[individual_buffer_sizes];
 	va_list args;
 	va_start(args, fmt);
-	wrote = __vsnprintf(buffer, 2048, fmt, args);
-	ev = (IOEvent){ .bg = IO_DEFAULT_COLOR_BG,
-			.fg = IO_DEFAULT_COLOR_FG,
-			.len = wrote,
-			.msg = buffer };
-	console_write(ev);
+	wrote = __vsnprintf(buffer, individual_buffer_sizes, fmt, args);
 	va_end(args);
+	events[1].bg = IO_DEFAULT_COLOR_BG;
+	events[1].fg = IO_DEFAULT_COLOR_FG;
+	events[1].len = wrote;
+	events[1].msg = buffer;
+
+	console_write_multiple(events, 2);
 	console_flush();
 }
 
