@@ -13,18 +13,6 @@ static void print_int(i8 *buffer, usize *write_count, i64 x, u8 base,
 static void print_double(i8 *buffer, usize *write_count, f64 f, i32 precision);
 static void print_string(i8 *buffer, usize *write_count, const u8 *s);
 
-void printf_init(void)
-{
-}
-
-void printf_deinit(void)
-{
-}
-
-void printf_flush(void)
-{
-}
-
 // NOLINTBEGIN(clang-analyzer-valist.Uninitialized,
 // clang-analyzer-valist.Uninitialized)
 void __attribute__((format(printf, 1, 2))) printf(const i8 *fmt, ...)

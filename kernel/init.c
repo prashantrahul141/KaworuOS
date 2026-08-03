@@ -10,7 +10,6 @@ void kernel_main(void)
 	semihosting_init();
 #endif
 
-	printf_init();
 	printf("booting...\n");
 	framebuffer_init();
 	kmem_init();
@@ -33,6 +32,5 @@ void kernel_main(void)
 	printf("\nHello from kaworu\n\n");
 	console_flush();
 
-	printf_deinit();
 	console_deinit();
 }

@@ -3,8 +3,6 @@
 
 #include "types.h"
 #include <stdarg.h>
-
-void printf_init(void);
 /*
  * very dump printf implementation.
  * Supports:
@@ -23,9 +21,5 @@ void vprintf(const i8 *fmt, va_list arg);
 usize __vsnprintf(i8 *buffer, usize buf_size, const i8 *fmt, va_list ap);
 
 usize vsnprintf(i8 *buffer, usize buf_size, const i8 *fmt, ...);
-
-void printf_flush(void);
-
-void printf_deinit(void);
 
 #endif // _PRINT_H_
