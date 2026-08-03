@@ -154,6 +154,7 @@ static i32 fdt_get_interrupt_cells_count(i32 node)
 
 	const i8 *interrupt_controller_name =
 		fdt_get_name(fdt.fdt, interrupt_controller, &len);
+	UNUSED_ARG(interrupt_controller_name);
 	DEBUG("found interrupt-controller = %s", interrupt_controller_name);
 
 	/*
