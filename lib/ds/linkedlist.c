@@ -84,3 +84,21 @@ void *linkedlist_remove_tail(LinkedList *ll)
 
 	return data;
 }
+
+void *linkedlist_peek_head(const LinkedList *ll)
+{
+	if (nullptr == ll->head) {
+		return nullptr;
+	}
+
+	return ll->head->data;
+}
+
+void *linkedlist_peek_tail(const LinkedList *ll)
+{
+	if (nullptr == ll->tail) {
+		return nullptr;
+	}
+
+	return ll->tail->data;
+}
