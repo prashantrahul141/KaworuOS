@@ -1,4 +1,5 @@
 #include "core/run_queue.h"
+#include "core/scheduler.h"
 #include "debug/panic.h"
 #include <stdatomic.h>
 #include "core/cpu.h"
@@ -69,6 +70,11 @@ void init_secondary_cpu(void)
 
 	/* increment count of secondary cpus enabled */
 	atomic_fetch_add(&cpus_enabled_count, 1);
+
+	/* schedule */
+	schedule();
+
+	panic("scheduler for secondary cpu = %d returned", cpu->cpuid);
 }
 
 static void wake_secondary_cpu(struct limine_mp_info *cpu)
