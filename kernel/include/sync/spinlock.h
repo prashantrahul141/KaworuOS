@@ -5,7 +5,6 @@
 
 #include "types.h"
 #include "config.h"
-#include "core/cpu.h"
 
 typedef struct {
 	/* is spinlock locked */
@@ -15,7 +14,7 @@ typedef struct {
 	const i8 *name;
 
 	/* which cpu has acquired this lock*/
-	Cpu *cpu;
+	void *cpu;
 } SpinLock;
 
 void spinlock_init(SpinLock *sp, const i8 *name);
