@@ -21,7 +21,7 @@ Cpu *this_cpu(void);
 void wake_secondary_cpus(void);
 
 /* creates idle task for this cpu */
-void cpu_init_idle_task(void);
+void cpu_init_idle_task_and_switch(Cpu *cpu);
 
 /* saves current cpu struct mem address in TPIDR_EL1 */
 void cpu_cache_current_cpu(void);
