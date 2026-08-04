@@ -50,6 +50,10 @@ void linkedlist_insert_tail(LinkedList *ll, void *data)
 void *linkedlist_remove_head(LinkedList *ll)
 {
 	Node *current_head = ll->head;
+	if (nullptr == current_head) {
+		return nullptr;
+	}
+
 	ll->head = current_head->next;
 
 	if (nullptr != ll->head) {
