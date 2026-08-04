@@ -32,5 +32,7 @@ void kernel_main(void)
 	printf("\nHello from kaworu\n\n");
 	console_flush();
 
-	console_deinit();
+	schedule();
+
+	panic("schedule returned");
 }

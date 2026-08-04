@@ -6,6 +6,7 @@
 #include "io/console.h"
 #include "core/cpu.h"
 #include "config.h"
+#include "core/scheduler.h"
 #include "debug/log.h"
 #include "limine.h"
 #include "mm/kmem.h"
