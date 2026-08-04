@@ -1,6 +1,7 @@
 #include "core/task.h"
 #include "aarch64/aarch64.h"
 #include "core/cpu.h"
+#include "core/scheduler.h"
 #include "debug/log.h"
 #include "debug/panic.h"
 #include "mm/kheap.h"
@@ -16,13 +17,15 @@ void task_trampoline(void)
 	Cpu *cpu = this_cpu();
 	Task *task = cpu->current;
 	task->entry(task->arg);
-	task_exit();
+	DEBUG("task = %s exited", task->name);
+	task_exit(task);
 	panic("trampoline ended?");
 }
 
-Task *task_create(task_fn_type task_fn, void *arg)
+Task *task_create(task_fn_type task_fn, void *arg, const i8 *name)
 {
 	Task *task = kalloc(sizeof(Task));
+	task->name = name;
 	task->stack = kalloc(TASK_STACK_SIZE);
 
 	memset(&task->context, 0, sizeof(task->context));
@@ -37,15 +40,15 @@ Task *task_create(task_fn_type task_fn, void *arg)
 	return task;
 }
 
-void task_exit(void)
+void task_exit(Task *task)
 {
-	Task *task = this_cpu()->current;
 	task->state = TASK_DEAD;
-	// TODO: schedule() which should never return.
+	schedule();
 }
 
 void task_destroy(Task *task)
 {
+	TRACE("destroying task = %s", task->name);
 	kfree(task->stack);
 	kfree(task);
 }
@@ -54,7 +57,7 @@ void task_idle(void *arg)
 {
 	UNUSED_ARG(arg);
 	for (;;) {
-		DEBUG("idle task");
+		TRACE("idle task | cpuid = %d", this_cpu()->cpuid);
 		wfi();
 	}
 }

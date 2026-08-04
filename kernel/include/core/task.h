@@ -13,6 +13,7 @@ typedef enum {
 } TaskState;
 
 typedef struct {
+	const i8 *name;
 	ExecutionContext context;
 	void *stack;
 	TaskState state;
@@ -22,10 +23,10 @@ typedef struct {
 
 void task_trampoline(void);
 
-Task *task_create(task_fn_type task_fn, void *arg);
+Task *task_create(task_fn_type task_fn, void *arg, const i8 *name);
 
 /* exits current task */
-void task_exit(void);
+void task_exit(Task *task);
 
 /* destroies given task */
 void task_destroy(Task *task);
