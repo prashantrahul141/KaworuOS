@@ -54,6 +54,7 @@ C_SOURCES = $D/framebuffer/framebuffer.c \
 			$K/core/cpu.c \
 			$K/core/irq_controller.c \
 			$K/core/run_queue.c \
+			$K/core/scheduler.c \
 			$K/core/semihosting.c \
 			$K/core/task.c \
 			$K/core/timer.c \
