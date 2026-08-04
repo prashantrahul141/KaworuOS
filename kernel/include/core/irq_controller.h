@@ -37,4 +37,10 @@ errno_t request_irq(u32 irq, irq_handler_t handler, void *data);
  */
 errno_t reject_irq(u32 irq);
 
+/* push and pop like toggle for interrupts */
+
+/* very similar to w_intrd_disable, w_intrd_enable but works like a stack. */
+void irq_push_intr(void);
+void irq_pop_intr(void);
+
 #endif // _IRQ_CONTROLLER_H_

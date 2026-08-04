@@ -1,4 +1,5 @@
 #include "core/irq_controller.h"
+#include "core/cpu.h"
 #include "debug/log.h"
 #include "common/manager.h"
 #include "debug/panic.h"
@@ -87,4 +88,39 @@ errno_t reject_irq(u32 irq)
 	irq_controller.irq_table[irq].handler = nullptr;
 	spinlock_release(&irq_controller.lock);
 	return EOK;
+}
+
+void irq_push_intr(void)
+{
+	bool enabled_previously = r_intrd_enabled();
+	w_intrd_disable();
+
+	Cpu *t_cpu = this_cpu();
+
+	/* first push_intr */
+	if (0 == t_cpu->lock_count) {
+		t_cpu->intrd_was_enabled = enabled_previously;
+	}
+	/* increment */
+	t_cpu->lock_count += 1;
+}
+
+void irq_pop_intr(void)
+{
+	Cpu *t_cpu = this_cpu();
+	/* interrupts are already enabled? */
+	if (r_intrd_enabled()) {
+		panic("interrupts are already enabled\n\tcpuid = %d\n",
+		      t_cpu->cpuid);
+	}
+
+	if (t_cpu->lock_count < 1) {
+		panic("underflow");
+	}
+
+	t_cpu->lock_count -= 1;
+	/* if we are the last pop_off && interrupts were enabled previously */
+	if (0 == t_cpu->lock_count && t_cpu->intrd_was_enabled) {
+		w_intrd_enable();
+	}
 }
