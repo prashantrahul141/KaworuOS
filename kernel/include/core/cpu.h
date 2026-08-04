@@ -3,25 +3,23 @@
 
 #include "core/task.h"
 #include "core/timer.h"
+#include "core/run_queue.h"
 #include "types.h"
 #include "config.h"
 
 typedef struct {
 	u32 cpuid;
-	i32 count;
+	i32 lock_count;
 	bool intrd_was_enabled;
 	CpuTimer timer;
 	Task *current;
 	Task *idle;
-	// RunQueue;
+	RunQueue tasks;
 } Cpu;
 
 u32 cpu_get_cpuid(void);
 Cpu *this_cpu(void);
 void wake_secondary_cpus(void);
-
-/* creates idle task for this cpu */
-void cpu_init_idle_task_and_switch(Cpu *cpu);
 
 /* saves current cpu struct mem address in TPIDR_EL1 */
 void cpu_cache_current_cpu(void);

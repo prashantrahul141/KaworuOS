@@ -1,4 +1,3 @@
-#include "aarch64/context.h"
 #include "core/run_queue.h"
 #include "debug/panic.h"
 #include <stdatomic.h>
@@ -11,7 +10,6 @@
 #include "mm/vmm.h"
 #include "types.h"
 #include "arch/aarch64/secondary_entry.h"
-#include "aarch64/context_switch.h"
 #include "arch/aarch64/aarch64.h"
 #include "config.h"
 
@@ -36,23 +34,17 @@ void cpu_cache_current_cpu(void)
 	w_tpidr_el1((u64)cpu);
 }
 
-void cpu_init_idle_task_and_switch(Cpu *cpu)
-{
-	/* create idle task */
-	Task *idle_task = task_create(task_idle, nullptr);
-	cpu->idle = idle_task;
-	cpu->current = idle_task;
-	ExecutionContext old;
-	context_switch(&old, &idle_task->context);
-	panic("returned from scheduler: %d", cpu->cpuid);
-}
-
 /* these are to be done for boot and all secondary cpus */
 static void common_cpu_init_tasks(void)
 {
 	Cpu *cpu = this_cpu();
 	cpu->cpuid = cpu_get_cpuid();
-	run_queue_init(&cpu->run_queue);
+
+	run_queue_init(&cpu->tasks);
+
+	/* create idle task */
+	cpu->idle = task_create(task_idle, nullptr, "idle");
+	cpu->current = nullptr;
 }
 
 void init_secondary_cpu(void)
@@ -77,8 +69,6 @@ void init_secondary_cpu(void)
 
 	/* increment count of secondary cpus enabled */
 	atomic_fetch_add(&cpus_enabled_count, 1);
-
-	cpu_init_idle_task_and_switch(cpu);
 }
 
 static void wake_secondary_cpu(struct limine_mp_info *cpu)
