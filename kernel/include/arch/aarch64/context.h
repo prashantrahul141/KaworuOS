@@ -14,4 +14,7 @@ typedef struct {
 static_assert(sizeof(ExecutionContext) == 104, "ExecutionContext is not 104 "
 					       "bytes?");
 
+/* saves current cpu state to old context and switches to new context */
+void context_switch(ExecutionContext *old, ExecutionContext *new);
+
 #endif // _CONTEXT_H_
