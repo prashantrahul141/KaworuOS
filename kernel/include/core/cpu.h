@@ -19,7 +19,7 @@ typedef struct {
 
 u32 cpu_get_cpuid(void);
 Cpu *this_cpu(void);
-void wake_secondary_cpus(void);
+void wake_secondary_cpus_and_wait(void);
 
 /* saves current cpu struct mem address in TPIDR_EL1 */
 void cpu_cache_current_cpu(void);

@@ -83,7 +83,7 @@ static void wake_secondary_cpu(struct limine_mp_info *cpu)
 	atomic_store((_Atomic u64 *)&cpu->goto_address, (u64)secondary_entry);
 }
 
-void wake_secondary_cpus(void)
+void wake_secondary_cpus_and_wait(void)
 {
 	INFO("Waking secondary cpus");
 	struct limine_mp_response *cpus = limine_mp();
