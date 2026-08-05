@@ -1,11 +1,17 @@
 
 #
-# General Setup
+# CPU
 #
 CONFIG_PER_CPU_STACK_SIZE_SHIFT=16
-CONFIG_TIMER_RESCHED_MS=100
 CONFIG_MAX_CPU_COUNT=8
-# end of General Setup
+# end of CPU
+
+#
+# Scheduler
+#
+CONFIG_SCHEDULER_POLICY_ROUND_ROBIN=y
+CONFIG_TIMER_RESCHED_MS=100
+# end of Scheduler
 
 #
 # Building
