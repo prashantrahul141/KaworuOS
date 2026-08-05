@@ -1,6 +1,7 @@
 #include "core/scheduler.h"
 #include "aarch64/context.h"
 #include "core/cpu.h"
+#include "core/scheduler_policy.h"
 #include "core/task.h"
 #include "debug/log.h"
 #include "debug/panic.h"
@@ -28,7 +29,7 @@ void schedule(void)
 	}
 
 	/* pick the next task */
-	Task *next = run_queue_dequeue(&cpu->tasks);
+	Task *next = scheduler_policy_pick_next(cpu);
 
 	if (next == nullptr) {
 		next = cpu->idle;
