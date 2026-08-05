@@ -3,7 +3,7 @@
 
 #include "core/task.h"
 #include "core/timer.h"
-#include "core/run_queue.h"
+#include "sched/run_queue.h"
 #include "types.h"
 #include "config.h"
 

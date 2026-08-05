@@ -6,20 +6,20 @@
 #include "io/console.h"
 #include "core/cpu.h"
 #include "config.h"
-#include "core/scheduler.h"
+#include "sched/scheduler.h"
 #include "debug/log.h"
 #include "limine.h"
 #include "mm/kmem.h"
 #include "mm/vmm.h"
 #include "mm/kheap.h"
-#include "core/irq_controller.h"
+#include "irq/irq_controller.h"
 #include "debug/printf.h"
 #include "common/manager.h"
 #include "boot/limine_responses.h"
 #include "boot/fdt.h"
 #include "core/timer.h"
 #include "framebuffer/framebuffer.h"
-#include "core/semihosting.h"
+#include "debug/semihosting.h"
 
 /*
  * Kernel's entry point in C.

@@ -1,5 +1,5 @@
 #include "sync/spinlock.h"
-#include "core/irq_controller.h"
+#include "irq/irq_controller.h"
 #include "config.h"
 #include "core/cpu.h"
 #include "debug/panic.h"

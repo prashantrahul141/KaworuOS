@@ -1,4 +1,4 @@
-#include "core/irq_controller.h"
+#include "irq/irq_controller.h"
 #include "core/cpu.h"
 #include "debug/log.h"
 #include "common/manager.h"

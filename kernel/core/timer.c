@@ -2,7 +2,7 @@
 #include "common/manager.h"
 #include "common_defs.h"
 #include "core/cpu.h"
-#include "core/irq_controller.h"
+#include "irq/irq_controller.h"
 #include "debug/panic.h"
 #include "config.h"
 

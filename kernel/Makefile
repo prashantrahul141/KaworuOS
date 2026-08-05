@@ -43,30 +43,30 @@ ASM_SOURCES = $K/arch/aarch64/context_switch.S \
 			  $K/arch/aarch64/start.S
 ASM_OBJS = $(ASM_SOURCES:=.o)
 
-C_SOURCES = $D/framebuffer/framebuffer.c \
+C_SOURCES := $D/common/manager.c \
+			$D/framebuffer/framebuffer.c \
 			$D/irqchip/arm-gicv2.c \
 			$D/timer/arm-timer.c \
-			$D/common/manager.c \
 			$D/uart/pl011.c \
 			$K/arch/aarch64/exception.c \
 			$K/boot/fdt.c \
 			$K/boot/limine_responses.c \
 			$K/core/cpu.c \
-			$K/core/irq_controller.c \
-			$K/core/run_queue.c \
-			$K/core/scheduler.c \
-			$K/core/scheduler_policy.c \
-			$K/core/semihosting.c \
 			$K/core/task.c \
 			$K/core/timer.c \
 			$K/debug/printf.c \
+			$K/debug/semihosting.c \
 			$K/init.c \
 			$K/io/console.c \
+			$K/irq/irq_controller.c \
 			$K/mm/kheap.c \
 			$K/mm/kmem.c \
 			$K/mm/paging.c \
 			$K/mm/vmm.c \
 			$K/mm/vmm_region.c \
+			$K/sched/run_queue.c \
+			$K/sched/scheduler.c \
+			$K/sched/scheduler_policy.c \
 			$K/sync/spinlock.c \
 			$L/allocator/arena.c \
 			$L/allocator/bitmap.c \
@@ -78,12 +78,12 @@ C_SOURCES = $D/framebuffer/framebuffer.c \
 			$L/string.c
 
 
-_LIBFDT_SRCS = fdt.c fdt_ro.c fdt_wip.c fdt_sw.c fdt_rw.c fdt_strerror.c fdt_empty_tree.c \
+_LIBFDT_SRCS := fdt.c fdt_ro.c fdt_wip.c fdt_sw.c fdt_rw.c fdt_strerror.c fdt_empty_tree.c \
 	fdt_addresses.c fdt_overlay.c fdt_check.c
 LIBFDT_SRCS := $(addprefix $(TH)/libfdt/, $(_LIBFDT_SRCS))
-EXTERNAL_C_SOURCES = $(TH)/Flanterm/src/flanterm.c \
-				$(TH)/Flanterm/src/flanterm_backends/fb.c \
-				$(LIBFDT_SRCS)
+FLANTERM_SRCS := $(TH)/Flanterm/src/flanterm.c \
+				$(TH)/Flanterm/src/flanterm_backends/fb.c
+EXTERNAL_C_SOURCES = $(LIBFDT_SRCS) $(FLANTERM_SRCS)
 
 C_OBJS = $(C_SOURCES:=.o)
 C_EXTERNAL_OBJS = $(EXTERNAL_C_SOURCES:=.e.o)

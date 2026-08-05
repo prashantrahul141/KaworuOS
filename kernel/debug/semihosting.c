@@ -1,11 +1,9 @@
-#include "core/semihosting.h"
+#include "debug/semihosting.h"
 #include "io/console.h"
 #include "types.h"
 #include "config.h"
-
 #include "common/manager.h"
 #include "common_defs.h"
-#include "core/semihosting.h"
 #include "io/console.h"
 
 static void sh_write_event(Device *backend, const IOEvent *event)

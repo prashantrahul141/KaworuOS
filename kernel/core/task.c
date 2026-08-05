@@ -1,7 +1,7 @@
 #include "core/task.h"
 #include "aarch64/aarch64.h"
 #include "core/cpu.h"
-#include "core/scheduler.h"
+#include "sched/scheduler.h"
 #include "debug/log.h"
 #include "debug/panic.h"
 #include "mm/kheap.h"

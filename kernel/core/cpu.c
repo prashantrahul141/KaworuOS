@@ -1,5 +1,5 @@
-#include "core/run_queue.h"
-#include "core/scheduler.h"
+#include "sched/run_queue.h"
+#include "sched/scheduler.h"
 #include "debug/panic.h"
 #include <stdatomic.h>
 #include "core/cpu.h"

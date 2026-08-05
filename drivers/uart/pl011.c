@@ -1,5 +1,5 @@
 #include "boot/fdt.h"
-#include "core/irq_controller.h"
+#include "irq/irq_controller.h"
 #include "io/console.h"
 #include "memlayout.h"
 #include "register.h"

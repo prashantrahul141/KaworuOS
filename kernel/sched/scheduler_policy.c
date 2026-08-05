@@ -1,7 +1,7 @@
-#include "core/scheduler_policy.h"
+#include "sched/scheduler_policy.h"
 #include "common_defs.h"
 #include "core/cpu.h"
-#include "core/run_queue.h"
+#include "sched/run_queue.h"
 
 static Task *sched_policy_round_robin(RunQueue *queue, Task *current)
 {

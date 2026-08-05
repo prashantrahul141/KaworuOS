@@ -1,5 +1,5 @@
 #include "core/task.h"
-#include "core/run_queue.h"
+#include "sched/run_queue.h"
 #include "ds/linkedlist.h"
 
 void run_queue_init(RunQueue *run_queue)
