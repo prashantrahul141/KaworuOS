@@ -43,7 +43,7 @@ void task_init(Task *task, task_fn_type task_fn, void *arg, const i8 *name)
 void task_exit(Task *task)
 {
 	task->state = TASK_DEAD;
-	schedule();
+	yield();
 }
 
 void task_destroy(Task *task)

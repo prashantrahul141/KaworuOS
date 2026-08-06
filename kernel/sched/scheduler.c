@@ -8,10 +8,10 @@
 
 void yield(void)
 {
-	schedule();
+	scheduler_switch();
 }
 
-void schedule(void)
+void scheduler_switch(void)
 {
 	Cpu *cpu = this_cpu();
 	DEBUG("schedule cpu = %d", cpu->cpuid);

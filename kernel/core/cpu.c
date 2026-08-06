@@ -73,7 +73,7 @@ void init_secondary_cpu(void)
 	atomic_fetch_add(&cpus_enabled_count, 1);
 
 	/* schedule */
-	schedule();
+	yield();
 
 	panic("scheduler for secondary cpu = %d returned", cpu->cpuid);
 }
