@@ -1,5 +1,11 @@
 #include "ds/intrusivelist.h"
 
+void intrusivelist_node_init(IntrusiveNode *in)
+{
+	in->next = nullptr;
+	in->prev = nullptr;
+}
+
 void intrusivelist_init(IntrusiveList *il)
 {
 	il->head = nullptr;
