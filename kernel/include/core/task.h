@@ -14,12 +14,14 @@ typedef enum {
 } TaskState;
 
 typedef struct {
+	usize tid;
 	const i8 *name;
 
 	void *stack;
 	ExecutionContext context;
 
 	TaskState state;
+	IntrusiveNode global_node;
 	IntrusiveNode runnable_node;
 
 	task_fn_type entry;
@@ -28,7 +30,7 @@ typedef struct {
 
 void task_trampoline(void);
 
-Task *task_create(task_fn_type task_fn, void *arg, const i8 *name);
+void task_init(Task *task, task_fn_type task_fn, void *arg, const i8 *name);
 
 /* exits current task */
 void task_exit(Task *task);
