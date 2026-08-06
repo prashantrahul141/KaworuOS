@@ -1,6 +1,7 @@
 #include "sched/scheduler.h"
 #include "aarch64/context.h"
 #include "core/cpu.h"
+#include "debug/assert.h"
 #include "sched/scheduler_policy.h"
 #include "core/task.h"
 #include "debug/log.h"
@@ -24,9 +25,14 @@ void scheduler_switch(void)
 	 */
 	if (nullptr != prev && prev != cpu->idle &&
 	    TASK_RUNNING == prev->state) {
+		ASSERT(prev->state != TASK_BLOCKED ||
+			       prev->waiting_on != nullptr,
+		       "task is not blocked but is waiting on something");
+		ASSERT(prev->state == TASK_BLOCKED ||
+			       prev->waiting_on == nullptr,
+		       "task is not blocked but is waiting on something");
 		prev->state = TASK_READY;
-		intrusivelist_insert_tail(&cpu->runnable_tasks,
-					  &prev->runnable_node);
+		runqueue_enqueue(&cpu->runnable_tasks, prev);
 	}
 
 	/* pick the next task */
@@ -35,6 +41,11 @@ void scheduler_switch(void)
 	if (next == nullptr) {
 		next = cpu->idle;
 	}
+
+	ASSERT(next->state != TASK_BLOCKED || next->waiting_on != nullptr,
+	       "task is not blocked but is waiting on something");
+	ASSERT(next->state == TASK_BLOCKED || next->waiting_on == nullptr,
+	       "task is not blocked but is waiting on something");
 
 	next->state = TASK_RUNNING;
 	cpu->current = next;
