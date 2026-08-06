@@ -40,4 +40,7 @@
 
 #define TODO() panic("TODO")
 
+#define _CONCAT2(a, b) a##b
+#define CONCAT(a, b)   _CONCAT2(a, b)
+
 #endif // _COMMON_DEFS_H_
