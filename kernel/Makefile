@@ -64,7 +64,6 @@ C_SOURCES := $D/common/manager.c \
 			$K/mm/paging.c \
 			$K/mm/vmm.c \
 			$K/mm/vmm_region.c \
-			$K/sched/run_queue.c \
 			$K/sched/scheduler.c \
 			$K/sched/scheduler_policy.c \
 			$K/sync/spinlock.c \
