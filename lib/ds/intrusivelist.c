@@ -127,6 +127,3 @@ bool intrusivelist_is_empty(const IntrusiveList *il)
 {
 	return il->count == 0;
 }
-
-#define intrusivelist_foreach(list, node) \
-	for ((node) = (list)->head; (node); (node) = (node)->next)

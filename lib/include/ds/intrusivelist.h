@@ -27,4 +27,7 @@ IntrusiveNode *intrusivelist_peek_tail(const IntrusiveList *il);
 usize intrusivelist_count(const IntrusiveList *il);
 bool intrusivelist_is_empty(const IntrusiveList *il);
 
+#define intrusivelist_foreach(list, node) \
+	for ((node) = (list)->head; (node); (node) = (node)->next)
+
 #endif // _INTRUSIVE_LIST_H_

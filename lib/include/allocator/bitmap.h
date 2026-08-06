@@ -7,6 +7,7 @@
 #define _BITMAP_H_
 
 #include "types.h"
+#include "memlayout.h"
 
 #define SIZE_TO_BITMAP_BYTES(size) (((size) / PAGE_SIZE + 7) / 8)
 
