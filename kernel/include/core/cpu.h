@@ -3,6 +3,7 @@
 
 #include "core/task.h"
 #include "core/timer.h"
+#include "sync/run_queue.h"
 #include "types.h"
 #include "config.h"
 
@@ -17,7 +18,7 @@ typedef struct {
 	Task *current;
 	Task *idle;
 
-	IntrusiveList runnable_tasks;
+	RunQueue runnable_tasks;
 } Cpu;
 
 u32 cpu_get_cpuid(void);
