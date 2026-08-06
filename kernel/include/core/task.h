@@ -2,6 +2,7 @@
 #define _TASK_H_
 
 #include "aarch64/context.h"
+#include "ds/intrusivelist.h"
 
 typedef void (*task_fn_type)(void *arg);
 
@@ -14,9 +15,13 @@ typedef enum {
 
 typedef struct {
 	const i8 *name;
-	ExecutionContext context;
+
 	void *stack;
+	ExecutionContext context;
+
 	TaskState state;
+	IntrusiveNode runnable_node;
+
 	task_fn_type entry;
 	void *arg;
 } Task;

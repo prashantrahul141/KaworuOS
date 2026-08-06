@@ -1,6 +1,7 @@
 #include "core/task.h"
 #include "aarch64/aarch64.h"
 #include "core/cpu.h"
+#include "ds/intrusivelist.h"
 #include "sched/scheduler.h"
 #include "debug/log.h"
 #include "debug/panic.h"
@@ -33,6 +34,7 @@ Task *task_create(task_fn_type task_fn, void *arg, const i8 *name)
 	task->context.lr = (u64)task_trampoline;
 
 	task->state = TASK_READY;
+	intrusivelist_node_init(&task->runnable_node);
 
 	task->entry = task_fn;
 	task->arg = arg;
