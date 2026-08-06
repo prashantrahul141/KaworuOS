@@ -29,31 +29,27 @@ VMAllocation *region_find(VMRegion *region, void *addr)
 void *region_alloc(VMRegion *region, usize page_count)
 {
 	ASSERT(page_count > 0, "Page count is zero?");
-	spinlock_acquire(&region->lock);
+	spinlock_acquire_scoped(&region->lock);
 	VMAllocation *vm_allocation = region_find(region, nullptr);
 	if (IS_ERR(vm_allocation)) {
-		spinlock_release(&region->lock);
 		return ERR_TO_PTR(-ENOMEM);
 	}
 
 	void *va = bitmap_alloc(&region->allocator, page_count);
 	if (IS_ERR(va)) {
-		spinlock_release(&region->lock);
 		return va;
 	}
 
 	*vm_allocation = (VMAllocation){ .va = va, .page_count = page_count };
-	spinlock_release(&region->lock);
 	return va;
 }
 
 usize region_free(VMRegion *region, void *addr)
 {
-	spinlock_acquire(&region->lock);
+	spinlock_acquire_scoped(&region->lock);
 
 	VMAllocation *vm_allocation = region_find(region, addr);
 	if (IS_ERR(vm_allocation)) {
-		spinlock_release(&region->lock);
 		panic("tried freeing non existent allocation addr = %p", addr);
 		return 0;
 	}
@@ -63,7 +59,6 @@ usize region_free(VMRegion *region, void *addr)
 	bitmap_free(&region->allocator, addr, vm_allocation->page_count);
 	vm_allocation->va = nullptr;
 	vm_allocation->page_count = 0;
-	spinlock_release(&region->lock);
 
 	return page_count;
 }

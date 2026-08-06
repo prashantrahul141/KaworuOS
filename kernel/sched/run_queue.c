@@ -10,25 +10,20 @@ void run_queue_init(RunQueue *run_queue)
 
 void run_queue_enqueue(RunQueue *run_queue, Task *task)
 {
-	spinlock_acquire(&run_queue->lock);
+	spinlock_acquire_scoped(&run_queue->lock);
 	linkedlist_insert_tail(&run_queue->tasks, task);
-	spinlock_release(&run_queue->lock);
 }
 
 Task *run_queue_dequeue(RunQueue *run_queue)
 {
-	spinlock_acquire(&run_queue->lock);
-	Task *t = linkedlist_remove_head(&run_queue->tasks);
-	spinlock_release(&run_queue->lock);
-	return t;
+	spinlock_acquire_scoped(&run_queue->lock);
+	return linkedlist_remove_head(&run_queue->tasks);
 }
 
 Task *run_queue_peek(RunQueue *run_queue)
 {
-	spinlock_acquire(&run_queue->lock);
-	Task *t = linkedlist_peek_head(&run_queue->tasks);
-	spinlock_release(&run_queue->lock);
-	return t;
+	spinlock_acquire_scoped(&run_queue->lock);
+	return linkedlist_peek_head(&run_queue->tasks);
 }
 
 usize run_queue_count(const RunQueue *run_queue)

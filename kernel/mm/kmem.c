@@ -52,15 +52,12 @@ void kmem_init(void)
 
 void *kmem_alloc(void)
 {
-	spinlock_acquire(&kmem.spinlock);
+	spinlock_acquire_scoped(&kmem.spinlock);
 	PhyChunk *ret = kmem.free_list;
 	if (nullptr == ret) {
-		spinlock_release(&kmem.spinlock);
 		return ERR_TO_PTR(-ENOMEM);
 	}
 	kmem.free_list = ret->next;
-	spinlock_release(&kmem.spinlock);
-
 	memset(ret, 0, PAGE_SIZE);
 	return (void *)ret;
 }
@@ -77,10 +74,9 @@ void kmem_free(void *py_addr)
 	memset(py_addr, 0, PAGE_SIZE);
 
 	PhyChunk *p = py_addr;
-	spinlock_acquire(&kmem.spinlock);
+	spinlock_acquire_scoped(&kmem.spinlock);
 	p->next = kmem.free_list;
 	kmem.free_list = p;
-	spinlock_release(&kmem.spinlock);
 	TRACE("freed addr = %p", py_addr);
 }
 

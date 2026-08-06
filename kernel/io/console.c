@@ -56,10 +56,9 @@ void console_deinit()
 void console_register_backend(ConsoleBackend *backend)
 {
 	DEBUG("registering device = %s", backend->device->name);
-	spinlock_acquire(&console.write_lock);
+	spinlock_acquire_scoped(&console.write_lock);
 	backend->next = console.backends;
 	console.backends = backend;
-	spinlock_release(&console.write_lock);
 }
 
 void console_register(Device *device)
@@ -72,7 +71,7 @@ void console_register(Device *device)
 bool console_unregister(const Device *device)
 {
 	DEBUG("removing device = %s", device->name);
-	spinlock_acquire(&console.write_lock);
+	spinlock_acquire_scoped(&console.write_lock);
 	ConsoleBackend *curr = console.backends;
 	ConsoleBackend *prev = nullptr;
 	while (nullptr != curr) {
@@ -85,7 +84,6 @@ bool console_unregister(const Device *device)
 			}
 
 			curr->next = nullptr;
-			spinlock_release(&console.write_lock);
 			return true;
 		}
 
@@ -93,7 +91,6 @@ bool console_unregister(const Device *device)
 		curr = curr->next;
 	}
 
-	spinlock_release(&console.write_lock);
 	return false;
 }
 
@@ -153,9 +150,8 @@ static errno_t _console_flush()
 
 errno_t console_flush()
 {
-	spinlock_acquire(&console.write_lock);
+	spinlock_acquire_scoped(&console.write_lock);
 	_console_flush();
-	spinlock_release(&console.write_lock);
 	return EOK;
 }
 
@@ -179,31 +175,26 @@ static errno_t _console_write(IOEvent *e)
 
 errno_t console_write_multiple(IOEvent *events, usize events_count)
 {
-	spinlock_acquire(&console.write_lock);
+	spinlock_acquire_scoped(&console.write_lock);
 	for (usize i = 0; i < events_count; i++) {
 		errno_t ret = _console_write(&events[i]);
 		if (EOK != ret) {
-			spinlock_release(&console.write_lock);
 			return ret;
 		}
 	}
-	spinlock_release(&console.write_lock);
 	return EOK;
 }
 
 errno_t console_write(IOEvent e)
 {
-	spinlock_acquire(&console.write_lock);
-	errno_t ret = _console_write(&e);
-	spinlock_release(&console.write_lock);
-	return ret;
+	spinlock_acquire_scoped(&console.write_lock);
+	return _console_write(&e);
 }
 
 void console_set_buffering(bool buffering)
 {
-	spinlock_acquire(&console.write_lock);
+	spinlock_acquire_scoped(&console.write_lock);
 	console.enable_buffering = buffering;
-	spinlock_release(&console.write_lock);
 }
 
 errno_t console_write_char(i8 c)
@@ -217,20 +208,16 @@ errno_t console_write_char(i8 c)
 
 errno_t console_receive_char(i8 c)
 {
-	spinlock_acquire(&console.read_lock);
-	errno_t ret = ringbuffer_push(&console.recv_rb, &c);
-	spinlock_release(&console.read_lock);
-	return ret;
+	spinlock_acquire_scoped(&console.read_lock);
+	return ringbuffer_push(&console.recv_rb, &c);
 }
 
 bool console_read(u8 *out)
 {
-	spinlock_acquire(&console.read_lock);
+	spinlock_acquire_scoped(&console.read_lock);
 	if (ringbuffer_empty(&console.recv_rb)) {
-		spinlock_release(&console.read_lock);
 		return false;
 	}
 	ringbuffer_pop(&console.recv_rb, out);
-	spinlock_release(&console.read_lock);
 	return true;
 }

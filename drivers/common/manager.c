@@ -27,7 +27,7 @@ void dmanager_init(void)
 	spinlock_init(&dmanager.lock, "driver manager");
 
 	INFO("Discovering compatible devices");
-	spinlock_acquire(&dmanager.lock);
+	spinlock_acquire_scoped(&dmanager.lock);
 	/* for each fdt node */
 	for (i32 offset = fdt_traverse_next_node(-1); offset >= 0;
 	     offset = fdt_traverse_next_node(offset)) {
@@ -57,8 +57,6 @@ void dmanager_init(void)
 		     driver->name);
 		insert_device(device);
 	}
-
-	spinlock_release(&dmanager.lock);
 }
 
 errno_t dmanager_ready_device(Device *device)
@@ -104,18 +102,16 @@ Device *dmanager_get_by_class_and_ready(DeviceClass class)
 Device *dmanager_get_by_class(DeviceClass class)
 {
 	DEBUG("get by class = %d", class);
-	spinlock_acquire(&dmanager.lock);
+	spinlock_acquire_scoped(&dmanager.lock);
 
 	Device *curr = dmanager.device_list;
 	while (nullptr != curr) {
 		if (curr->driver->device_class == class) {
-			spinlock_release(&dmanager.lock);
 			return curr;
 		}
 		curr = curr->next;
 	}
 
-	spinlock_release(&dmanager.lock);
 	return ERR_TO_PTR(-ENOENT);
 }
 

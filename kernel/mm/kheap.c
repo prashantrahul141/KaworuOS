@@ -27,7 +27,7 @@ void kheap_init()
 void *kalloc(usize size)
 {
 	DEBUG("kalloc size = %d", size);
-	spinlock_acquire(&kheap.lock);
+	spinlock_acquire_scoped(&kheap.lock);
 	void *alloc = freelist_alloc(&kheap.freelist, size);
 	if (IS_ERR(alloc)) {
 		DEBUG("growing heap");
@@ -36,10 +36,8 @@ void *kalloc(usize size)
 	}
 
 	if (IS_ERR(alloc)) {
-		spinlock_release(&kheap.lock);
 		return ERR_TO_PTR(-ENOMEM);
 	}
-	spinlock_release(&kheap.lock);
 	return alloc;
 }
 
@@ -47,9 +45,8 @@ void kfree(void *ptr)
 {
 	DEBUG("kfree ptr = %p", ptr);
 	ASSERT(ptr != nullptr, "ptr is null");
-	spinlock_acquire(&kheap.lock);
+	spinlock_acquire_scoped(&kheap.lock);
 	freelist_free(&kheap.freelist, ptr);
-	spinlock_release(&kheap.lock);
 }
 
 static void grow_heap(usize size)
