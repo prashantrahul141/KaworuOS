@@ -27,6 +27,7 @@ void kernel_main(void)
 #endif
 
 	timer_init();
+	task_manager_init();
 	wake_secondary_cpus_and_wait();
 
 	printf("\nHello from kaworu\n\n");

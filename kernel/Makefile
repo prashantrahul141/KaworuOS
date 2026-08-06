@@ -53,6 +53,7 @@ C_SOURCES := $D/common/manager.c \
 			$K/boot/limine_responses.c \
 			$K/core/cpu.c \
 			$K/core/task.c \
+			$K/core/task_manager.c \
 			$K/core/timer.c \
 			$K/debug/printf.c \
 			$K/debug/semihosting.c \

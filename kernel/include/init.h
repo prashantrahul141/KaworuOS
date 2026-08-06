@@ -20,6 +20,7 @@
 #include "core/timer.h"
 #include "framebuffer/framebuffer.h"
 #include "debug/semihosting.h"
+#include "core/task_manager.h"
 
 /*
  * Kernel's entry point in C.
