@@ -6,6 +6,8 @@
 
 typedef void (*task_fn_type)(void *arg);
 
+struct WaitQueue;
+
 typedef enum {
 	TASK_READY = 0,
 	TASK_RUNNING,
@@ -23,6 +25,8 @@ typedef struct {
 	TaskState state;
 	IntrusiveNode global_node;
 	IntrusiveNode runnable_node;
+	IntrusiveNode wait_node;
+	struct WaitQueue *waiting_on;
 
 	task_fn_type entry;
 	void *arg;

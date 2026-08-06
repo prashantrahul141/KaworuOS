@@ -68,6 +68,7 @@ C_SOURCES := $D/common/manager.c \
 			$K/sched/scheduler.c \
 			$K/sched/scheduler_policy.c \
 			$K/sync/spinlock.c \
+			$K/sync/wait_queue.c \
 			$L/allocator/arena.c \
 			$L/allocator/bitmap.c \
 			$L/allocator/freelist.c \

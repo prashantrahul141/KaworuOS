@@ -35,6 +35,8 @@ void task_init(Task *task, task_fn_type task_fn, void *arg, const i8 *name)
 	task->state = TASK_READY;
 	intrusivelist_node_init(&task->global_node);
 	intrusivelist_node_init(&task->runnable_node);
+	intrusivelist_node_init(&task->wait_node);
+	task->waiting_on = nullptr;
 
 	task->entry = task_fn;
 	task->arg = arg;
