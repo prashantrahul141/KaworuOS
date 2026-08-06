@@ -1,4 +1,4 @@
-#include "sched/run_queue.h"
+#include "ds/intrusivelist.h"
 #include "sched/scheduler.h"
 #include "debug/panic.h"
 #include <stdatomic.h>
@@ -41,7 +41,7 @@ static void common_cpu_init_tasks(void)
 	Cpu *cpu = this_cpu();
 	cpu->cpuid = cpu_get_cpuid();
 
-	run_queue_init(&cpu->tasks);
+	intrusivelist_init(&cpu->runnable_tasks);
 
 	/* create idle task */
 	cpu->idle = task_create(task_idle, nullptr, "idle");

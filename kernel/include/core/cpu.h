@@ -3,18 +3,21 @@
 
 #include "core/task.h"
 #include "core/timer.h"
-#include "sched/run_queue.h"
 #include "types.h"
 #include "config.h"
 
 typedef struct {
 	u32 cpuid;
+
 	i32 lock_count;
 	bool intrd_was_enabled;
+
 	CpuTimer timer;
+
 	Task *current;
 	Task *idle;
-	RunQueue tasks;
+
+	IntrusiveList runnable_tasks;
 } Cpu;
 
 u32 cpu_get_cpuid(void);
