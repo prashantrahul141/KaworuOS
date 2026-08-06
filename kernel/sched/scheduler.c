@@ -25,7 +25,8 @@ void schedule(void)
 	if (nullptr != prev && prev != cpu->idle &&
 	    TASK_RUNNING == prev->state) {
 		prev->state = TASK_READY;
-		run_queue_enqueue(&cpu->tasks, prev);
+		intrusivelist_insert_tail(&cpu->runnable_tasks,
+					  &prev->runnable_node);
 	}
 
 	/* pick the next task */
