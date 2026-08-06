@@ -71,6 +71,7 @@ C_SOURCES := $D/common/manager.c \
 			$L/allocator/arena.c \
 			$L/allocator/bitmap.c \
 			$L/allocator/freelist.c \
+			$L/ds/intrusivelist.c \
 			$L/ds/linkedlist.c \
 			$L/ds/ringbuffer.c \
 			$L/error.c \
