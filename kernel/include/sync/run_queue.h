@@ -15,6 +15,7 @@ void runqueue_enqueue(RunQueue *rq, Task *task);
 Task *runqueue_dequeue(RunQueue *rq);
 void runqueue_remove(RunQueue *rq, Task *task);
 bool runqueue_is_empty(const RunQueue *rq);
+usize runqueue_count(const RunQueue *rq);
 Task *runqueue_peek(const RunQueue *rq);
 
 #endif // _RUN_QUEUE_H

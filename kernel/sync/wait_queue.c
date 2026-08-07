@@ -1,6 +1,7 @@
 #include "sync/wait_queue.h"
 #include "common_defs.h"
 #include "core/task.h"
+#include "debug/assert.h"
 #include "ds/intrusivelist.h"
 #include "sync/spinlock.h"
 
@@ -12,6 +13,8 @@ void waitqueue_init(WaitQueue *wq, const i8 *name)
 
 void waitqueue_enqueue(WaitQueue *wq, Task *task)
 {
+	ASSERT(task->state != TASK_READY, "only NOT READY tasks may enter "
+					  "waitqueue");
 	spinlock_acquire_scoped(&wq->lock);
 	intrusivelist_insert_tail(&wq->waiters, &task->wait_node);
 	task->waiting_on = (void *)wq;
@@ -38,6 +41,11 @@ void waitqueue_remove(WaitQueue *wq, Task *task)
 bool waitqueue_is_empty(const WaitQueue *wq)
 {
 	return intrusivelist_is_empty(&wq->waiters);
+}
+
+usize waitqueue_count(const WaitQueue *rq)
+{
+	return intrusivelist_count(&rq->waiters);
 }
 
 Task *waitqueue_peek(const WaitQueue *wq)

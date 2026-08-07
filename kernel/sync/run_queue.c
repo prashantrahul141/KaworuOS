@@ -1,5 +1,6 @@
 #include "sync/run_queue.h"
 #include "core/task.h"
+#include "debug/assert.h"
 #include "ds/intrusivelist.h"
 #include "sync/spinlock.h"
 
@@ -11,6 +12,8 @@ void runqueue_init(RunQueue *rq, const i8 *name)
 
 void runqueue_enqueue(RunQueue *rq, Task *task)
 {
+	ASSERT(task->state == TASK_READY, "only READY tasks may enter "
+					  "runqueue");
 	spinlock_acquire_scoped(&rq->lock);
 	intrusivelist_insert_tail(&rq->runnables, &task->runnable_node);
 }
@@ -34,6 +37,11 @@ void runqueue_remove(RunQueue *rq, Task *task)
 bool runqueue_is_empty(const RunQueue *rq)
 {
 	return intrusivelist_is_empty(&rq->runnables);
+}
+
+usize runqueue_count(const RunQueue *rq)
+{
+	return intrusivelist_count(&rq->runnables);
 }
 
 Task *runqueue_peek(const RunQueue *rq)
