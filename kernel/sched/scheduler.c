@@ -7,15 +7,63 @@
 #include "debug/log.h"
 #include "debug/panic.h"
 
+void scheduler_init(void)
+{
+	scheduler_switch();
+}
+
 void yield(void)
 {
 	scheduler_switch();
 }
 
+/*
+ * Add task to runnables
+ */
+void scheduler_enqueue(Task *task)
+{
+	Cpu *cpu = this_cpu();
+	task->waiting_on = nullptr;
+	task->state = TASK_READY;
+	runqueue_enqueue(&cpu->runnable_tasks, task);
+}
+
+/*
+ * Remove task from runnables
+ */
+void scheduler_dequeue(Task *task)
+{
+	Cpu *cpu = this_cpu();
+	runqueue_remove(&cpu->runnable_tasks, task);
+}
+
+/*
+ * Blocks current task
+ */
+void scheduler_block_current(WaitQueue *wq)
+{
+	Cpu *cpu = this_cpu();
+	Task *current = cpu->current;
+
+	ASSERT(current != nullptr, "current is null");
+	ASSERT(current != cpu->idle, "idle task cannot block");
+
+	current->state = TASK_BLOCKED;
+
+	waitqueue_enqueue(wq, current);
+
+	scheduler_switch();
+
+	/*
+	 * execution resumes here when this task
+	 * is eventually woken.
+	 */
+}
+
 void scheduler_switch(void)
 {
 	Cpu *cpu = this_cpu();
-	DEBUG("schedule cpu = %d", cpu->cpuid);
+	TRACE("schedule cpu = %d", cpu->cpuid);
 
 	Task *prev = cpu->current;
 
@@ -33,6 +81,7 @@ void scheduler_switch(void)
 		       "task is not blocked but is waiting on something");
 		prev->state = TASK_READY;
 		runqueue_enqueue(&cpu->runnable_tasks, prev);
+		TRACE("putting prev task (%s) back in runqueue", prev->name);
 	}
 
 	/* pick the next task */
@@ -41,6 +90,9 @@ void scheduler_switch(void)
 	if (next == nullptr) {
 		next = cpu->idle;
 	}
+
+	DEBUG("switching task from = %s to = %s", prev ? prev->name : "nil",
+	      next->name);
 
 	ASSERT(next->state != TASK_BLOCKED || next->waiting_on != nullptr,
 	       "task is not blocked but is waiting on something");
