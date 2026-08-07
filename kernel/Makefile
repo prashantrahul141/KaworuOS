@@ -3,7 +3,7 @@
 CC := clang
 LD := ld.lld
 
-NAME = kaworu
+NAME = KaworuOS
 
 LINKER_SCRIPT := kernel.ld
 OUT := $(NAME).elf

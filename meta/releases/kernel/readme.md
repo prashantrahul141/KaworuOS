@@ -1,4 +1,4 @@
-# kaworu
+# KaworuOS
 
 I recommend downloading the `full-release` as it already contains an efi
 firmware for qemu which you will need in order to run the kernel under qemu.

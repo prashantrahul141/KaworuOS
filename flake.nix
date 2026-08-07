@@ -1,5 +1,5 @@
 {
-  description = "kaworu development environment";
+  description = "KaworuOS development environment";
 
   inputs = {
     nixpkgs.url = "github:NixOS/nixpkgs/nixos-26.05";

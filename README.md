@@ -1,6 +1,6 @@
-# Kaworu
+# KaworuOS
 
-A WIP Unix-like AArch64 kernel
+A WIP Unix-like AArch64 operating system.
 
 ## Building
 
@@ -45,7 +45,7 @@ I have yet to test this on actual hardware, I have only tested this on Qemu
 under the `virt` platform.
 
 Since AArch64 only supports UEFI and not bios, you will need to provide UEFI firmware for Qemu.
-You can just download the `full-release` from the [releases page](https://github.com/prashantrahul141/kaworu/releases) as it contains
+You can just download the `full-release` from the [releases page](https://github.com/prashantrahul141/KaworuOS/releases) as it contains
 both a built ISO Image and firmware you need to emulate under Qemu.
 
 You can also download the firmware from the releases

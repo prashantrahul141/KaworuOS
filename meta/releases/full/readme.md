@@ -1,4 +1,4 @@
-# kaworu
+# KaworuOS
 
 This contains both the kernel and the efi firmware to run under qemu.
 

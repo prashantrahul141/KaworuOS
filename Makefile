@@ -11,7 +11,7 @@ ifeq ($(filter $(MAKECMDGOALS),$(CONFIG_FREE_TARGETS)),)
   include .config
 endif
 
-NAME = kaworu
+NAME = KaworuOS
 
 # Point to the uefi firmware for qemu (not the directory, the firmware file itself)
 # UEFI_FIRMWARE :=
@@ -162,7 +162,7 @@ help: # Show this help
 
 # create releases
 .PHONY: release_kernel
-rkf = kaworu-kernel-$(VERSION_MAJOR).$(VERSION_MINOR)
+rkf = kaworuos-elf-$(VERSION_MAJOR).$(VERSION_MINOR)
 release_kernel: $(ISO)
 	mkdir -p $(rkf)/
 	cp $(ISO) $(rkf)/
@@ -171,7 +171,7 @@ release_kernel: $(ISO)
 	rm -rf $(rkf)
 
 .PHONY: release_full
-rff = kaworu-full-$(VERSION_MAJOR).$(VERSION_MINOR)
+rff = kaworuos-full-$(VERSION_MAJOR).$(VERSION_MINOR)
 release_full: $(ISO)
 	mkdir -p $(rff)/
 	cp $(ISO) $(rff)/

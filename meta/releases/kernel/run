@@ -1,4 +1,4 @@
-ISO_PATH=kaworu.iso
+ISO_PATH=KaworuOS.iso
 EFI_FIRMWARE=. # Point to efi firmware for qemu
 
 qemu-system-aarch64 -M virt,acpi=off -cpu cortex-a72 \
