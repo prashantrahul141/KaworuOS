@@ -7,6 +7,7 @@
 typedef void (*task_fn_type)(void *arg);
 
 struct WaitQueue;
+struct Cpu;
 
 typedef enum {
 	TASK_READY = 0,
@@ -19,6 +20,7 @@ typedef struct {
 	usize tid;
 	const i8 *name;
 
+	struct Cpu *cpu;
 	void *stack;
 	ExecutionContext context;
 

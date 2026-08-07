@@ -3,6 +3,7 @@
 #include "debug/log.h"
 #include "ds/intrusivelist.h"
 #include "mm/kheap.h"
+#include "sched/scheduler.h"
 #include "sync/spinlock.h"
 
 typedef struct {
@@ -28,6 +29,7 @@ Task *task_manager_create_new(task_fn_type task_fn, void *arg, const i8 *name)
 	task_init(task, task_fn, arg, name);
 
 	spinlock_acquire_scoped(&task_manager.lock);
+	task->cpu = (struct Cpu *)scheduler_pick_cpu();
 	task->tid = task_manager.task_id_count++;
 	intrusivelist_insert_tail(&task_manager.tasks, &task->global_node);
 
