@@ -22,7 +22,7 @@ void yield(void)
  */
 void scheduler_enqueue(Task *task)
 {
-	Cpu *cpu = this_cpu();
+	Cpu *cpu = (Cpu *)task->cpu;
 	task->waiting_on = nullptr;
 	task->state = TASK_READY;
 	runqueue_enqueue(&cpu->runnable_tasks, task);
@@ -33,7 +33,7 @@ void scheduler_enqueue(Task *task)
  */
 void scheduler_dequeue(Task *task)
 {
-	Cpu *cpu = this_cpu();
+	Cpu *cpu = (Cpu *)task->cpu;
 	runqueue_remove(&cpu->runnable_tasks, task);
 }
 
