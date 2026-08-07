@@ -21,15 +21,22 @@ void task_manager_init(void)
 	task_manager.task_id_count = 1;
 }
 
-Task *task_manager_create_new(task_fn_type task_fn, void *arg, const i8 *name)
+Task *task_manager_create(task_fn_type task_fn, void *arg, const i8 *name)
 {
-	DEBUG("creating task = %s", name);
+	Cpu *cpu = scheduler_pick_cpu();
+	return task_manager_create_with_cpu(task_fn, arg, name, cpu);
+}
+
+Task *task_manager_create_with_cpu(task_fn_type task_fn, void *arg,
+				   const i8 *name, Cpu *cpu)
+{
+	DEBUG("creating task = %s on cpu = %d", name);
 
 	Task *task = kalloc(sizeof(Task));
 	task_init(task, task_fn, arg, name);
 
 	spinlock_acquire_scoped(&task_manager.lock);
-	task->cpu = (struct Cpu *)scheduler_pick_cpu();
+	task->cpu = (struct Cpu *)cpu;
 	task->tid = task_manager.task_id_count++;
 	intrusivelist_insert_tail(&task_manager.tasks, &task->global_node);
 
