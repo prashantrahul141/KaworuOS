@@ -6,6 +6,8 @@
 #include "core/task.h"
 #include "debug/log.h"
 #include "debug/panic.h"
+#include "sync/wait_queue.h"
+#include <stdint.h>
 
 void scheduler_init(void)
 {
@@ -58,6 +60,32 @@ void scheduler_block_current(WaitQueue *wq)
 	 * execution resumes here when this task
 	 * is eventually woken.
 	 */
+}
+
+/*
+ * Wake one
+ */
+void scheduler_wake_one(WaitQueue *wq)
+{
+	Task *blocked = waitqueue_dequeue(wq);
+	if (nullptr == blocked) {
+		return;
+	}
+	scheduler_enqueue(blocked);
+}
+
+/*
+ * Wake all
+ */
+void scheduler_wake_all(WaitQueue *wq)
+{
+	for (;;) {
+		Task *blocked = waitqueue_dequeue(wq);
+		if (nullptr == blocked) {
+			return;
+		}
+		scheduler_enqueue(blocked);
+	}
 }
 
 void scheduler_switch(void)

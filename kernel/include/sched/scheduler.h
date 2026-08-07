@@ -26,6 +26,16 @@ void scheduler_dequeue(Task *task);
 void scheduler_block_current(WaitQueue *wq);
 
 /*
+ * Wake one
+ */
+void scheduler_wake_one(WaitQueue *wq);
+
+/*
+ * Wake all
+ */
+void scheduler_wake_all(WaitQueue *wq);
+
+/*
  * switch task to the next READY one.
  */
 void scheduler_switch(void);
