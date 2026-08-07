@@ -61,5 +61,6 @@ void task_idle(void *arg)
 	for (;;) {
 		TRACE("idle task | cpuid = %d", this_cpu()->cpuid);
 		wfi();
+		yield();
 	}
 }
