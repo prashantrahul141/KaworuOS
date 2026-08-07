@@ -60,7 +60,9 @@ void task_idle(void *arg)
 	UNUSED_ARG(arg);
 	for (;;) {
 		TRACE("idle task | cpuid = %d", this_cpu()->cpuid);
+		if (scheduler_cpu_has_runnable_tasks()) {
+			yield();
+		}
 		wfi();
-		yield();
 	}
 }
