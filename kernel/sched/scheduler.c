@@ -180,3 +180,12 @@ Cpu *scheduler_pick_cpu(void)
 	ASSERT(best_cpu != nullptr, "no cpu was picked");
 	return best_cpu;
 }
+
+/*
+ * check if current cpu has runnable tasks
+ */
+bool scheduler_cpu_has_runnable_tasks(void)
+{
+	Cpu *cpu = this_cpu();
+	return runqueue_count(&cpu->runnable_tasks) > 0;
+}

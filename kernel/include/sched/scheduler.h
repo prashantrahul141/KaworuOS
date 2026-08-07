@@ -50,4 +50,9 @@ void yield(void);
  */
 Cpu *scheduler_pick_cpu(void);
 
+/*
+ * check if current cpu has runnable tasks
+ */
+bool scheduler_cpu_has_runnable_tasks(void);
+
 #endif // _SCHEDULER_H_
