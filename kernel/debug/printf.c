@@ -11,7 +11,7 @@ static void _print_int(u8 buf[static 32], i32 *size, i64 x, u8 base, bool sign);
 static void print_int(i8 *buffer, usize *write_count, i64 x, u8 base,
 		      bool sign);
 static void print_double(i8 *buffer, usize *write_count, f64 f, i32 precision);
-static void print_string(i8 *buffer, usize *write_count, const u8 *s);
+static void print_string(i8 *buffer, usize *write_count, const i8 *s);
 
 // NOLINTBEGIN(clang-analyzer-valist.Uninitialized,
 // clang-analyzer-valist.Uninitialized)
@@ -80,14 +80,17 @@ usize __vsnprintf(i8 *buffer, usize buf_size, const i8 *fmt, va_list ap)
 				print_int(buffer, &write_count, va_arg(ap, i64),
 					  16, false);
 			} else if ('s' == ch) {
-				u8 *s = va_arg(ap, u8 *);
+				const i8 *s = va_arg(ap, i8 *);
+				if (nullptr == s) {
+					s = "null";
+				}
 				print_string(buffer, &write_count, s);
 			} else if ('c' == ch) {
 				buffer[write_count++] = (u8)va_arg(ap, i32);
 			} else if ('b' == ch) {
 				bool v = (bool)va_arg(ap, i32);
 				print_string(buffer, &write_count,
-					     (const u8 *)(v ? "true" :
+					     (const i8 *)(v ? "true" :
 							      "false"));
 			} else if ('%' == ch) {
 				buffer[write_count++] = '%';
@@ -175,7 +178,7 @@ static void print_double(i8 *buffer, usize *write_count, f64 f, i32 precision)
 	}
 }
 
-static void print_string(i8 *buffer, usize *write_count, const u8 *s)
+static void print_string(i8 *buffer, usize *write_count, const i8 *s)
 {
 	while (*s != 0) {
 		buffer[(*write_count)++] = *s;
