@@ -127,3 +127,28 @@ void scheduler_switch(void)
 
 	panic("bootstrap context returned");
 }
+
+/*
+ * picks cpu with least tasks queued on it
+ */
+Cpu *scheduler_pick_cpu(void)
+{
+	Cpu *cpu = nullptr;
+	Cpu *best_cpu = nullptr;
+	usize best_count = INT64_MAX;
+	cpu_foreach(cpu)
+	{
+		if (!cpu->online) {
+			continue;
+		}
+
+		usize task_count = runqueue_count(&cpu->runnable_tasks);
+		if (task_count < best_count) {
+			best_cpu = cpu;
+			best_count = task_count;
+		}
+	}
+
+	ASSERT(best_cpu != nullptr, "no cpu was picked");
+	return best_cpu;
+}

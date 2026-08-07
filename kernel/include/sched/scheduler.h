@@ -1,6 +1,7 @@
 #ifndef _SCHEDULER_H_
 #define _SCHEDULER_H_
 
+#include "core/cpu.h"
 #include "core/task.h"
 #include "sync/wait_queue.h"
 
@@ -33,5 +34,10 @@ void scheduler_switch(void);
  * wrapper around scheduler_switch
  */
 void yield(void);
+
+/*
+ * picks cpu with least tasks queued on it
+ */
+Cpu *scheduler_pick_cpu(void);
 
 #endif // _SCHEDULER_H_
