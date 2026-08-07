@@ -227,4 +227,9 @@ static inline u64 r_tpidr_el1(void)
 	return value;
 }
 
+static inline void cpu_relax(void)
+{
+	asm volatile("yield");
+}
+
 #endif // _ARCH64_H_

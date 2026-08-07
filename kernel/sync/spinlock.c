@@ -1,4 +1,5 @@
 #include "sync/spinlock.h"
+#include "aarch64/aarch64.h"
 #include "irq/irq_controller.h"
 #include "config.h"
 #include "core/cpu.h"
@@ -43,8 +44,9 @@ void spinlock_acquire(SpinLock *sp)
 	 * to given pointer and returns old value in a "single" instruction. For
 	 * me it seems to be use ldaxrb and stlxrb on debug builds.
 	 */
-	while (0 != __atomic_exchange_n(&sp->locked, true, __ATOMIC_ACQUIRE))
-		;
+	while (0 != __atomic_exchange_n(&sp->locked, true, __ATOMIC_ACQUIRE)) {
+		cpu_relax();
+	}
 
 	/* update which cpui has the lock */
 	sp->cpu = this_cpu();

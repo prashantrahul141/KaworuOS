@@ -110,8 +110,9 @@ void wake_secondary_cpus_and_wait(void)
 	common_cpu_init_tasks();
 
 	/* wait for all cpus to be enabled */
-	while (cpus->cpu_count != atomic_load(&cpus_enabled_count))
-		;
+	while (cpus->cpu_count != atomic_load(&cpus_enabled_count)) {
+		cpu_relax();
+	}
 
 	INFO("All cpus running");
 }
