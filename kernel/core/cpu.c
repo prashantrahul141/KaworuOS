@@ -16,11 +16,16 @@
 
 volatile _Atomic u64 cpus_enabled_count = 1;
 
-static Cpu CPUS[CONFIG_MAX_CPU_COUNT] = { 0 };
+Cpu CPUS[CONFIG_MAX_CPU_COUNT] = { 0 };
 
 u32 cpu_get_cpuid(void)
 {
 	return r_mpidr_el1() & 0xFF;
+}
+
+Cpu *cpu_all_cpus(void)
+{
+	return CPUS;
 }
 
 Cpu *this_cpu(void)
@@ -46,6 +51,7 @@ static void common_cpu_init_tasks(void)
 	/* create idle task */
 	cpu->idle = task_manager_create_new(task_idle, nullptr, "idle");
 	cpu->current = nullptr;
+	cpu->online = true;
 }
 
 void init_secondary_cpu(void)
@@ -85,6 +91,8 @@ static void wake_secondary_cpu(struct limine_mp_info *cpu)
 
 void wake_secondary_cpus_and_wait(void)
 {
+	this_cpu()->online = true;
+
 	INFO("Waking secondary cpus");
 	struct limine_mp_response *cpus = limine_mp();
 	DEBUG("total cpu count = %d", cpus->cpu_count);

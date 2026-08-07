@@ -8,6 +8,7 @@
 #include "config.h"
 
 typedef struct {
+	bool online;
 	u32 cpuid;
 
 	i32 lock_count;
@@ -30,5 +31,12 @@ void cpu_cache_current_cpu(void);
 
 /* only called by arch secondary_entry */
 void init_secondary_cpu(void);
+
+Cpu *cpu_all_cpus(void);
+
+#define cpu_foreach(cpu)                                          \
+	for (usize __i = 0; __i < CONFIG_MAX_CPU_COUNT &&         \
+			    ((cpu) = &cpu_all_cpus()[__i], true); \
+	     __i++)
 
 #endif // _CPU_H_
