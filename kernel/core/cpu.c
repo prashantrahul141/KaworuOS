@@ -49,7 +49,8 @@ static void common_cpu_init_tasks(void)
 	runqueue_init(&cpu->runnable_tasks, "Runnable Task");
 
 	/* create idle task */
-	cpu->idle = task_manager_create_new(task_idle, nullptr, "idle");
+	cpu->idle =
+		task_manager_create_with_cpu(task_idle, nullptr, "idle", cpu);
 	cpu->current = nullptr;
 	cpu->online = true;
 }
