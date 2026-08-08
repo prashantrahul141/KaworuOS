@@ -11,8 +11,8 @@ typedef struct {
 	bool online;
 	u32 cpuid;
 
-	i32 lock_count;
-	bool intrd_was_enabled;
+	i32 irq_disable_depth;
+	bool irq_was_enabled;
 
 	CpuTimer timer;
 

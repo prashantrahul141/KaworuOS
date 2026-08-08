@@ -97,11 +97,11 @@ void irq_push_intr(void)
 	Cpu *t_cpu = this_cpu();
 
 	/* first push_intr */
-	if (0 == t_cpu->lock_count) {
-		t_cpu->intrd_was_enabled = enabled_previously;
+	if (0 == t_cpu->irq_disable_depth) {
+		t_cpu->irq_was_enabled = enabled_previously;
 	}
 	/* increment */
-	t_cpu->lock_count += 1;
+	t_cpu->irq_disable_depth += 1;
 }
 
 void irq_pop_intr(void)
@@ -113,13 +113,13 @@ void irq_pop_intr(void)
 		      t_cpu->cpuid);
 	}
 
-	if (t_cpu->lock_count < 1) {
+	if (t_cpu->irq_disable_depth < 1) {
 		panic("underflow");
 	}
 
-	t_cpu->lock_count -= 1;
+	t_cpu->irq_disable_depth -= 1;
 	/* if we are the last pop_off && interrupts were enabled previously */
-	if (0 == t_cpu->lock_count && t_cpu->intrd_was_enabled) {
+	if (0 == t_cpu->irq_disable_depth && t_cpu->irq_was_enabled) {
 		w_intrd_enable();
 	}
 }
