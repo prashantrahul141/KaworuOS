@@ -4,6 +4,7 @@
 #include "error.h"
 #include "memlayout.h"
 #include "debug/assert.h"
+#include "string.h"
 #include <stdint.h>
 
 static inline void *bm_allocate(AllocBitMap *alloc, usize page,
@@ -30,6 +31,23 @@ void bitmap_free(AllocBitMap *alloc, void *addr, usize page_count)
 	DEBUG("freeing alloc->pool = %p, page_count = %d", alloc->pool,
 	      page_count);
 	bm_free(alloc, addr, page_count);
+}
+
+void alloc_bitmap_init(AllocBitMap *alloc, void *pool, usize pool_size)
+{
+	ASSERT(IS_PAGE_ALIGNED((usize)pool), "pool is not page aligned");
+	ASSERT(IS_PAGE_ALIGNED(pool_size), "pool_size is not page aligned");
+
+	usize bitmap_bytes = SIZE_TO_BITMAP_BYTES(pool_size);
+
+	alloc->bitmap = (u8 *)round_down((usize)pool + pool_size - bitmap_bytes,
+					 PAGE_SIZE);
+	alloc->page_count = ((usize)alloc->bitmap - (usize)pool) / PAGE_SIZE;
+	alloc->pool = (u8 *)pool;
+
+	ASSERT(alloc->page_count > 0, "pool too small to hold bitmap");
+
+	memset(alloc->bitmap, 0, bitmap_bytes);
 }
 
 static inline usize bm_find_n_free_pages(const AllocBitMap *alloc,

@@ -7,7 +7,6 @@
 #define _BITMAP_H_
 
 #include "types.h"
-#include "memlayout.h"
 
 #define SIZE_TO_BITMAP_BYTES(size) (((size) / PAGE_SIZE + 7) / 8)
 
@@ -20,7 +19,6 @@ typedef struct {
 void *bitmap_alloc(AllocBitMap *alloc, usize page_count);
 void bitmap_free(AllocBitMap *alloc, void *addr, usize size);
 
-/* TODO: implement */
-void alloc_bitmap_init(AllocBitMap *alloc, size_t start_addr, size_t end_addr);
+void alloc_bitmap_init(AllocBitMap *alloc, void *pool, usize pool_size);
 
 #endif // _BITMAP_H_
