@@ -2,6 +2,7 @@
 #include "aarch64/context.h"
 #include "core/cpu.h"
 #include "debug/assert.h"
+#include "irq/irq_controller.h"
 #include "sched/scheduler_policy.h"
 #include "core/task.h"
 #include "debug/log.h"
@@ -119,6 +120,10 @@ void scheduler_wake_all(WaitQueue *wq)
 
 void scheduler_switch(void)
 {
+	/* save current irq state locally in this task's scheduler "context" */
+	bool irq_was_enabled = irq_local_is_enable();
+	irq_local_disable();
+
 	Cpu *cpu = this_cpu();
 	TRACE("schedule cpu = %d", cpu->cpuid);
 
@@ -169,9 +174,6 @@ void scheduler_switch(void)
 	ASSERT(next->waiting_on == nullptr, "scheduler selected task waiting "
 					    "on a wait queue");
 
-	DEBUG("switching task from = %s to = %s", prev ? prev->name : "nil",
-	      next->name);
-
 	next->state = TASK_RUNNING;
 	cpu->current = next;
 
@@ -182,11 +184,23 @@ void scheduler_switch(void)
 	if (prev == next) {
 		ASSERT(next == cpu->idle || next->state == TASK_RUNNING,
 		       "current task is not running");
+		/* restore this task's irq state after coming back */
+		if (irq_was_enabled) {
+			irq_local_enable();
+		}
 		return;
 	}
 
+	DEBUG("switching task from = %s to = %s", prev ? prev->name : "nil",
+	      next->name);
+
 	if (nullptr != prev) {
 		context_switch(&prev->context, &next->context);
+
+		/* restore this task's irq state after coming back */
+		if (irq_was_enabled) {
+			irq_local_enable();
+		}
 
 		/*
 		 * we resume execution here when this task is scheduled again.
