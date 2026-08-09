@@ -53,6 +53,7 @@ static void common_cpu_init_tasks(void)
 		task_manager_create_with_cpu(task_idle, nullptr, "idle", cpu);
 	cpu->current = nullptr;
 	cpu->online = true;
+	cpu->needs_resched = false;
 }
 
 void init_secondary_cpu(void)

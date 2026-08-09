@@ -15,6 +15,7 @@ typedef struct {
 	bool irq_was_enabled;
 
 	CpuTimer timer;
+	bool needs_resched;
 
 	Task *current;
 	Task *idle;
