@@ -6,7 +6,7 @@
 .align 16
 .global cpu_stack
 cpu_stack:
-    .skip ((1 << CONFIG_PER_CPU_STACK_SIZE_SHIFT) * CONFIG_CPU_COUNT)
+    .skip ((1 << CONFIG_PER_CPU_BOOT_STACK_SIZE_SHIFT) * CONFIG_CPU_COUNT)
 cpu_stack_top:
 
 .section .text.boot
@@ -27,7 +27,7 @@ start:
 
     /* setup boot cpu stack */
     ldr x0, =cpu_stack
-    add x0, x0, #(1 << CONFIG_PER_CPU_STACK_SIZE_SHIFT)
+    add x0, x0, #(1 << CONFIG_PER_CPU_BOOT_STACK_SIZE_SHIFT)
     mov sp, x0
     isb
 

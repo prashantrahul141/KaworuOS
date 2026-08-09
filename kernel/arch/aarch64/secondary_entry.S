@@ -24,7 +24,7 @@ secondary_entry:
     mrs x0, MPIDR_EL1
     and x0, x0, #0xff
     add x0, x0, #1              // stack top of CPU n
-    lsl x0, x0, #CONFIG_PER_CPU_STACK_SIZE_SHIFT
+    lsl x0, x0, #CONFIG_PER_CPU_BOOT_STACK_SIZE_SHIFT
     ldr x1, =cpu_stack
     add sp, x1, x0
     isb

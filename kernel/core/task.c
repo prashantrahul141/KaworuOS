@@ -8,11 +8,11 @@
 #include "debug/panic.h"
 #include "mm/kheap.h"
 #include "string.h"
+#include "config.h"
 
 typedef void (*task_fn)(void *arg);
 
-/* TODO: make this a kconfig option */
-constexpr usize TASK_STACK_SIZE = (1 << 14);
+constexpr usize TASK_STACK_SIZE = (1 << CONFIG_PER_TASK_STACK_SIZE_SHIFT);
 
 void task_trampoline(void)
 {

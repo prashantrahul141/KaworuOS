@@ -1,110 +1,180 @@
 menu "CPU"
-config PER_CPU_STACK_SIZE_SHIFT
-    int "Per Cpu Stack size in shift"
+
+config PER_CPU_BOOT_STACK_SIZE_SHIFT
+    int "Per CPU boot stack size shift"
     default 16
     help
-        - This stack is embedded in the elf itself. "shift" means it will be used to left shift 1 to get a aligned value.
-        Example: shift value = 16
-                1 << 16 = 65536 bytes per cpu
+      Sets the size of each CPU's kernel boot stack as a power of two.
+
+      The stack size is calculated as:
+        1 << PER_CPU_BOOT_STACK_SIZE_SHIFT
+
+      For example, a value of 16 gives each CPU a 64 KiB stack:
+        1 << 16 = 65536 bytes
+
+      The per CPU stacks are embedded in the kernel ELF image.
+
+
+config PER_TASK_STACK_SIZE_SHIFT
+    int "Per Task stack size shift"
+    default 16
+    help
+      Sets the size of stack allocated dynamically for each task
+
+      The stack size is calculated as:
+        1 << PER_TASK_STACK_SIZE_SHIFT
+
+      For example, a value of 16 gives each TASK a 64 KiB stack:
+        1 << 16 = 65536 bytes
+
 
 config MAX_CPU_COUNT
-    int "Max cpu kernel can hold"
+    int "Maximum number of CPUs"
     default 8
+    help
+      Sets the maximum number of CPUs that the kernel supports.
+
 endmenu
 
 
 
 menu "Scheduler"
-choice SCHEDULER_POLICY
-    prompt "Scheduler Policy"
-    default SCHEDULER_POLICY_ROUND_ROBIN
 
-    config SCHEDULER_POLICY_ROUND_ROBIN
-        bool "Round Robin"
+choice SCHEDULER_POLICY
+    prompt "Scheduler policy"
+    default SCHEDULER_POLICY_ROUND_ROBIN
+    help
+      Selects the scheduling policy used to choose the next runnable task.
+
+config SCHEDULER_POLICY_ROUND_ROBIN
+    bool "Round robin"
+    help
+      Schedules runnable tasks in a circular order.
+
+      Each task receives a (somewhat) fixed time slice before the scheduler moves
+      to another runnable task.
+
 endchoice
 
 config TIMER_RESCHED_MS
-        int "Timer fires after every given miliseconds"
-        default 100
+    int "Scheduler time slice (milliseconds)"
+    default 100
+    help
+      Sets the interval between scheduler timer interrupts in milliseconds.
+
+      When the timer expires, the scheduler may preempt the currently
+      running task and select another runnable task.
+
 endmenu
 
 
 
 menu "Building"
+
 choice OPTIMIZATIONS
-    prompt "Optimizations level"
+    prompt "Optimization level"
     default OPTIMIZATIONS_NONE
+    help
+      Selects the compiler optimization level used when building the kernel.
 
-    config OPTIMIZATIONS_NONE
-        bool "None"
+config OPTIMIZATIONS_NONE
+    bool "None"
 
-    config OPTIMIZATIONS_LOW
-        bool "Low"
+config OPTIMIZATIONS_LOW
+    bool "Low"
 
-    config OPTIMIZATIONS_MEDIUM
-        bool "Medium"
+config OPTIMIZATIONS_MEDIUM
+    bool "Medium"
 
-    config OPTIMIZATIONS_HIGH
-        bool "High (recommended)"
+config OPTIMIZATIONS_HIGH
+    bool "High (recommended)"
 
-    config OPTIMIZATIONS_MAX
-        bool "Max"
+config OPTIMIZATIONS_MAX
+    bool "Maximum"
 endchoice
+
 endmenu
 
 
 
-# drivers
 menu "Drivers"
-    config MAX_ACTIVE_DEVICES_COUNT
-        int "Max number of devices that can be active"
-        default 256
+
+config MAX_ACTIVE_DEVICES_COUNT
+    int "Maximum number of active devices"
+    default 256
+    help
+      Sets the maximum number of devices that can be active in the kernel
+      at the same time.
+
 endmenu
 
-# running
-menu "Running via qemu"
+
+
+menu "QEMU"
+
 config CPU_COUNT
-    int "Cpu count"
+    int "Number of CPUs"
     default 4
+    help
+      Sets the number of virtual CPUs provided to the kernel when running
+      under QEMU.
+
+      This setting controls the QEMU virtual machine configuration and
+      should not exceed MAX_CPU_COUNT.
 
 config PHYSICAL_MEMORY_MB
-    int "Physical memory (in MB)"
-    default 512
+    int "Physical memory (MB)"
+    default 128
+    help
+      Sets the amount of physical memory provided to the kernel by QEMU,
+      in megabytes.
+
+      For example, a value of 128 provides the virtual machine with
+      128 MiB of physical memory.
+
 endmenu
 
 
 
-# hacking
 menu "Hacking"
+
 config DEBUG_CHECKS
-    bool "Enable Debug checks"
+    bool "Enable debug checks"
     default y
+    help
+      Enables additional runtime checks.
 
 config DEBUG_SYMBOLS
-    bool "Enable debug symbols"
+    bool "Include debug symbols"
     default y
+    help
+      Includes debugging symbols in the kernel build.
 
 config ENABLE_SEMIHOSTING
     bool "Enable semihosting support"
     default n
+    help
+      Enables semihosting support
 
 choice LOGGING_LEVEL
-    prompt "Set level of logging"
+    prompt "Logging level"
     default LOGGING_LEVEL_DEBUG
+    help
+      Sets the minimum logging level
+config LOGGING_LEVEL_TRACE
+    bool "Trace"
 
-    config LOGGING_LEVEL_TRACE
-        bool "Trace"
+config LOGGING_LEVEL_DEBUG
+    bool "Debug"
 
-    config LOGGING_LEVEL_DEBUG
-        bool "Debug"
+config LOGGING_LEVEL_INFO
+    bool "Info"
 
-    config LOGGING_LEVEL_INFO
-        bool "Info"
+config LOGGING_LEVEL_WARN
+    bool "Warning"
 
-    config LOGGING_LEVEL_WARN
-        bool "Warn"
-
-    config LOGGING_LEVEL_ERROR
-        bool "Error"
+config LOGGING_LEVEL_ERROR
+    bool "Error"
 endchoice
+
 endmenu
