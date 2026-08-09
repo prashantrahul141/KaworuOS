@@ -108,8 +108,22 @@
 .endm
 
 .extern exception_handler
-.extern irq_dispatcher
+.extern irq_handle
 .extern unhandled_exception_handler
+.extern scheduler_switch
+
+.global preempt
+preempt:
+    /* mask irqs: eret brings SPSR (I=0) back */
+    msr daifset, #0b0011
+
+    /* switch */
+    bl scheduler_switch
+
+    /* restore frame */
+    restore_registers
+
+    eret
 
 .macro vector_entry target
     b \target
@@ -285,7 +299,8 @@ curr_el_spx_sync_handler:
 
 curr_el_spx_irq_handler:
     save_registers
-    bl irq_dispatcher
+    bl irq_handle
+    cbnz x0, preempt
     restore_registers
     eret
 
