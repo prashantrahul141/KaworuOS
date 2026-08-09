@@ -1,4 +1,3 @@
-#include "arch/aarch64/exception.S"
 #include "config.h"
 
 .section .bss
@@ -12,6 +11,7 @@ cpu_stack_top:
 .section .text.boot
 
 .extern kernel_main
+.extern vector_table_el1
 
 .global start
 start:

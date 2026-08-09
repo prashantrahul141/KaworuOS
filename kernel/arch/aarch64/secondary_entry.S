@@ -4,9 +4,9 @@
  */
 
 #include "config.h"
-#include "arch/aarch64/exception.S"
 
 .extern init_secondary_cpu
+.extern vector_table_el1
 
 .global secondary_entry
 secondary_entry:

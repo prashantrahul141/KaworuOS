@@ -116,6 +116,7 @@
 .endm
 
 /* Exception vector table */
+.global vector_table_el1
 .section .text
 .balign 0x800
 vector_table_el1:
