@@ -67,6 +67,7 @@ C_SOURCES := $D/common/manager.c \
 			$K/mm/vmm_region.c \
 			$K/sched/scheduler.c \
 			$K/sched/scheduler_policy.c \
+			$K/sync/mutex.c \
 			$K/sync/run_queue.c \
 			$K/sync/spinlock.c \
 			$K/sync/wait_queue.c \
