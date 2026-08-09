@@ -2,6 +2,7 @@
 #include "aarch64/aarch64.h"
 #include "core/cpu.h"
 #include "ds/intrusivelist.h"
+#include "irq/irq_controller.h"
 #include "sched/scheduler.h"
 #include "debug/log.h"
 #include "debug/panic.h"
@@ -17,6 +18,8 @@ void task_trampoline(void)
 {
 	Cpu *cpu = this_cpu();
 	Task *task = cpu->current;
+	/* enable irq when starting a new task */
+	irq_local_enable();
 	task->entry(task->arg);
 	DEBUG("task = %s exited", task->name);
 	task_exit(task);
