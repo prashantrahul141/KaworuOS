@@ -30,7 +30,7 @@ Task *task_manager_create(task_fn_type task_fn, void *arg, const i8 *name)
 Task *task_manager_create_with_cpu(task_fn_type task_fn, void *arg,
 				   const i8 *name, Cpu *cpu)
 {
-	DEBUG("creating task = %s on cpu = %d", name);
+	DEBUG("creating task = %s on cpu = %d", name, cpu->cpuid);
 
 	Task *task = kalloc(sizeof(Task));
 	task_init(task, task_fn, arg, name);
