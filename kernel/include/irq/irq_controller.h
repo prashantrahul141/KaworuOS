@@ -1,6 +1,7 @@
 #ifndef _IRQ_CONTROLLER_H_
 #define _IRQ_CONTROLLER_H_
 
+#include "aarch64/aarch64.h"
 #include "error.h"
 
 typedef void (*irq_handler_t)(void *data);
@@ -42,5 +43,14 @@ errno_t reject_irq(u32 irq);
 /* very similar to w_intrd_disable, w_intrd_enable but works like a stack. */
 void irq_push_intr(void);
 void irq_pop_intr(void);
+
+/* check if local irq is enabled */
+bool irq_local_is_enable(void);
+
+/* disable local irqs */
+void irq_local_disable(void);
+
+/* enable local irqs */
+void irq_local_enable(void);
 
 #endif // _IRQ_CONTROLLER_H_

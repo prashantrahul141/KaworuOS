@@ -1,4 +1,5 @@
 #include "irq/irq_controller.h"
+#include "aarch64/aarch64.h"
 #include "core/cpu.h"
 #include "debug/log.h"
 #include "common/manager.h"
@@ -122,4 +123,22 @@ void irq_pop_intr(void)
 	if (0 == t_cpu->irq_disable_depth && t_cpu->irq_was_enabled) {
 		w_intrd_enable();
 	}
+}
+
+/* check if local irq is enabled */
+bool irq_local_is_enable(void)
+{
+	return r_intrd_enabled();
+}
+
+/* disable local irqs */
+void irq_local_disable(void)
+{
+	w_intrd_disable();
+}
+
+/* enable local irqs */
+void irq_local_enable(void)
+{
+	w_intrd_enable();
 }
