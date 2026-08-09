@@ -20,8 +20,8 @@ typedef uint64_t u64;
 typedef float f32;
 typedef double f64;
 
-typedef intptr_t isize;
-typedef uintptr_t usize;
+typedef i64 isize;
+typedef u64 usize;
 
 typedef char symbol[];
 
