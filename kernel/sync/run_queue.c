@@ -34,22 +34,25 @@ void runqueue_remove(RunQueue *rq, Task *task)
 	intrusivelist_remove(&rq->runnables, &task->runnable_node);
 }
 
-bool runqueue_is_empty(const RunQueue *rq)
+bool runqueue_is_empty(RunQueue *rq)
 {
+	spinlock_acquire_scoped(&rq->lock);
 	return intrusivelist_is_empty(&rq->runnables);
 }
 
-usize runqueue_count(const RunQueue *rq)
+usize runqueue_count(RunQueue *rq)
 {
+	spinlock_acquire_scoped(&rq->lock);
 	return intrusivelist_count(&rq->runnables);
 }
 
-Task *runqueue_peek(const RunQueue *rq)
+Task *runqueue_peek(RunQueue *rq)
 {
+	spinlock_acquire_scoped(&rq->lock);
 	IntrusiveNode *run_node = intrusivelist_peek_head(&rq->runnables);
 	if (nullptr == run_node) {
 		return nullptr;
 	}
-	Task *waiting_task = container_of(run_node, Task, wait_node);
-	return waiting_task;
+	Task *runnable_node = container_of(run_node, Task, runnable_node);
+	return runnable_node;
 }

@@ -14,8 +14,8 @@ void waitqueue_init(WaitQueue *wq, const i8 *name);
 void waitqueue_enqueue(WaitQueue *wq, Task *task);
 Task *waitqueue_dequeue(WaitQueue *wq);
 void waitqueue_remove(WaitQueue *q, Task *task);
-bool waitqueue_is_empty(const WaitQueue *q);
-usize waitqueue_count(const WaitQueue *rq);
-Task *waitqueue_peek(const WaitQueue *q);
+bool waitqueue_is_empty(WaitQueue *q);
+usize waitqueue_count(WaitQueue *rq);
+Task *waitqueue_peek(WaitQueue *q);
 
 #endif // _WAIT_QUEUE_H_

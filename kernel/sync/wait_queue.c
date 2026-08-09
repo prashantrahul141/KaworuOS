@@ -38,18 +38,21 @@ void waitqueue_remove(WaitQueue *wq, Task *task)
 	intrusivelist_remove(&wq->waiters, &task->wait_node);
 }
 
-bool waitqueue_is_empty(const WaitQueue *wq)
+bool waitqueue_is_empty(WaitQueue *wq)
 {
+	spinlock_acquire_scoped(&wq->lock);
 	return intrusivelist_is_empty(&wq->waiters);
 }
 
-usize waitqueue_count(const WaitQueue *rq)
+usize waitqueue_count(WaitQueue *wq)
 {
-	return intrusivelist_count(&rq->waiters);
+	spinlock_acquire_scoped(&wq->lock);
+	return intrusivelist_count(&wq->waiters);
 }
 
-Task *waitqueue_peek(const WaitQueue *wq)
+Task *waitqueue_peek(WaitQueue *wq)
 {
+	spinlock_acquire_scoped(&wq->lock);
 	IntrusiveNode *wait_node = intrusivelist_peek_head(&wq->waiters);
 	if (nullptr == wait_node) {
 		return nullptr;
