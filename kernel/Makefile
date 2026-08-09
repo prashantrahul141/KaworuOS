@@ -93,19 +93,15 @@ C_EXTERNAL_OBJS = $(EXTERNAL_C_SOURCES:=.e.o)
 
 OBJS = $(ASM_OBJS) $(C_OBJS) $(C_EXTERNAL_OBJS)
 
-KI = $K/include
-DI = $D/include
-LI = $L/include
 LIM_INC := $(TH)/limine-protocol/include/
 FLAN_INC := $(TH)/Flanterm/src/
 LIBFDT_INC := $(TH)/libfdt/
 INCLUDES_DIR = 	-I../  \
                 -I$(D)/ \
-                -I$(DI)/ \
 				-I. \
-				-I$(KI)/ \
-				-I$(KI)/arch \
-				-I$(LI)/ \
+				-I$(K)/ \
+				-I$(K)/arch \
+				-I$(L)/ \
 				-I$(LIM_INC) \
 				-I$(FLAN_INC) \
 				-I$(LIBFDT_INC)
