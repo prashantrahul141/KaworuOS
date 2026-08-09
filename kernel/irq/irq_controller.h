@@ -1,7 +1,7 @@
 #ifndef _IRQ_CONTROLLER_H_
 #define _IRQ_CONTROLLER_H_
 
-#include "aarch64/aarch64.h"
+#include "aarch64/exception.h"
 #include "error.h"
 
 typedef void (*irq_handler_t)(void *data);
@@ -13,7 +13,12 @@ typedef struct {
 
 void irq_controller_init(void);
 
-void irq_dispatcher(void);
+/*
+ * Handler for all interrupts
+ *
+ * returns whether cpu needs resched
+ */
+bool irq_handle(ExceptionFrame *frame);
 
 /*
  * set handler but do not enable irqs

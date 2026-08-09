@@ -1,5 +1,6 @@
 #include "irq/irq_controller.h"
 #include "aarch64/aarch64.h"
+#include "aarch64/exception.h"
 #include "core/cpu.h"
 #include "debug/log.h"
 #include "common/manager.h"
@@ -35,7 +36,7 @@ void irq_controller_init(void)
 		irq_device->irq_chip_ops->interrupts_count(irq_device);
 }
 
-void irq_dispatcher(void)
+static void irq_dispatcher(void)
 {
 	u32 active = irq_controller.device->irq_chip_ops->get_active(
 		irq_controller.device);
@@ -54,6 +55,25 @@ void irq_dispatcher(void)
 	}
 	irq_controller.device->irq_chip_ops->signal_eoi(irq_controller.device,
 							active);
+}
+
+/*
+ * Handler for all interrupts
+ *
+ * returns whether cpu needs resched
+ */
+bool irq_handle(ExceptionFrame *frame)
+{
+	UNUSED_ARG(frame);
+	irq_dispatcher();
+	Cpu *cpu = this_cpu();
+	/* does this cpu need rescheduling */
+	if (cpu->needs_resched && nullptr != cpu->current) {
+		cpu->needs_resched = false;
+		return true;
+	}
+
+	return false;
 }
 
 void irq_set_handler(u32 irq, irq_handler_t handler, void *data)
