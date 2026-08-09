@@ -53,9 +53,10 @@ void scheduler_dequeue(Task *task)
 }
 
 /*
- * Blocks current task
+ * blocks the current task
+ *
  */
-void scheduler_block_current(WaitQueue *wq)
+void scheduler_block_current(void)
 {
 	Cpu *cpu = this_cpu();
 	Task *current = cpu->current;
@@ -65,11 +66,10 @@ void scheduler_block_current(WaitQueue *wq)
 	ASSERT((Cpu *)current->cpu == cpu, "current task belongs to another "
 					   "cpu");
 	ASSERT(TASK_RUNNING == current->state, "only running task can block");
-	ASSERT(current->waiting_on == nullptr, "running task is already "
+	ASSERT(current->waiting_on != nullptr, "running task is already "
 					       "waiting");
 
 	current->state = TASK_BLOCKED;
-	waitqueue_enqueue(wq, current);
 	scheduler_switch();
 
 	/*
@@ -79,21 +79,20 @@ void scheduler_block_current(WaitQueue *wq)
 }
 
 /*
- * Wake one
+ * Wake given task
  */
-void scheduler_wake_one(WaitQueue *wq)
+void scheduler_wake(Task *blocked)
 {
-	Task *blocked = waitqueue_dequeue(wq);
 	if (nullptr == blocked) {
 		return;
 	}
 
 	ASSERT(TASK_BLOCKED == blocked->state, "wait queue contains "
 					       "non blocked task");
-	ASSERT(blocked->waiting_on == nullptr ||
-		       (WaitQueue *)blocked->waiting_on == wq,
-	       "task is waiting on a different wait queue");
+	ASSERT(blocked->waiting_on == nullptr, "blocked is not waiting on "
+					       "any waitqueue");
 
+	blocked->state = TASK_READY;
 	scheduler_enqueue(blocked);
 }
 
@@ -132,15 +131,9 @@ void scheduler_switch(void)
 	if (nullptr != prev) {
 		ASSERT((Cpu *)prev->cpu == cpu, "current task belongs to "
 						"another cpu");
-
 		ASSERT(prev->state != TASK_BLOCKED ||
 			       prev->waiting_on != nullptr,
-		       "blocked task is not waiting on a wait queue");
-
-		ASSERT(prev->state == TASK_BLOCKED ||
-			       prev->waiting_on == nullptr,
-		       "non blocked task is waiting on a wait queue");
-
+		       "blocked task has nothing waiting on");
 		ASSERT(prev->state != TASK_READY || prev->waiting_on == nullptr,
 		       "ready task is waiting on a wait queue");
 	}

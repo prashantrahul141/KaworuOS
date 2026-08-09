@@ -23,12 +23,12 @@ void scheduler_dequeue(Task *task);
 /*
  * Blocks current task
  */
-void scheduler_block_current(WaitQueue *wq);
+void scheduler_block_current(void);
 
 /*
- * Wake one
+ * Wake given task
  */
-void scheduler_wake_one(WaitQueue *wq);
+void scheduler_wake(Task *blocked);
 
 /*
  * Wake all
