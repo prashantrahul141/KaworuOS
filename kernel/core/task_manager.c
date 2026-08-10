@@ -57,3 +57,24 @@ Task *task_manager_lookup(usize task_id)
 
 	return nullptr;
 }
+
+Task *task_manager_find_dead_task(void)
+{
+	spinlock_acquire_scoped(&task_manager.lock);
+	IntrusiveNode *node;
+	intrusivelist_foreach(&task_manager.tasks, node)
+	{
+		Task *task = container_of(node, Task, global_node);
+		if (TASK_DEAD == task->state) {
+			return task;
+		}
+	}
+
+	return nullptr;
+}
+
+void task_manager_remove_task(Task *task)
+{
+	spinlock_acquire_scoped(&task_manager.lock);
+	intrusivelist_remove(&task_manager.tasks, &task->global_node);
+}
