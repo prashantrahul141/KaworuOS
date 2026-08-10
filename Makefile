@@ -23,7 +23,7 @@ ISO = $(NAME).iso
 # WARN: dont forget to update in release run scripts
 QEMU_MACHINE := virt,acpi=off
 QEMU_FLAGS := -cpu cortex-a72 \
-			-m $(CONFIG_PHYSICAL_MEMORY_MB)M \
+			-m $(CONFIG_QEMU_PHYSICAL_MEMORY_MB)M \
 			-device ramfb \
 			-device qemu-xhci \
 			-device usb-kbd \
@@ -31,7 +31,7 @@ QEMU_FLAGS := -cpu cortex-a72 \
 			-serial stdio \
 			-drive if=pflash,unit=0,format=raw,file=$(UEFI_FIRMWARE),readonly=on \
 			-cdrom $(ISO) \
-			-smp $(CONFIG_CPU_COUNT)
+			-smp $(CONFIG_QEMU_CPU_COUNT)
 
 ifeq ($(CONFIG_ENABLE_SEMIHOSTING),y)
 	 QEMU_FLAGS += -semihosting
