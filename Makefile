@@ -28,10 +28,16 @@ QEMU_FLAGS := -cpu cortex-a72 \
 			-device qemu-xhci \
 			-device usb-kbd \
 			-device usb-tablet \
-			-serial stdio \
 			-drive if=pflash,unit=0,format=raw,file=$(UEFI_FIRMWARE),readonly=on \
 			-cdrom $(ISO) \
 			-smp $(CONFIG_QEMU_CPU_COUNT)
+
+
+ifeq ($(CONFIG_QEMU_WITH_DISPLAY),y)
+	 QEMU_FLAGS += -serial stdio
+else
+	 QEMU_FLAGS += -display none -nographic
+endif
 
 ifeq ($(CONFIG_ENABLE_SEMIHOSTING),y)
 	 QEMU_FLAGS += -semihosting

@@ -132,6 +132,13 @@ config QEMU_PHYSICAL_MEMORY_MB
       For example, a value of 128 provides the virtual machine with
       128 MiB of physical memory.
 
+
+config QEMU_WITH_DISPLAY
+    bool "With display"
+    default false
+    help
+      Enable display
+
 endmenu
 
 
