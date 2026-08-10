@@ -25,7 +25,7 @@ static usize frequency(const Device *device)
 static usize counter(const Device *device)
 {
 	UNUSED_ARG(device);
-	return r_cntp_ctl_el0();
+	return r_cntpct_el0();
 }
 
 static void fire_from_now(Device *device, usize ticks)
