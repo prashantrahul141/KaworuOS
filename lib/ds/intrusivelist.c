@@ -1,5 +1,10 @@
 #include "ds/intrusivelist.h"
 
+bool intrusivelist_node_is_null(IntrusiveNode *in)
+{
+	return in->next == nullptr && in->prev == nullptr;
+}
+
 void intrusivelist_node_init(IntrusiveNode *in)
 {
 	in->next = nullptr;

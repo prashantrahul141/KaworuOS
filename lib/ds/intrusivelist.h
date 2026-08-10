@@ -15,6 +15,7 @@ typedef struct {
 	usize count;
 } IntrusiveList;
 
+bool intrusivelist_node_is_null(IntrusiveNode *in);
 void intrusivelist_node_init(IntrusiveNode *in);
 void intrusivelist_init(IntrusiveList *il);
 void intrusivelist_insert_head(IntrusiveList *il, IntrusiveNode *node);
