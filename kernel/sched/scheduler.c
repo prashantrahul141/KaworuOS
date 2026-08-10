@@ -117,6 +117,20 @@ void scheduler_wake_all(WaitQueue *wq)
 	}
 }
 
+static Task *scheduler_pick_next(Cpu *cpu)
+{
+	if (cpu->needs_cleanup) {
+		return cpu->cleanup_task;
+	}
+
+	Task *next = scheduler_policy_pick_next(cpu);
+	if (next == nullptr) {
+		next = cpu->idle;
+	}
+
+	return next;
+}
+
 void scheduler_switch(void)
 {
 	/* save current irq state locally in this task's scheduler "context" */
@@ -136,34 +150,36 @@ void scheduler_switch(void)
 		       "blocked task has nothing waiting on");
 		ASSERT(prev->state != TASK_READY || prev->waiting_on == nullptr,
 		       "ready task is waiting on a wait queue");
-	}
 
-	/*
-	 * if the current task is still runnable, put it back on the
-	 * run queue before selecting the next task
-	 */
-	if (nullptr != prev && prev != cpu->idle &&
-	    TASK_RUNNING == prev->state) {
-		ASSERT(prev->waiting_on == nullptr, "running task is waiting "
-						    "on a wait queue");
-		ASSERT((Cpu *)prev->cpu == cpu, "running task belongs to "
-						"another cpu");
+		/*
+		 * if the current task is still runnable, put it back on the
+		 * run queue before selecting the next task
+		 */
+		if (prev != cpu->idle && prev != cpu->cleanup_task &&
+		    TASK_RUNNING == prev->state) {
+			ASSERT(prev->waiting_on == nullptr, "running task is "
+							    "waiting "
+							    "on a wait queue");
+			ASSERT((Cpu *)prev->cpu == cpu, "running task belongs "
+							"to "
+							"another cpu");
 
-		prev->state = TASK_READY;
-		runqueue_enqueue(&cpu->runnable_tasks, prev);
-		TRACE("putting prev task (%s) back in runqueue", prev->name);
+			prev->state = TASK_READY;
+			runqueue_enqueue(&cpu->runnable_tasks, prev);
+			TRACE("putting prev task (%s) back in runqueue",
+			      prev->name);
+		}
 	}
 
 	/* pick the next task */
-	Task *next = scheduler_policy_pick_next(cpu);
-	if (next == nullptr) {
-		next = cpu->idle;
-	}
+	Task *next = scheduler_pick_next(cpu);
 
 	ASSERT((Cpu *)next->cpu == cpu, "selected task belongs to another cpu");
-	ASSERT(next->state == TASK_READY || next == cpu->idle, "scheduler "
-							       "selected non "
-							       "ready task");
+	ASSERT(next->state == TASK_READY || next == cpu->idle ||
+		       next == cpu->cleanup_task,
+	       "scheduler "
+	       "selected non "
+	       "ready task");
 	ASSERT(next->waiting_on == nullptr, "scheduler selected task waiting "
 					    "on a wait queue");
 
