@@ -73,7 +73,7 @@ void mutex_release(Mutex *mt)
 		return;
 	}
 
-	scheduler_wake(blocked);
+	scheduler_wake_blocked(blocked);
 }
 
 bool mutex_is_acquired(Mutex *mt)

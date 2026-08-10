@@ -81,7 +81,7 @@ void scheduler_block_current(void)
 /*
  * Wake given task
  */
-void scheduler_wake(Task *blocked)
+void scheduler_wake_blocked(Task *blocked)
 {
 	if (nullptr == blocked) {
 		return;

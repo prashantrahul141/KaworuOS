@@ -65,5 +65,5 @@ void semaphore_release(Semaphore *sm)
 		return;
 	}
 
-	scheduler_wake(blocked);
+	scheduler_wake_blocked(blocked);
 }
