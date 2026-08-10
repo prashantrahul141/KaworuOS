@@ -1,6 +1,8 @@
 #include "aarch64/exception.h"
 #include "aarch64/aarch64.h"
 #include "common_defs.h"
+#include "io/console.h"
+#include "irq/irq_controller.h"
 
 typedef struct {
 	const i8 *description;
@@ -13,20 +15,26 @@ static inline EcDecoded print_exception_class_info(ExceptionFrame *frame);
 
 void exception_handler(ExceptionFrame *frame)
 {
+	irq_local_disable();
 	printf("Caught exception:\n");
 	EcDecoded ec = print_exception_class_info(frame);
 	print_regs(frame);
+	console_flush();
 	if (ec.halt) {
-		wfi();
+		while (1)
+			cpu_relax();
 	}
 }
 
 void unhandled_exception_handler(ExceptionFrame *frame)
 {
+	irq_local_disable();
 	printf("Unhandled exception:\n");
 	print_exception_class_info(frame);
 	print_regs(frame);
-	wfi();
+	console_flush();
+	while (1)
+		cpu_relax();
 }
 
 static inline void print_regs(ExceptionFrame *frame)
