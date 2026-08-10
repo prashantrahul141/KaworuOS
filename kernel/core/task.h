@@ -44,6 +44,21 @@ void task_exit(Task *task);
 /* destroies given task */
 void task_destroy(Task *task);
 
+/*
+ * The idle task.
+ * Each cpu owns a separate copy of this task.
+ * This task's responsiblity is to
+ *    1. use minimum resources
+ *    2. yield if the owning cpu has other tasks
+ *    3. free zombie tasks
+ */
 void task_idle(void *arg);
+
+/*
+ * The cleanup task.
+ * Each cpu owns a separate copy of this task.
+ * Cleans up dead tasks
+ */
+void task_cleanup(void *arg);
 
 #endif // _TASK_H_
