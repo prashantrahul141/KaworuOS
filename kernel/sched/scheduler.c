@@ -66,8 +66,8 @@ void scheduler_block_current(void)
 	ASSERT((Cpu *)current->cpu == cpu, "current task belongs to another "
 					   "cpu");
 	ASSERT(TASK_RUNNING == current->state, "only running task can block");
-	ASSERT(current->waiting_on != nullptr, "running task is already "
-					       "waiting");
+	ASSERT(current->waiting_on != nullptr, "current task is not waiting on "
+					       "a wait queue");
 
 	current->state = TASK_BLOCKED;
 	scheduler_switch();
