@@ -33,9 +33,8 @@ void spinlock_acquire(SpinLock *sp)
 
 	/*
 	 * force fencing here so that it is safe to acquire lock
-	 * uses dmb	ish
 	 */
-	__sync_synchronize();
+	dmb(BARRIER_ISH);
 
 	/*
 	 * lock using atomic operation.
@@ -71,9 +70,8 @@ void spinlock_release(SpinLock *sp)
 
 	/*
 	 * force fencing here so that it is safe to release the lock
-	 * uses dmb	ish
 	 */
-	__sync_synchronize();
+	dmb(BARRIER_ISH);
 
 	/* pop from stack */
 	irq_pop_intr();
