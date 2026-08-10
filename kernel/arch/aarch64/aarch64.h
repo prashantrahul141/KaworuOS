@@ -34,6 +34,7 @@ constexpr usize SCTLR_I = (1 << 12);
 
 /* Data sync barrier */
 #define dsb(_type) asm volatile("dsb " _type)
+#define dmb(_type) asm volatile("dsb " _type)
 #define isb()	   asm volatile("isb")
 
 /* read mpidr_el1 */
