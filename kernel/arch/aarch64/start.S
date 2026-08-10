@@ -5,7 +5,7 @@
 .align 16
 .global cpu_stack
 cpu_stack:
-    .skip ((1 << CONFIG_PER_CPU_BOOT_STACK_SIZE_SHIFT) * CONFIG_CPU_COUNT)
+    .skip ((1 << CONFIG_PER_CPU_BOOT_STACK_SIZE_SHIFT) * CONFIG_MAX_CPU_COUNT)
 cpu_stack_top:
 
 .section .text.boot
