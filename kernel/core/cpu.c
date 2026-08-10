@@ -54,6 +54,9 @@ static void common_cpu_init_tasks(void)
 	cpu->current = nullptr;
 	cpu->online = true;
 	cpu->needs_resched = false;
+	cpu->cleanup_task = task_manager_create_with_cpu(task_cleanup, nullptr,
+							 "cleanup", cpu);
+	cpu->needs_cleanup = false;
 }
 
 void init_secondary_cpu(void)

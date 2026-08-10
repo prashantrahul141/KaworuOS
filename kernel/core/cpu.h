@@ -20,6 +20,10 @@ typedef struct {
 	Task *current;
 	Task *idle;
 
+	/* every cpu has copy of the idle cleanup task to clean dead tasks */
+	Task *cleanup_task;
+	bool needs_cleanup;
+
 	RunQueue runnable_tasks;
 } Cpu;
 
