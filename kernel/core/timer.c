@@ -50,6 +50,16 @@ void timer_cpu_enable(CpuTimer *cpu_timer)
 	timer.device->timer_ops->enable(timer.device);
 }
 
+usize timer_ms_to_ticks(usize ms)
+{
+	return ticks_from_miliseconds(timer.frequency, ms);
+}
+
+usize timer_current_tick(void)
+{
+	return timer.device->timer_ops->counter(timer.device);
+}
+
 static void timer_cpu_resched(const CpuTimer *cpu_timer)
 {
 	timer.device->timer_ops->fire_from_now(timer.device,

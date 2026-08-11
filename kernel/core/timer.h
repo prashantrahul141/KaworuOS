@@ -41,6 +41,16 @@ void timer_cpu_init(CpuTimer *cpu_timer);
 void timer_cpu_enable(CpuTimer *cpu_timer);
 
 /*
+ * converts miliseconds into ticks
+ */
+usize timer_ms_to_ticks(usize ms);
+
+/*
+ * current ticks
+ */
+usize timer_current_tick(void);
+
+/*
  * This is called when timer interrupt arrives
  */
 void timer_tick(void *data);
