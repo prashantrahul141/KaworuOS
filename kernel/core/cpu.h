@@ -4,6 +4,7 @@
 #include "core/task.h"
 #include "core/timer.h"
 #include "sync/run_queue.h"
+#include "sync/wait_queue.h"
 #include "types.h"
 #include "config.h"
 
@@ -25,6 +26,8 @@ typedef struct {
 	bool needs_cleanup;
 
 	RunQueue runnable_tasks;
+	// TODO: should be using something sorted here.
+	WaitQueue sleeping_tasks;
 } Cpu;
 
 u32 cpu_get_cpuid(void);

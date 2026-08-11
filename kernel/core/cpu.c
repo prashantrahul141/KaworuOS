@@ -47,6 +47,7 @@ static void common_cpu_init_tasks(void)
 	cpu->cpuid = cpu_get_cpuid();
 
 	runqueue_init(&cpu->runnable_tasks, "Runnable Task");
+	waitqueue_init(&cpu->sleeping_tasks, "Sleeping Task");
 
 	/* create idle task */
 	cpu->idle =
