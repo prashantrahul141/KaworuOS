@@ -31,6 +31,16 @@ void scheduler_block_current(void);
 void scheduler_wake_blocked(Task *blocked);
 
 /*
+ * Sleeps current task for n ms
+ */
+void scheduler_sleep_current(usize ms);
+
+/*
+ * Wake given task
+ */
+void scheduler_wake_sleepers(void);
+
+/*
  * Wake all
  */
 void scheduler_wake_all(WaitQueue *wq);

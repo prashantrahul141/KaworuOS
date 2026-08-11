@@ -1,7 +1,10 @@
 #include "sched/scheduler.h"
 #include "aarch64/context.h"
 #include "core/cpu.h"
+#include "core/timer.h"
 #include "debug/assert.h"
+#include "ds/intrusivelist.h"
+#include "sync/wait_queue.h"
 #include "irq/irq_controller.h"
 #include "sched/scheduler_policy.h"
 #include "core/task.h"
@@ -9,7 +12,6 @@
 #include "debug/panic.h"
 #include "sync/run_queue.h"
 #include "sync/wait_queue.h"
-#include <stdint.h>
 
 void scheduler_init(void)
 {
@@ -50,6 +52,66 @@ void scheduler_dequeue(Task *task)
 
 	Cpu *cpu = (Cpu *)task->cpu;
 	runqueue_remove(&cpu->runnable_tasks, task);
+}
+
+/*
+ * Sleeps current task for n ms
+ */
+void scheduler_sleep_current(usize ms)
+{
+	Cpu *cpu = this_cpu();
+	Task *current = cpu->current;
+
+	ASSERT(current != nullptr, "current is null");
+	ASSERT(current != cpu->idle, "idle task cannot block");
+	ASSERT((Cpu *)current->cpu == cpu, "current task belongs to another "
+					   "cpu");
+	ASSERT(TASK_RUNNING == current->state, "only running task can sleep");
+
+	WaitQueue *sleeping = &cpu->sleeping_tasks;
+	spinlock_acquire(&sleeping->lock);
+
+	current->sleep_until = timer_current_tick() + timer_ms_to_ticks(ms);
+
+	intrusivelist_insert_tail(&sleeping->waiters, &current->wait_node);
+
+	current->waiting_on = (void *)sleeping;
+	current->state = TASK_BLOCKED;
+
+	spinlock_release(&sleeping->lock);
+	scheduler_switch();
+}
+
+/*
+ * wake timer sleeping task
+ */
+void scheduler_wake_sleepers(void)
+{
+	Cpu *cpu = this_cpu();
+
+	WaitQueue *sleeping = &cpu->sleeping_tasks;
+	usize now = timer_current_tick();
+
+	spinlock_acquire(&sleeping->lock);
+	IntrusiveNode *node = intrusivelist_peek_head(&sleeping->waiters);
+
+	while (node != nullptr) {
+		IntrusiveNode *next = node->next;
+		Task *task = container_of(node, Task, wait_node);
+
+		if (now >= task->sleep_until) {
+			intrusivelist_remove(&sleeping->waiters, node);
+			task->waiting_on = nullptr;
+			task->sleep_until = 0;
+			spinlock_release(&sleeping->lock);
+			/* set ready and enqueue */
+			scheduler_wake_blocked(task);
+			spinlock_acquire(&sleeping->lock);
+		}
+		node = next;
+	}
+
+	spinlock_release(&sleeping->lock);
 }
 
 /*
