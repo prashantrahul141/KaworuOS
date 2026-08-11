@@ -1,4 +1,5 @@
 #include "core/timer.h"
+#include "sched/scheduler.h"
 #include "common/manager.h"
 #include "common_defs.h"
 #include "core/cpu.h"
@@ -72,7 +73,8 @@ void timer_tick(void *data)
 	Cpu *cpu = this_cpu();
 	cpu->needs_resched = true;
 	cpu->timer.ticks++;
-	DEBUG("TICK! cpu id = %d ticks = %d", cpu_get_cpuid(),
+	TRACE("TICK! cpu id = %d ticks = %d", cpu_get_cpuid(),
 	      cpu->timer.ticks);
+	scheduler_wake_sleepers();
 	timer_cpu_resched(&cpu->timer);
 }
