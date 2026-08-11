@@ -23,12 +23,16 @@ typedef struct {
 	struct Cpu *cpu;
 	void *stack;
 	ExecutionContext context;
-
 	TaskState state;
+
 	IntrusiveNode global_node;
+
 	IntrusiveNode runnable_node;
+
 	IntrusiveNode wait_node;
 	struct WaitQueue *waiting_on;
+
+	usize sleep_until;
 
 	task_fn_type entry;
 	void *arg;
