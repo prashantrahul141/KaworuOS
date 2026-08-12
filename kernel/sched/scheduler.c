@@ -299,8 +299,7 @@ Cpu *scheduler_pick_cpu(void)
 	Cpu *cpu = nullptr;
 	Cpu *best_cpu = nullptr;
 	usize best_count = INT64_MAX;
-	cpu_foreach(cpu)
-	{
+	cpu_foreach(cpu) {
 		ASSERT(cpu != nullptr, "cpu is null");
 		if (!cpu->online) {
 			continue;

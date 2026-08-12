@@ -47,8 +47,7 @@ Task *task_manager_lookup(usize task_id)
 {
 	spinlock_acquire_scoped(&task_manager.lock);
 	IntrusiveNode *node;
-	intrusivelist_foreach(&task_manager.tasks, node)
-	{
+	intrusivelist_foreach(&task_manager.tasks, node) {
 		Task *task = container_of(node, Task, global_node);
 		if (task_id == task->tid) {
 			return task;
@@ -62,8 +61,7 @@ Task *task_manager_find_dead_task(void)
 {
 	spinlock_acquire_scoped(&task_manager.lock);
 	IntrusiveNode *node;
-	intrusivelist_foreach(&task_manager.tasks, node)
-	{
+	intrusivelist_foreach(&task_manager.tasks, node) {
 		Task *task = container_of(node, Task, global_node);
 		if (TASK_DEAD == task->state) {
 			return task;
