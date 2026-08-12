@@ -73,7 +73,8 @@ void scheduler_sleep_current(usize ms)
 
 	current->sleep_until = timer_current_tick() + timer_ms_to_ticks(ms);
 
-	intrusivelist_insert_tail(&sleeping->waiters, &current->wait_node);
+	intrusivelist_insert_sorted(&sleeping->waiters, &current->wait_node,
+				    task_comparator_sleep_until);
 
 	current->waiting_on = (void *)sleeping;
 	current->state = TASK_BLOCKED;
@@ -99,15 +100,18 @@ void scheduler_wake_sleepers(void)
 		IntrusiveNode *next = node->next;
 		Task *task = container_of(node, Task, wait_node);
 
-		if (now >= task->sleep_until) {
-			intrusivelist_remove(&sleeping->waiters, node);
-			task->waiting_on = nullptr;
-			task->sleep_until = 0;
-			spinlock_release(&sleeping->lock);
-			/* set ready and enqueue */
-			scheduler_wake_blocked(task);
-			spinlock_acquire(&sleeping->lock);
+		/* since tasks are sorted */
+		if (now < task->sleep_until) {
+			break;
 		}
+
+		intrusivelist_remove(&sleeping->waiters, node);
+		task->waiting_on = nullptr;
+		task->sleep_until = 0;
+		spinlock_release(&sleeping->lock);
+		/* set ready and enqueue */
+		scheduler_wake_blocked(task);
+		spinlock_acquire(&sleeping->lock);
 		node = next;
 	}
 

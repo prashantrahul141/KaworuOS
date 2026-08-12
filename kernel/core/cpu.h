@@ -26,7 +26,6 @@ typedef struct {
 	bool needs_cleanup;
 
 	RunQueue runnable_tasks;
-	// TODO: should be using something sorted here.
 	WaitQueue sleeping_tasks;
 } Cpu;
 
