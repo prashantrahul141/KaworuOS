@@ -79,7 +79,7 @@ void task_idle(void *arg)
 		if (scheduler_cpu_has_runnable_tasks()) {
 			yield();
 		}
-		wfi();
+		cpu_relax();
 	}
 }
 
