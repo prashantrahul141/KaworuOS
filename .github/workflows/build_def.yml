@@ -1,0 +1,28 @@
+name: Build
+
+on:
+  pull_request:
+    branches: [ "main" ]
+  workflow_dispatch:
+
+jobs:
+  build:
+    strategy:
+      matrix:
+        os: ["ubuntu-26.04", "ubuntu-26.04-arm", "macos-latest"]
+
+    runs-on: ${{ matrix.os }}
+
+    steps:
+    - name: Checkout repo recursively
+      uses: actions/checkout@v4
+      with:
+        fetch-depth: 1
+
+    - name: Install Nix
+      uses: cachix/install-nix-action@v31.10.6
+      with:
+          github_access_token: ${{ secrets.GITHUB_TOKEN }}
+
+    - name: Config & Build
+      run: nix develop --command bash -c  "make cleanall && make defconfig && make"
