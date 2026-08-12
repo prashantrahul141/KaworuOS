@@ -119,3 +119,13 @@ void task_cleanup(void *arg)
 		task_destroy(dead);
 	}
 }
+
+/*
+ * comparator function for sleeping tasks
+ */
+bool task_comparator_sleep_until(IntrusiveNode *a, IntrusiveNode *b)
+{
+	Task *first = container_of(a, Task, wait_node);
+	Task *second = container_of(b, Task, wait_node);
+	return first->sleep_until > second->sleep_until;
+}

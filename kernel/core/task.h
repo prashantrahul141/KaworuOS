@@ -65,4 +65,9 @@ void task_idle(void *arg);
  */
 void task_cleanup(void *arg);
 
+/*
+ * comparator function for sleeping tasks
+ */
+bool task_comparator_sleep_until(IntrusiveNode *a, IntrusiveNode *b);
+
 #endif // _TASK_H_
