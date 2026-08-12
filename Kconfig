@@ -71,6 +71,10 @@ endmenu
 
 menu "Building"
 
+config WARNING_AS_ERROR
+    bool "Treat warnings as errors"
+    default y
+
 choice OPTIMIZATIONS
     prompt "Optimization level"
     default OPTIMIZATIONS_NONE
