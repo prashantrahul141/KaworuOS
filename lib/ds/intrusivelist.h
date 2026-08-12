@@ -15,11 +15,22 @@ typedef struct {
 	usize count;
 } IntrusiveList;
 
+/*
+ * return
+ * true if a is smaller than b
+ * else false
+ */
+typedef bool (*comparator_fn_type)(IntrusiveNode *a, IntrusiveNode *b);
+
 bool intrusivelist_node_is_null(IntrusiveNode *in);
 void intrusivelist_node_init(IntrusiveNode *in);
 void intrusivelist_init(IntrusiveList *il);
+bool intrusivelist_insert_sorted(IntrusiveList *il, IntrusiveNode *node,
+				 comparator_fn_type fn);
 void intrusivelist_insert_head(IntrusiveList *il, IntrusiveNode *node);
 void intrusivelist_insert_tail(IntrusiveList *il, IntrusiveNode *node);
+bool intrusivelist_insert_at(IntrusiveList *il, IntrusiveNode *node,
+			     usize index);
 void intrusivelist_remove(IntrusiveList *il, IntrusiveNode *node);
 IntrusiveNode *intrusivelist_remove_head(IntrusiveList *il);
 IntrusiveNode *intrusivelist_remove_tail(IntrusiveList *il);

@@ -18,6 +18,40 @@ void intrusivelist_init(IntrusiveList *il)
 	il->count = 0;
 }
 
+bool intrusivelist_insert_sorted(IntrusiveList *il, IntrusiveNode *node,
+				 comparator_fn_type comparator_fn)
+{
+	/* empty */
+	if (il->count == 0) {
+		intrusivelist_insert_head(il, node);
+		return true;
+	}
+
+	IntrusiveNode *existing;
+	intrusivelist_foreach(il, existing) {
+		if (comparator_fn(existing, node)) {
+			/* right side */
+			node->next = existing;
+			IntrusiveNode *was_prev = existing->prev;
+			existing->prev = node;
+
+			/* left side */
+			node->prev = was_prev;
+			if (was_prev != nullptr) {
+				was_prev->next = node;
+			} else {
+				il->head = node;
+			}
+
+			il->count++;
+			return true;
+		}
+	}
+
+	intrusivelist_insert_tail(il, node);
+	return true;
+}
+
 void intrusivelist_insert_head(IntrusiveList *il, IntrusiveNode *node)
 {
 	node->next = il->head;
@@ -46,6 +80,46 @@ void intrusivelist_insert_tail(IntrusiveList *il, IntrusiveNode *node)
 
 	il->tail = node;
 	il->count++;
+}
+
+bool intrusivelist_insert_at(IntrusiveList *il, IntrusiveNode *node,
+			     usize index)
+{
+	if (index == 0) {
+		intrusivelist_insert_head(il, node);
+		return true;
+	}
+
+	if (index == il->count) {
+		intrusivelist_insert_tail(il, node);
+		return true;
+	}
+
+	if (il->count < index) {
+		return false;
+	}
+
+	IntrusiveNode *existing;
+	usize counting = 0;
+	intrusivelist_foreach(il, existing) {
+		if (counting == index) {
+			/* right side */
+			node->next = existing;
+			IntrusiveNode *was_prev = existing->prev;
+			existing->prev = node;
+
+			/* left side */
+			node->prev = was_prev;
+			was_prev->next = node;
+
+			il->count++;
+			break;
+		}
+
+		counting++;
+	}
+
+	return counting == index;
 }
 
 void intrusivelist_remove(IntrusiveList *il, IntrusiveNode *node)
