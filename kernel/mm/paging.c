@@ -92,10 +92,27 @@ void paging_kernel_init(TableDescriptor *kernel_page_table)
 
 void paging_switch_kernel_table(TableDescriptor *kernel_page_table)
 {
-	DEBUG("swapping page table");
+	DEBUG("swapping kernel page table");
 
 	/* write kernel pages to TTB1_EL1 */
 	w_ttbr1_el1(virt_to_phys(kernel_page_table));
+
+	/* flush flush flush! */
+	dsb(BARRIER_ALL);
+	isb();
+
+	tlb_flush();
+
+	dsb(BARRIER_ALL);
+	isb();
+}
+
+void paging_switch_user_table(TableDescriptor *user_page_table)
+{
+	DEBUG("swapping user page table");
+
+	/* write user pages to TTB0_EL1 */
+	w_ttbr0_el1(virt_to_phys(user_page_table));
 
 	/* flush flush flush! */
 	dsb(BARRIER_ALL);

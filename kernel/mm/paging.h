@@ -92,9 +92,14 @@ static_assert(sizeof(PageDescriptor) == 8, "PageDescriptor is not 8 bytes?");
 void paging_kernel_init(TableDescriptor *kernel_page_table);
 
 /*
- * switch page table to our own page table
+ * switch kernel page table
  */
 void paging_switch_kernel_table(TableDescriptor *kernel_page_table);
+
+/*
+ * switch user page table
+ */
+void paging_switch_user_table(TableDescriptor *user_page_table);
 
 /*
  * maps given virtual address range to given physical address
