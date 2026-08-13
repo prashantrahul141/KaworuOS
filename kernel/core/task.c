@@ -30,8 +30,10 @@ void task_trampoline(void)
 	panic("trampoline ended?");
 }
 
-void task_init(Task *task, task_fn_type task_fn, void *arg, const i8 *name)
+void task_init(Task *task, task_fn_type task_fn, void *arg, usize tid,
+	       const i8 *name)
 {
+	task->tid = tid;
 	task->name = name;
 	task->stack = kalloc(TASK_STACK_SIZE);
 
