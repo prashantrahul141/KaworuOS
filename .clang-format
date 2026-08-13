@@ -72,6 +72,7 @@ FixNamespaceComments: false
 ForEachMacros:
   - 'cpu_foreach'
   - 'intrusivelist_foreach'
+  - 'linkedlist_foreach'
 
 IncludeBlocks: Preserve
 IncludeCategories:

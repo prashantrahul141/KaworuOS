@@ -47,6 +47,51 @@ void linkedlist_insert_tail(LinkedList *ll, void *data)
 	ll->count++;
 }
 
+bool linkedlist_insert_at(LinkedList *ll, void *data, usize index)
+{
+	if (index == 0) {
+		linkedlist_insert_head(ll, data);
+		return true;
+	}
+
+	if (index == ll->count) {
+		linkedlist_insert_tail(ll, data);
+		return true;
+	}
+
+	if (ll->count < index) {
+		return false;
+	}
+
+	Node *existing;
+	usize counting = 0;
+	linkedlist_foreach(ll, existing) {
+		if (counting == index) {
+			Node *new_node = kalloc(sizeof(Node));
+
+			/* right side */
+			new_node->next = existing;
+			Node *was_prev = existing->prev;
+			existing->prev = new_node;
+
+			/* left side */
+			new_node->prev = was_prev;
+			was_prev->next = new_node;
+
+			new_node->data = data;
+
+			ll->count++;
+			break;
+		}
+
+		counting++;
+	}
+
+	return counting == index;
+
+	return true;
+}
+
 void *linkedlist_remove_head(LinkedList *ll)
 {
 	Node *current_head = ll->head;
@@ -87,6 +132,34 @@ void *linkedlist_remove_tail(LinkedList *ll)
 	ll->count--;
 
 	return data;
+}
+
+bool linkedlist_remove(LinkedList *ll, void *data)
+{
+	Node *node;
+	linkedlist_foreach(ll, node) {
+		if (node->data != data) {
+			continue;
+		}
+
+		if (nullptr != node->prev) {
+			node->prev->next = node->next;
+		} else {
+			ll->head = node->next;
+		}
+
+		if (nullptr != node->next) {
+			node->next->prev = node->prev;
+		} else {
+			ll->tail = node->prev;
+		}
+
+		ll->count--;
+		kfree(node);
+		return true;
+	}
+
+	return false;
 }
 
 void *linkedlist_peek_head(const LinkedList *ll)

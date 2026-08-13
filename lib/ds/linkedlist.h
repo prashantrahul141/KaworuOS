@@ -33,12 +33,19 @@ void linkedlist_insert_head(LinkedList *ll, void *data);
 
 void linkedlist_insert_tail(LinkedList *ll, void *data);
 
+bool linkedlist_insert_at(LinkedList *ll, void *data, usize index);
+
 void *linkedlist_remove_head(LinkedList *ll);
 
 void *linkedlist_remove_tail(LinkedList *ll);
 
+bool linkedlist_remove(LinkedList *ll, void *data);
+
 void *linkedlist_peek_head(const LinkedList *ll);
 
 void *linkedlist_peek_tail(const LinkedList *ll);
+
+#define linkedlist_foreach(list, node) \
+	for ((node) = (list)->head; ((node) != nullptr); (node) = (node)->next)
 
 #endif // _LINKED_LIST_H_
