@@ -141,7 +141,7 @@ static inline void w_mair_el1(u64 value)
 /* write ttbr0_el1: user process's virtual address space base addr */
 static inline void w_ttbr0_el1(usize value)
 {
-	asm volatile("msr TTBR0_EL0, %0" : : "r"(value));
+	asm volatile("msr TTBR0_EL1, %0" : : "r"(value));
 }
 
 /* write ttbr1_el1: kernel's virtual address space base addr */
