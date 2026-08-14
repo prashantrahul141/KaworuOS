@@ -4,7 +4,6 @@
 #include <stdatomic.h>
 #include "core/cpu.h"
 #include "boot/limine_responses.h"
-#include "core/task.h"
 #include "core/timer.h"
 #include "debug/log.h"
 #include "limine.h"
@@ -50,13 +49,14 @@ static void common_cpu_init_tasks(void)
 	waitqueue_init(&cpu->sleeping_tasks, "Sleeping Task");
 
 	/* create idle task */
-	cpu->idle =
-		task_manager_create_with_cpu(task_idle, nullptr, "idle", cpu);
+
+	cpu->idle = task_manager_create_idle_task();
 	cpu->current = nullptr;
 	cpu->online = true;
 	cpu->needs_resched = false;
-	cpu->cleanup_task = task_manager_create_with_cpu(task_cleanup, nullptr,
-							 "cleanup", cpu);
+
+	/* cleanup task */
+	cpu->cleanup_task = task_manager_create_cleanup_task();
 	cpu->needs_cleanup = false;
 }
 
