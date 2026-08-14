@@ -8,7 +8,6 @@
 #include "mm/paging.h"
 #include "mm/vmm_region.h"
 #include "error.h"
-#include <string.h>
 
 /*
  * Kernel root page table, start of address translation tree for kernel.
@@ -33,14 +32,12 @@ STATIC_ALLOC_VM_REGION(mmio_region, KERNEL_MMIO_RANGE_START,
 void vm_init(void)
 {
 	INFO("Initializing virtual memory manager");
-	kernel_page_table = kmem_alloc();
 
+	kernel_page_table = paging_create_table();
 	if (IS_ERR(kernel_page_table)) {
 		panic("could not allocate for kernel page table, returned = %s",
 		      str_err(PTR_TO_ERR(kernel_page_table)));
 	}
-
-	memset(kernel_page_table, 0, PAGE_SIZE);
 
 	/* setup kernel paging */
 	paging_kernel_init(kernel_page_table);

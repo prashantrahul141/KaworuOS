@@ -86,6 +86,16 @@ typedef union {
 static_assert(sizeof(PageDescriptor) == 8, "PageDescriptor is not 8 bytes?");
 
 /*
+ * creates a new page table
+ */
+TableDescriptor *paging_create_table(void);
+
+/*
+ * destroys a page table
+ */
+void paging_destroy_table(TableDescriptor *table);
+
+/*
  * Init pages for kernel
  * sets up page table entries AND switches page table.
  */

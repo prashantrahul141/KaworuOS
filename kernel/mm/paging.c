@@ -40,6 +40,28 @@ static inline errno_t map_data(TableDescriptor *table, usize va, usize pa,
 static MUST_CHECK TableDescriptor *table_next_table(TableDescriptor *td,
 						    bool allocate);
 
+/*
+ * creates a new page table
+ */
+TableDescriptor *paging_create_table(void)
+{
+	TableDescriptor *td = kmem_alloc();
+	if (IS_ERR(td)) {
+		return td;
+	}
+
+	memset(td, 0, PAGE_SIZE);
+	return td;
+}
+
+/*
+ * destroys a page table
+ */
+void paging_destroy_table(TableDescriptor *table)
+{
+	kmem_free(table);
+}
+
 void paging_kernel_init(TableDescriptor *kernel_page_table)
 {
 	DEBUG("Initializing paging and mapping kernel pages");
