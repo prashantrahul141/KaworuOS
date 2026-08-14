@@ -26,12 +26,12 @@ void kmem_init(void);
 
 /* Get a physical memory allocation of PAGE_SIZE size
  */
-void *kmem_alloc(void);
+usize kmem_alloc(void);
 
 /*
  * Return back an allocation
  */
-void kmem_free(void *ph_addr);
+void kmem_free(usize phy_addr);
 
 /*
  * converts physical address to virtual address
