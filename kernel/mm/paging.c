@@ -45,11 +45,12 @@ static MUST_CHECK TableDescriptor *table_next_table(TableDescriptor *td,
  */
 TableDescriptor *paging_create_table(void)
 {
-	TableDescriptor *td = kmem_alloc();
-	if (IS_ERR(td)) {
-		return td;
+	usize pa = kmem_alloc();
+	if (IS_ERR_VALUE(pa)) {
+		return (void *)pa;
 	}
 
+	TableDescriptor *td = phys_to_virt(pa);
 	memset(td, 0, PAGE_SIZE);
 	return td;
 }
@@ -59,7 +60,7 @@ TableDescriptor *paging_create_table(void)
  */
 void paging_destroy_table(TableDescriptor *table)
 {
-	kmem_free(table);
+	kmem_free(virt_to_phys(table));
 }
 
 void paging_kernel_init(TableDescriptor *kernel_page_table)
@@ -278,11 +279,12 @@ static MUST_CHECK TableDescriptor *table_next_table(TableDescriptor *td,
 		return ERR_TO_PTR(-ENOMEM);
 	}
 
-	TableDescriptor *page = kmem_alloc();
+	usize pa = kmem_alloc();
+	TableDescriptor *page = phys_to_virt(pa);
 	td->raw = 0;
 	td->field.is_valid = true;
 	td->field.is_table = true;
-	td->field.next_level_address = PA_TO_PAGE_DESC(virt_to_phys(page));
+	td->field.next_level_address = PA_TO_PAGE_DESC(pa);
 	return page;
 }
 

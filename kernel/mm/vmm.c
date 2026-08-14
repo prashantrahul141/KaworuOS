@@ -148,12 +148,10 @@ void *vm_alloc(usize size, VMRegion *region, PagePerms perms,
 
 	u8 *va = start;
 	for (usize page = 0; page < page_count; page++, va += PAGE_SIZE) {
-		void *pa_as_virt = kmem_alloc();
-		if (IS_ERR(pa_as_virt)) {
+		usize pa = kmem_alloc();
+		if (IS_ERR_VALUE(pa)) {
 			panic("ran out of physical memory");
 		}
-
-		usize pa = virt_to_phys(pa_as_virt);
 
 		errno_t err = paging_map(kernel_page_table, (usize)va, pa,
 					 PAGE_SIZE, perms, attr_index,
@@ -205,7 +203,7 @@ void vm_free(void *addr, VMRegion *region)
 		void *va = (u8 *)addr + page * PAGE_SIZE;
 		usize pa = paging_lookup(kernel_page_table, (usize)va);
 		vm_unmap(va, PAGE_SIZE, region);
-		kmem_free(phys_to_virt(pa));
+		kmem_free(pa);
 	}
 
 	region_free(region, addr);
