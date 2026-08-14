@@ -13,6 +13,10 @@ Task *task_manager_create_with_cpu(task_fn_type task_fn, void *arg,
 
 Task *task_manager_lookup(usize task_id);
 
+Task *task_manager_create_idle_task(void);
+
+Task *task_manager_create_cleanup_task(void);
+
 Task *task_manager_find_dead_task(void);
 
 void task_manager_remove_task(Task *task);

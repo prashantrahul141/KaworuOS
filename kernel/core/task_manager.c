@@ -61,6 +61,22 @@ Task *task_manager_create_with_cpu(task_fn_type task_fn, void *arg,
 	return task;
 }
 
+Task *task_manager_create_idle_task(void)
+{
+	Task *task = kalloc(sizeof(Task));
+	task->cpu = (struct Cpu *)this_cpu();
+	task_init(task, task_idle, nullptr, 0, "Idle task");
+	return task;
+}
+
+Task *task_manager_create_cleanup_task(void)
+{
+	Task *task = kalloc(sizeof(Task));
+	task->cpu = (struct Cpu *)this_cpu();
+	task_init(task, task_cleanup, nullptr, UINT64_MAX, "Clean up");
+	return task;
+}
+
 Task *task_manager_lookup(usize task_id)
 {
 	spinlock_acquire_scoped(&task_manager.lock);
