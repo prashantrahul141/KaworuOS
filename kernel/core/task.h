@@ -50,23 +50,6 @@ void task_exit(Task *task);
 void task_destroy(Task *task);
 
 /*
- * The idle task.
- * Each cpu owns a separate copy of this task.
- * This task's responsiblity is to
- *    1. use minimum resources
- *    2. yield if the owning cpu has other tasks
- *    3. free zombie tasks
- */
-void task_idle(void *arg);
-
-/*
- * The cleanup task.
- * Each cpu owns a separate copy of this task.
- * Cleans up dead tasks
- */
-void task_cleanup(void *arg);
-
-/*
  * comparator function for sleeping tasks
  */
 bool task_comparator_sleep_until(IntrusiveNode *a, IntrusiveNode *b);
