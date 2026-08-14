@@ -2,48 +2,36 @@
  * Physical memory allocator for user and kernel space.
  */
 
-#ifndef _KMEM_H_
-#define _KMEM_H_
+#ifndef _PMM_H_
+#define _PMM_H_
 
-#include "aarch64/aarch64.h"
-#include "sync/spinlock.h"
-
-typedef struct PhyChunk PhyChunk;
-
-struct PhyChunk {
-	PhyChunk *next;
-};
-
-typedef struct {
-	SpinLock spinlock;
-	PhyChunk *free_list;
-} Kmem;
+#include "types.h"
 
 /*
  * Init kernel physical memory allocator.
  */
-void kmem_init(void);
+void pmm_init(void);
 
 /* Get a physical memory allocation of PAGE_SIZE size
  */
-usize kmem_alloc(void);
+usize pmm_alloc(void);
 
 /*
  * Return back an allocation
  */
-void kmem_free(usize phy_addr);
+void pmm_free(usize phy_addr);
 
 /*
  * converts physical address to virtual address
  */
-void *phys_to_virt(usize phy);
+void *pmm_phys_to_virt(usize phy);
 
 /*
  * converts virtual address to physical address
  */
-usize virt_to_phys(const void *virt);
+usize pmm_virt_to_phys(const void *virt);
 
 /* converts virtual to physical for kernel symbols */
 usize kernel_virt_to_phys(usize va);
 
-#endif // _KMEM_H_
+#endif // _PMM_H_

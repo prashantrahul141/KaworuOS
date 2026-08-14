@@ -9,7 +9,7 @@
 #include "sched/scheduler.h"
 #include "debug/log.h"
 #include "limine.h"
-#include "mm/kmem.h"
+#include "mm/pmm.h"
 #include "mm/vmm.h"
 #include "mm/kheap.h"
 #include "irq/irq_controller.h"

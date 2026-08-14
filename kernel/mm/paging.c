@@ -6,13 +6,12 @@
 #include "limine.h"
 #include "boot/limine_responses.h"
 #include "memlayout.h"
-#include "mm/kmem.h"
+#include "mm/pmm.h"
 #include "common_defs.h"
 #include "memlayout.h"
 #include "string.h"
 #include "types.h"
 #include "debug/panic.h"
-#include "mm/kmem.h"
 
 constexpr usize PAGE_SHIFT = 12;
 constexpr usize PT_INDEX_MASK = 0x1FF;
@@ -45,12 +44,12 @@ static MUST_CHECK TableDescriptor *table_next_table(TableDescriptor *td,
  */
 TableDescriptor *paging_create_table(void)
 {
-	usize pa = kmem_alloc();
-	if (IS_ERR_VALUE(pa)) {
+	usize pa = pmm_alloc();
+	if (IS_ERR_VALUE((void *)pa)) {
 		return (void *)pa;
 	}
 
-	TableDescriptor *td = phys_to_virt(pa);
+	TableDescriptor *td = pmm_phys_to_virt(pa);
 	memset(td, 0, PAGE_SIZE);
 	return td;
 }
@@ -60,7 +59,7 @@ TableDescriptor *paging_create_table(void)
  */
 void paging_destroy_table(TableDescriptor *table)
 {
-	kmem_free(virt_to_phys(table));
+	pmm_free(pmm_virt_to_phys(table));
 }
 
 void paging_kernel_init(TableDescriptor *kernel_page_table)
@@ -88,7 +87,7 @@ void paging_kernel_init(TableDescriptor *kernel_page_table)
 			// them too.
 		case LIMINE_MEMMAP_FRAMEBUFFER: {
 			map_device(kernel_page_table,
-				   (usize)phys_to_virt(entry->base),
+				   (usize)pmm_phys_to_virt(entry->base),
 				   entry->base, entry->length);
 			break;
 		}
@@ -97,8 +96,8 @@ void paging_kernel_init(TableDescriptor *kernel_page_table)
 		case LIMINE_MEMMAP_EXECUTABLE_AND_MODULES:
 		case LIMINE_MEMMAP_USABLE: {
 			map_data(kernel_page_table,
-				 (usize)phys_to_virt(entry->base), entry->base,
-				 entry->length);
+				 (usize)pmm_phys_to_virt(entry->base),
+				 entry->base, entry->length);
 			break;
 		}
 		default:
@@ -118,7 +117,7 @@ void paging_switch_kernel_table(TableDescriptor *kernel_page_table)
 	DEBUG("swapping kernel page table");
 
 	/* write kernel pages to TTB1_EL1 */
-	w_ttbr1_el1(virt_to_phys(kernel_page_table));
+	w_ttbr1_el1(pmm_virt_to_phys(kernel_page_table));
 
 	/* flush flush flush! */
 	dsb(BARRIER_ALL);
@@ -135,7 +134,7 @@ void paging_switch_user_table(TableDescriptor *user_page_table)
 	DEBUG("swapping user page table");
 
 	/* write user pages to TTB0_EL1 */
-	w_ttbr0_el1(virt_to_phys(user_page_table));
+	w_ttbr0_el1(pmm_virt_to_phys(user_page_table));
 
 	/* flush flush flush! */
 	dsb(BARRIER_ALL);
@@ -272,15 +271,15 @@ static MUST_CHECK TableDescriptor *table_next_table(TableDescriptor *td,
 	/* table already exists */
 	if (td->field.is_valid) {
 		usize pa = PAGE_DESC_TO_PA(td->field.next_level_address);
-		return phys_to_virt(pa);
+		return pmm_phys_to_virt(pa);
 	}
 
 	if (!allocate) {
 		return ERR_TO_PTR(-ENOMEM);
 	}
 
-	usize pa = kmem_alloc();
-	TableDescriptor *page = phys_to_virt(pa);
+	usize pa = pmm_alloc();
+	TableDescriptor *page = pmm_phys_to_virt(pa);
 	td->raw = 0;
 	td->field.is_valid = true;
 	td->field.is_table = true;

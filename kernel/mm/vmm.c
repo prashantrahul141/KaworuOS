@@ -4,7 +4,7 @@
 #include "debug/panic.h"
 #include "error.h"
 #include "memlayout.h"
-#include "mm/kmem.h"
+#include "mm/pmm.h"
 #include "mm/paging.h"
 #include "mm/vmm_region.h"
 #include "error.h"
@@ -148,8 +148,8 @@ void *vm_alloc(usize size, VMRegion *region, PagePerms perms,
 
 	u8 *va = start;
 	for (usize page = 0; page < page_count; page++, va += PAGE_SIZE) {
-		usize pa = kmem_alloc();
-		if (IS_ERR_VALUE(pa)) {
+		usize pa = pmm_alloc();
+		if (IS_ERR_VALUE((void *)pa)) {
 			panic("ran out of physical memory");
 		}
 
@@ -203,7 +203,7 @@ void vm_free(void *addr, VMRegion *region)
 		void *va = (u8 *)addr + page * PAGE_SIZE;
 		usize pa = paging_lookup(kernel_page_table, (usize)va);
 		vm_unmap(va, PAGE_SIZE, region);
-		kmem_free(pa);
+		pmm_free(pa);
 	}
 
 	region_free(region, addr);

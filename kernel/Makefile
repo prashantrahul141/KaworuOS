@@ -66,8 +66,8 @@ C_SOURCES := $D/common/manager.c \
 			$K/io/console.c \
 			$K/irq/irq_controller.c \
 			$K/mm/kheap.c \
-			$K/mm/kmem.c \
 			$K/mm/paging.c \
+			$K/mm/pmm.c \
 			$K/mm/vmm.c \
 			$K/mm/vmm_region.c \
 			$K/sched/scheduler.c \

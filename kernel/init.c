@@ -12,7 +12,7 @@ void kernel_main(void)
 
 	printf("booting...\n");
 	framebuffer_init();
-	kmem_init();
+	pmm_init();
 	vm_init();
 	kheap_init();
 	fdt_init();

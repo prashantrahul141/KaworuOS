@@ -95,7 +95,7 @@ make run
     - [ ] Decode ESR_EL1, FAR_EL1, ELR_EL1
 
 - [x] Physical page allocator
-    - [x] `kmem_alloc`/`kmem_free`
+    - [x] `pmm_alloc`/`pmm_free`
 
 - [x] MMU
     - [x] page table setup
