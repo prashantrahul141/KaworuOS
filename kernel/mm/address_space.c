@@ -50,7 +50,7 @@ void address_space_destroy(AddressSpace *as)
 {
 	for (usize i = 0; i < as->user_region->allocations_size; i++) {
 		RegionAllocation *alloc = &as->user_region->allocations[i];
-		if (nullptr != alloc) {
+		if (nullptr != alloc->va) {
 			vm_free(as->table, alloc->va, as->user_region);
 		}
 	}

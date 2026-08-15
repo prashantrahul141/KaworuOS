@@ -7,9 +7,9 @@
  * perms table:
  *            |  PagePerms                    |  UserExec
  *            |                               |
- * code sect  | EL1_READ_ONLY_EL0_READ_WRITE |  EXECUTABLE
- * data sect  | EL1_READ_ONLY_EL0_READ_WRITE |  NOT_EXECUTABLE
- * stack sect | EL1_READ_ONLY_EL0_READ_WRITE |  NOT_EXECUTABLE
+ * code sect  | EL1_READ_ONLY_EL0_READ_ONLY   |  EXECUTABLE
+ * data sect  | EL1_READ_ONLY_EL0_READ_WRITE  |  NOT_EXECUTABLE
+ * stack sect | EL1_READ_ONLY_EL0_READ_WRITE  |  NOT_EXECUTABLE
  *
  */
 
