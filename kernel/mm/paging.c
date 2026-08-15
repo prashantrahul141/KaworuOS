@@ -54,12 +54,30 @@ TableDescriptor *paging_create_table(void)
 	return td;
 }
 
+static void table_descriptor_destroy_recursive(TableDescriptor *table)
+{
+	for (usize i = 0; i < 512; i++) {
+		TableDescriptor *td = &table[i];
+		if (!td->field.is_table) {
+			continue;
+		}
+
+		if (td->field.is_table) {
+			TableDescriptor *next = pmm_phys_to_virt(
+				PAGE_DESC_TO_PA(td->field.next_level_address));
+			table_descriptor_destroy_recursive(next);
+		}
+		td->raw = 0;
+	}
+	pmm_free(pmm_virt_to_phys(table));
+}
+
 /*
  * destroys a page table
  */
 void paging_destroy_table(TableDescriptor *table)
 {
-	pmm_free(pmm_virt_to_phys(table));
+	table_descriptor_destroy_recursive(table);
 }
 
 void paging_kernel_init(TableDescriptor *kernel_page_table)
