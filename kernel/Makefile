@@ -45,7 +45,8 @@ TH = ../thirdparty
 ASM_SOURCES = $K/arch/aarch64/context_switch.S \
 			  $K/arch/aarch64/exception.S \
 			  $K/arch/aarch64/secondary_entry.S \
-			  $K/arch/aarch64/start.S
+			  $K/arch/aarch64/start.S \
+			  $K/arch/aarch64/user_entry_trampoline.S
 ASM_OBJS = $(ASM_SOURCES:=.o)
 
 C_SOURCES := $D/common/manager.c \
