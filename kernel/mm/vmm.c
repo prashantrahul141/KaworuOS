@@ -6,7 +6,7 @@
 #include "memlayout.h"
 #include "mm/pmm.h"
 #include "mm/paging.h"
-#include "mm/vmm_region.h"
+#include "allocator/region.h"
 #include "error.h"
 
 /*
@@ -59,7 +59,7 @@ void vm_set_kernel_page_table(void)
  *
  * prefer using specializations like vm_mem_map, vm_mmio_map
  */
-void *vm_map(usize pa, usize size, VMRegion *region, PagePerms perms,
+void *vm_map(usize pa, usize size, AllocRegion *region, PagePerms perms,
 	     AttrIndex attr_index, PageShareability shareability,
 	     ExecPerms privilege_execution, ExecPerms underprivilege_execution)
 
@@ -108,7 +108,7 @@ void *vm_mmio_map(usize pa, usize size)
  *
  * Prefer using specializations like vm_mem_unmap, vm_mmio_unmap
  */
-errno_t vm_unmap(void *va, usize size, VMRegion *region)
+errno_t vm_unmap(void *va, usize size, AllocRegion *region)
 {
 	if (!IS_PAGE_ALIGNED(size)) {
 		WARN("given size is not page aligned");
@@ -133,7 +133,7 @@ void vm_mmio_unmap(void *addr, usize size)
 }
 
 /* allocates and map n virtual pages  */
-void *vm_alloc(usize size, VMRegion *region, PagePerms perms,
+void *vm_alloc(usize size, AllocRegion *region, PagePerms perms,
 	       AttrIndex attr_index, PageShareability shareability,
 	       ExecPerms privilege_execution,
 	       ExecPerms underprivilege_execution)
@@ -192,9 +192,9 @@ void *vm_alloc_mmio(usize size)
 }
 
 /* frees and unmaps n virtual pages  */
-void vm_free(void *addr, VMRegion *region)
+void vm_free(void *addr, AllocRegion *region)
 {
-	VMAllocation *allocation = region_find(region, addr);
+	RegionAllocation *allocation = region_find(region, addr);
 	if (IS_ERR(allocation)) {
 		panic("trying to free non existent pages, addr = %p", addr);
 	}

@@ -69,7 +69,6 @@ C_SOURCES := $D/common/manager.c \
 			$K/mm/paging.c \
 			$K/mm/pmm.c \
 			$K/mm/vmm.c \
-			$K/mm/vmm_region.c \
 			$K/sched/scheduler.c \
 			$K/sched/scheduler_policy.c \
 			$K/sync/mutex.c \
@@ -80,6 +79,7 @@ C_SOURCES := $D/common/manager.c \
 			$L/allocator/arena.c \
 			$L/allocator/bitmap.c \
 			$L/allocator/freelist.c \
+			$L/allocator/region.c \
 			$L/ds/intrusivelist.c \
 			$L/ds/linkedlist.c \
 			$L/ds/ringbuffer.c \

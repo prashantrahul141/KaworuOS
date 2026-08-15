@@ -3,6 +3,7 @@
 #include "mm/vmm.h"
 #include "sync/spinlock.h"
 #include "allocator/freelist.h"
+#include "memlayout.h"
 
 constexpr usize INITIAL_HEAP_SIZE = round_up((usize)5 * 1000 * 1000, PAGE_SIZE);
 constexpr usize MAX_HEAP_SIZE = (usize)50 * 1000 * 1000;

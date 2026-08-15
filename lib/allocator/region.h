@@ -1,5 +1,5 @@
 /*
- * A very thin wrapper around bitmap allocator for the vmm. it stores allocation
+ * A very thin wrapper around bitmap allocator. it stores allocation
  * sizes
  */
 
@@ -7,28 +7,26 @@
 #define _REGION_H_
 
 #include "allocator/bitmap.h"
-#include "memlayout.h"
 #include "sync/spinlock.h"
 
 typedef struct {
 	void *va;
 	usize page_count;
-} VMAllocation;
-static_assert(sizeof(VMAllocation) == 16, "VMAllocation is not 16 bytes?");
+} RegionAllocation;
+static_assert(sizeof(RegionAllocation) == 16, "VMAllocation is not 16 bytes?");
 
 typedef struct {
 	SpinLock lock;
 	AllocBitMap allocator;
-	VMAllocation *allocations;
+	RegionAllocation *allocations;
 	usize allocations_size;
-} VMRegion;
+} AllocRegion;
 
 #define STATIC_ALLOC_VM_REGION(name, addr, size)                                \
 	static u8 _bitmap_storage_##name[SIZE_TO_BITMAP_BYTES((size))] = { 0 }; \
-	static VMAllocation _allocations_storage_##name[(size) / PAGE_SIZE] = { \
-		0                                                               \
-	};                                                                      \
-	static VMRegion name = {                                                \
+	static RegionAllocation                                                 \
+		_allocations_storage_##name[(size) / PAGE_SIZE] = { 0 };        \
+	static AllocRegion name = {                                             \
 		.allocator = { .bitmap = _bitmap_storage_##name,                \
 			       .page_count = (size) / (PAGE_SIZE),              \
 			       .pool = (u8 *)(addr) },                          \
@@ -36,12 +34,12 @@ typedef struct {
 		.allocations_size = SIZE_TO_BITMAP_BYTES((size))                \
 	};
 
-void region_init(VMRegion *region, const i8 *msg);
+void region_init(AllocRegion *region, const i8 *msg);
 
-VMAllocation *region_find(VMRegion *region, void *addr);
+RegionAllocation *region_find(AllocRegion *region, void *addr);
 
-void *region_alloc(VMRegion *region, usize page_count);
+void *region_alloc(AllocRegion *region, usize page_count);
 
-usize region_free(VMRegion *region, void *addr);
+usize region_free(AllocRegion *region, void *addr);
 
 #endif // _REGION_H_

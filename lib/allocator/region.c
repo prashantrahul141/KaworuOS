@@ -1,4 +1,4 @@
-#include "mm/vmm_region.h"
+#include "region.h"
 #include "debug/assert.h"
 #include "debug/panic.h"
 #include "error.h"
@@ -6,7 +6,7 @@
 #include "sync/spinlock.h"
 #include "string.h"
 
-void region_init(VMRegion *region, const i8 *msg)
+void region_init(AllocRegion *region, const i8 *msg)
 {
 	spinlock_init(&region->lock, msg);
 	DEBUG("region init name = %s, allocations_count = %p", msg, 1);
@@ -16,7 +16,7 @@ void region_init(VMRegion *region, const i8 *msg)
 	       sizeof(*region->allocations) * region->allocations_size);
 }
 
-VMAllocation *region_find(VMRegion *region, void *addr)
+RegionAllocation *region_find(AllocRegion *region, void *addr)
 {
 	for (size_t i = 0; i < region->allocations_size; i++) {
 		if (addr == region->allocations[i].va) {
@@ -26,11 +26,11 @@ VMAllocation *region_find(VMRegion *region, void *addr)
 	return ERR_TO_PTR(-ENOENT);
 }
 
-void *region_alloc(VMRegion *region, usize page_count)
+void *region_alloc(AllocRegion *region, usize page_count)
 {
 	ASSERT(page_count > 0, "Page count is zero?");
 	spinlock_acquire_scoped(&region->lock);
-	VMAllocation *vm_allocation = region_find(region, nullptr);
+	RegionAllocation *vm_allocation = region_find(region, nullptr);
 	if (IS_ERR(vm_allocation)) {
 		return ERR_TO_PTR(-ENOMEM);
 	}
@@ -40,15 +40,16 @@ void *region_alloc(VMRegion *region, usize page_count)
 		return va;
 	}
 
-	*vm_allocation = (VMAllocation){ .va = va, .page_count = page_count };
+	*vm_allocation =
+		(RegionAllocation){ .va = va, .page_count = page_count };
 	return va;
 }
 
-usize region_free(VMRegion *region, void *addr)
+usize region_free(AllocRegion *region, void *addr)
 {
 	spinlock_acquire_scoped(&region->lock);
 
-	VMAllocation *vm_allocation = region_find(region, addr);
+	RegionAllocation *vm_allocation = region_find(region, addr);
 	if (IS_ERR(vm_allocation)) {
 		panic("tried freeing non existent allocation addr = %p", addr);
 		return 0;
