@@ -16,6 +16,13 @@ static inline EcDecoded print_exception_class_info(ExceptionFrame *frame);
 void exception_handler(ExceptionFrame *frame)
 {
 	irq_local_disable();
+
+	if (EXTRACT_BITS(frame->ESR_EL1, 31, 26) == 0b010101) {
+		printf("SVC @ %p with id %d\n", frame->x0);
+		console_flush();
+		return;
+	}
+
 	printf("Caught exception:\n");
 	EcDecoded ec = print_exception_class_info(frame);
 	print_regs(frame);
