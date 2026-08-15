@@ -148,17 +148,17 @@ void irq_pop_intr(void)
 /* check if local irq is enabled */
 bool irq_local_is_enable(void)
 {
-	return r_intrd_enabled();
+	return r_intrall_enabled();
 }
 
 /* disable local irqs */
 void irq_local_disable(void)
 {
-	w_intrd_disable();
+	w_intrall_disable();
 }
 
 /* enable local irqs */
 void irq_local_enable(void)
 {
-	w_intrd_enable();
+	w_intrall_enable();
 }
