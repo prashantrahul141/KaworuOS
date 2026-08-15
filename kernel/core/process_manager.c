@@ -33,7 +33,17 @@ Process *proc_manager_create(const i8 *name)
 	spinlock_acquire_scoped(&proc_manager.lock);
 
 	Process *proc = kalloc(sizeof(Process));
+	if (IS_ERR(proc)) {
+		WARN("failed creating proc: %s", name);
+		return proc;
+	}
+
 	AddressSpace *as = address_space_create();
+	if (IS_ERR(as)) {
+		kfree(proc);
+		WARN("failed to create address space from proc: %s", name);
+		return ERR_TO_PTR(-ENOMEM);
+	}
 
 	process_init(proc, proc_manager.pid_count++, name, as);
 
@@ -56,22 +66,46 @@ Process *proc_manager_create_exec(const i8 *name, usize program_pa,
 	}
 
 	AddressSpace *as = address_space_create();
+	if (IS_ERR(as)) {
+		kfree(proc);
+		WARN("failed to create address space from proc: %s", name);
+		return ERR_TO_PTR(-ENOMEM);
+	}
 
 	process_init(proc, proc_manager.pid_count++, name, as);
 
 	void *ustack = address_space_alloc(as, USER_TASK_STACK_SIZE,
 					   EL1_READ_WRITE_EL0_READ_WRITE,
 					   NOT_EXECUTABLE);
+	if (IS_ERR(ustack)) {
+		address_space_destroy(as);
+		kfree(proc);
+		WARN("failed to allocate mem in this address space for proc: "
+		     "%s",
+		     name);
+		return ERR_TO_PTR(-ENOMEM);
+	}
 	usize ustack_top = ((usize)ustack) + USER_TASK_STACK_SIZE;
 
-	address_space_map(as, USER_PROGRAM_START_VM, program_pa, program_size,
-			  EL1_READ_ONLY_EL0_READ_ONLY, EXECUTABLE);
+	errno_t err = address_space_map(as, USER_PROGRAM_START_VM, program_pa,
+					program_size,
+					EL1_READ_ONLY_EL0_READ_ONLY,
+					EXECUTABLE);
+	if (EOK != err) {
+		address_space_destroy(as);
+		kfree(proc);
+		WARN("failed to allocate mem in this address space for proc: "
+		     "%s",
+		     name);
+		return ERR_TO_PTR(-ENOMEM);
+	}
 
 	Task *task = task_manager_create_user((struct Process *)proc, entry,
 					      ustack_top, name);
 	if (IS_ERR(task)) {
 		address_space_destroy(as);
 		kfree(proc);
+		WARN("failed to create user task for user: %s", name);
 		return ERR_TO_PTR(-ENOMEM);
 	}
 

@@ -51,12 +51,20 @@ static void common_cpu_init_tasks(void)
 	/* create idle task */
 
 	cpu->idle = task_manager_create_idle_task();
+	if (IS_ERR(cpu->idle)) {
+		panic("failed creating idle task");
+	}
+
 	cpu->current = nullptr;
 	cpu->online = true;
 	cpu->needs_resched = false;
 
 	/* cleanup task */
 	cpu->cleanup_task = task_manager_create_cleanup_task();
+	if (IS_ERR(cpu->cleanup_task)) {
+		panic("failed creating cleanup task");
+	}
+
 	cpu->needs_cleanup = false;
 }
 

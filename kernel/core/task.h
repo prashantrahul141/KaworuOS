@@ -3,6 +3,7 @@
 
 #include "aarch64/context.h"
 #include "ds/intrusivelist.h"
+#include "error.h"
 
 typedef void (*task_fn_type)(void *arg);
 
@@ -46,11 +47,11 @@ typedef struct {
 
 void task_trampoline(void);
 
-void task_init(struct Process *p, Task *task, task_fn_type task_fn, void *arg,
-	       usize tid, const i8 *name);
+errno_t task_init(struct Process *p, Task *task, task_fn_type task_fn,
+		  void *arg, usize tid, const i8 *name);
 
-void task_init_user(struct Process *p, Task *task, usize user_entry,
-		    usize stack, usize tid, const i8 *name);
+errno_t task_init_user(struct Process *p, Task *task, usize user_entry,
+		       usize stack, usize tid, const i8 *name);
 
 /* exits current task */
 void task_exit(Task *task);

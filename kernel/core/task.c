@@ -1,6 +1,7 @@
 #include "core/task.h"
 #include "core/cpu.h"
 #include "ds/intrusivelist.h"
+#include "error.h"
 #include "irq/irq_controller.h"
 #include "sched/scheduler.h"
 #include "debug/log.h"
@@ -27,10 +28,14 @@ void task_trampoline(void)
 	panic("trampoline ended?");
 }
 
-void task_init_user(struct Process *p, Task *task, usize user_entry,
-		    usize stack, usize tid, const i8 *name)
+errno_t task_init_user(struct Process *p, Task *task, usize user_entry,
+		       usize stack, usize tid, const i8 *name)
 {
-	task_init(p, task, nullptr, nullptr, tid, name);
+	errno_t err = task_init(p, task, nullptr, nullptr, tid, name);
+	if (EOK != err) {
+		return -ENOMEM;
+	}
+
 	task->user_stack = stack;
 	task->context.lr = (usize)user_entry_trampoline;
 
@@ -39,14 +44,22 @@ void task_init_user(struct Process *p, Task *task, usize user_entry,
 	frame[0] = user_entry;
 	frame[1] = stack;
 	task->context.sp = (usize)frame;
+
+	return EOK;
 }
 
-void task_init(struct Process *p, Task *task, task_fn_type task_fn, void *arg,
-	       usize tid, const i8 *name)
+errno_t task_init(struct Process *p, Task *task, task_fn_type task_fn,
+		  void *arg, usize tid, const i8 *name)
 {
 	task->tid = tid;
 	task->name = name;
+
 	task->stack = kalloc(TASK_STACK_SIZE);
+	if (IS_ERR(task->stack)) {
+		WARN("failed to allocate for task stack: %s", name);
+		return -ENOMEM;
+	}
+
 	task->process = p;
 
 	memset(&task->context, 0, sizeof(task->context));
@@ -63,6 +76,7 @@ void task_init(struct Process *p, Task *task, task_fn_type task_fn, void *arg,
 
 	task->entry = task_fn;
 	task->arg = arg;
+	return EOK;
 }
 
 void task_exit(Task *task)

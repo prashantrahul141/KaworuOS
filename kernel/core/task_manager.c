@@ -4,6 +4,7 @@
 #include "debug/assert.h"
 #include "debug/log.h"
 #include "ds/intrusivelist.h"
+#include "error.h"
 #include "mm/kheap.h"
 #include "sched/scheduler.h"
 #include "sync/spinlock.h"
@@ -45,17 +46,23 @@ Task *task_manager_create_user(struct Process *p, usize user_entry,
 {
 	Cpu *cpu = scheduler_pick_cpu();
 	DEBUG("creating user task = %s on cpu = %d", name, cpu->cpuid);
+
 	Task *task = kalloc(sizeof(Task));
 	if (IS_ERR(task)) {
 		WARN("failed allocating for task: %s", name);
 		return task;
 	}
+
 	task->cpu = (struct Cpu *)cpu;
 
 	spinlock_acquire_scoped(&task_manager.lock);
 
-	task_init_user(p, task, user_entry, user_stack,
-		       task_manager.task_id_count++, name);
+	errno_t err = task_init_user(p, task, user_entry, user_stack,
+				     task_manager.task_id_count++, name);
+	if (EOK != err) {
+		return ERR_TO_PTR(err);
+	}
+
 	intrusivelist_insert_tail(&task_manager.tasks, &task->global_node);
 
 	return task;
@@ -77,7 +84,12 @@ Task *task_manager_create_with_cpu(struct Process *p, task_fn_type task_fn,
 
 	spinlock_acquire_scoped(&task_manager.lock);
 
-	task_init(p, task, task_fn, arg, task_manager.task_id_count++, name);
+	errno_t err = task_init(p, task, task_fn, arg,
+				task_manager.task_id_count++, name);
+	if (EOK != err) {
+		return ERR_TO_PTR(err);
+	}
+
 	intrusivelist_insert_tail(&task_manager.tasks, &task->global_node);
 
 	return task;
@@ -86,16 +98,37 @@ Task *task_manager_create_with_cpu(struct Process *p, task_fn_type task_fn,
 Task *task_manager_create_idle_task(void)
 {
 	Task *task = kalloc(sizeof(Task));
+	if (IS_ERR(task)) {
+		ERROR("failed to allocate for idle task");
+		return ERR_TO_PTR(-ENOMEM);
+	}
 	task->cpu = (struct Cpu *)this_cpu();
-	task_init(nullptr, task, task_idle, nullptr, 0, "Idle task");
+
+	errno_t err =
+		task_init(nullptr, task, task_idle, nullptr, 0, "Idle task");
+	if (EOK != err) {
+		return ERR_TO_PTR(err);
+	}
+
 	return task;
 }
 
 Task *task_manager_create_cleanup_task(void)
 {
 	Task *task = kalloc(sizeof(Task));
+	if (IS_ERR(task)) {
+		ERROR("failed to allocate for cleanup task");
+		return ERR_TO_PTR(-ENOMEM);
+	}
+
 	task->cpu = (struct Cpu *)this_cpu();
-	task_init(nullptr, task, task_cleanup, nullptr, UINT64_MAX, "Clean up");
+
+	errno_t err = task_init(nullptr, task, task_cleanup, nullptr,
+				UINT64_MAX, "Clean up");
+	if (EOK != err) {
+		return ERR_TO_PTR(err);
+	}
+
 	return task;
 }
 
