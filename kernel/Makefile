@@ -65,6 +65,7 @@ C_SOURCES := $D/common/manager.c \
 			$K/init.c \
 			$K/io/console.c \
 			$K/irq/irq_controller.c \
+			$K/mm/address_space.c \
 			$K/mm/kheap.c \
 			$K/mm/paging.c \
 			$K/mm/pmm.c \
