@@ -20,6 +20,17 @@ start:
     msr daifclr, #0b1000
     msr daifset, #0b0111
 
+    /* setup exception vector table */
+    ldr x0, =vector_table_el1
+    msr vbar_el1, x0
+    isb
+
+    /* System control register: enable fpu and simd */
+    mrs x0, cpacr_el1
+    orr x0, x0, #(0x3 << 20)
+    msr cpacr_el1, x0
+    isb
+
     /* use current SP_ELx (1) for sp */
     mov x0, #1
     msr SPSel, x0
@@ -31,16 +42,17 @@ start:
     mov sp, x0
     isb
 
-    /* setup exception vector table */
-    ldr x0, =vector_table_el1
-    msr vbar_el1, x0
-    isb
+    /* zero out bss section */
+    ldr x0, =__bss_start
+    ldr x1, =__bss_end
+bss_loop:
+    cmp x0, x1
+    b.hs bss_end
 
-    /* System control register: enable fpu and simd */
-    mrs x0, cpacr_el1
-    orr x0, x0, #(0x3 << 20)
-    msr cpacr_el1, x0
-    isb
+    stp xzr, xzr, [x0], #16
+    b bss_loop
+
+bss_end:
 
     /* reenable all interrupts */
     /* unmask D, A, I, F */
