@@ -166,6 +166,10 @@ errno_t paging_map(TableDescriptor *table, usize va, usize pa, usize size,
 	     va += PAGE_SIZE, pa += PAGE_SIZE) {
 		/* this contains a leaf node which we can map */
 		PageDescriptor *pde = walk_pagetable(table, va, true);
+		if (IS_ERR(pde)) {
+			return PTR_TO_ERR(pde);
+		}
+
 		if (pde->field.is_valid) {
 			panic("remaping an already existing page va = %p, pde "
 			      "= %p",
@@ -202,7 +206,7 @@ void paging_unmap(TableDescriptor *page, usize va, usize size)
 	for (usize end = va + size; va < end; va += PAGE_SIZE) {
 		/* this contains a leaf node */
 		PageDescriptor *pde = walk_pagetable(page, va, false);
-		if (!pde->field.is_valid) {
+		if (IS_ERR(pde) || !pde->field.is_valid) {
 			panic("trying to unmap %p which is not a mapped page",
 			      va);
 		}
@@ -236,9 +240,10 @@ static PageDescriptor *walk_pagetable(TableDescriptor *table, u64 va,
 
 	TRACE("\tl0_index =  %d, l1_table = %p", l0_index, l1);
 	if (IS_ERR(l1)) {
-		panic("failed to get next table for l1 va = %p, l0 index = %d, "
-		      "allocate = %b",
-		      va, l0_index, allocate);
+		WARN("failed to get next table for l1 va = %p, l0 index = %d, "
+		     "allocate = %b",
+		     va, l0_index, allocate);
+		return (PageDescriptor *)l1;
 	}
 
 	usize l1_index = L1_INDEX(va);
@@ -246,9 +251,10 @@ static PageDescriptor *walk_pagetable(TableDescriptor *table, u64 va,
 
 	TRACE("\tl1_index =  %d, l2_table = %p", l1_index, l2);
 	if (IS_ERR(l2)) {
-		panic("failed to get next table for l2 va = %p, l1 index = %d, "
-		      "allocate = %b",
-		      va, l1_index, allocate);
+		WARN("failed to get next table for l2 va = %p, l1 index = %d, "
+		     "allocate = %b",
+		     va, l1_index, allocate);
+		return (PageDescriptor *)l2;
 	}
 
 	usize l2_index = L2_INDEX(va);
@@ -256,9 +262,10 @@ static PageDescriptor *walk_pagetable(TableDescriptor *table, u64 va,
 
 	TRACE("\tl2_index =  %d, l3_table = %p", l2_index, l3);
 	if (IS_ERR(l3)) {
-		panic("failed to get next table for l3 va = %p, l2 index = %d, "
-		      "allocate = %b",
-		      va, l2_index, allocate);
+		WARN("failed to get next table for l3 va = %p, l2 index = %d, "
+		     "allocate = %b",
+		     va, l2_index, allocate);
+		return (PageDescriptor *)l3;
 	}
 
 	return (PageDescriptor *)&l3[L3_INDEX(va)];
