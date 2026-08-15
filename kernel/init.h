@@ -7,6 +7,7 @@
 #include "core/cpu.h"
 #include "config.h"
 #include "sched/scheduler.h"
+#include "core/process_manager.h"
 #include "debug/log.h"
 #include "limine.h"
 #include "mm/pmm.h"
