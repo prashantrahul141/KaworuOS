@@ -8,6 +8,7 @@
 #include "mm/kheap.h"
 #include "string.h"
 #include "config.h"
+#include "aarch64/user_entry_trampoline.h"
 
 typedef void (*task_fn)(void *arg);
 
@@ -24,6 +25,20 @@ void task_trampoline(void)
 	cpu->needs_cleanup = true;
 	task_exit(task);
 	panic("trampoline ended?");
+}
+
+void task_init_user(struct Process *p, Task *task, usize user_entry,
+		    usize stack, usize tid, const i8 *name)
+{
+	task_init(p, task, nullptr, nullptr, tid, name);
+	task->user_stack = stack;
+	task->context.lr = (usize)user_entry_trampoline;
+
+	/* we put user entry and stack in kernel stack frame */
+	u64 *frame = (u64 *)task->context.sp - 2;
+	frame[0] = user_entry;
+	frame[1] = stack;
+	task->context.sp = (usize)frame;
 }
 
 void task_init(struct Process *p, Task *task, task_fn_type task_fn, void *arg,

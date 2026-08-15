@@ -40,12 +40,17 @@ typedef struct {
 
 	task_fn_type entry;
 	void *arg;
+
+	usize user_stack;
 } Task;
 
 void task_trampoline(void);
 
 void task_init(struct Process *p, Task *task, task_fn_type task_fn, void *arg,
 	       usize tid, const i8 *name);
+
+void task_init_user(struct Process *p, Task *task, usize user_entry,
+		    usize stack, usize tid, const i8 *name);
 
 /* exits current task */
 void task_exit(Task *task);
