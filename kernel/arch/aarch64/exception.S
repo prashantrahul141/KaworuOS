@@ -325,7 +325,8 @@ lower_el_aarch64_sync_handler:
 
 lower_el_aarch64_irq_handler:
     save_registers
-    bl unhandled_exception_handler
+    bl irq_handle
+    cbnz x0, preempt
     restore_registers
     eret
 
