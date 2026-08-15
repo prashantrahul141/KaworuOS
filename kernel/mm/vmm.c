@@ -226,7 +226,7 @@ void vm_free(TableDescriptor *table, void *addr, AllocRegion *region)
 	for (usize page = 0; page < allocation->page_count; page++) {
 		void *va = (u8 *)addr + page * PAGE_SIZE;
 		usize pa = paging_lookup(table, (usize)va);
-		paging_unmap(kernel_page_table, (usize)va, PAGE_SIZE);
+		paging_unmap(table, (usize)va, PAGE_SIZE);
 		pmm_free(pa);
 	}
 
