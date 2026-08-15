@@ -35,7 +35,7 @@ AllocRegion *region_create(usize base, usize size, usize max_allocations,
 
 	RegionAllocation *allocs =
 		kalloc(sizeof(RegionAllocation) * max_allocations);
-	if (IS_ERR(bitmap)) {
+	if (IS_ERR(allocs)) {
 		kfree(bitmap);
 		kfree(region);
 		return ERR_TO_PTR(-ENOMEM);
