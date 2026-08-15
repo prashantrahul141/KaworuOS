@@ -6,6 +6,9 @@
 
 void task_manager_init(void);
 
+Task *task_manager_create_user(struct Process *p, usize user_entry,
+			       usize user_stack, const i8 *name);
+
 Task *task_manager_create(struct Process *p, task_fn_type task_fn, void *arg,
 			  const i8 *name);
 

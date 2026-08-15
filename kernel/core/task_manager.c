@@ -40,6 +40,27 @@ void task_manager_init(void)
 	task_manager.task_id_count = 1;
 }
 
+Task *task_manager_create_user(struct Process *p, usize user_entry,
+			       usize user_stack, const i8 *name)
+{
+	Cpu *cpu = scheduler_pick_cpu();
+	DEBUG("creating user task = %s on cpu = %d", name, cpu->cpuid);
+	Task *task = kalloc(sizeof(Task));
+	if (IS_ERR(task)) {
+		WARN("failed allocating for task: %s", name);
+		return task;
+	}
+	task->cpu = (struct Cpu *)cpu;
+
+	spinlock_acquire_scoped(&task_manager.lock);
+
+	task_init_user(p, task, user_entry, user_stack,
+		       task_manager.task_id_count++, name);
+	intrusivelist_insert_tail(&task_manager.tasks, &task->global_node);
+
+	return task;
+}
+
 Task *task_manager_create(struct Process *p, task_fn_type task_fn, void *arg,
 			  const i8 *name)
 {
