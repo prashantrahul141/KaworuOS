@@ -59,9 +59,10 @@ void vm_set_kernel_page_table(void)
  *
  * prefer using specializations like vm_mem_map, vm_mmio_map
  */
-void *vm_map(usize pa, usize size, AllocRegion *region, PagePerms perms,
-	     AttrIndex attr_index, PageShareability shareability,
-	     ExecPerms privilege_execution, ExecPerms underprivilege_execution)
+void *vm_map(TableDescriptor *table, usize pa, usize size, AllocRegion *region,
+	     PagePerms perms, AttrIndex attr_index,
+	     PageShareability shareability, ExecPerms privilege_execution,
+	     ExecPerms underprivilege_execution)
 
 {
 	if (!IS_PAGE_ALIGNED(size)) {
@@ -72,8 +73,8 @@ void *vm_map(usize pa, usize size, AllocRegion *region, PagePerms perms,
 	usize page_count = size / PAGE_SIZE;
 	void *va = region_alloc(region, page_count);
 
-	errno_t err = paging_map(kernel_page_table, (usize)va, pa, size, perms,
-				 attr_index, shareability, privilege_execution,
+	errno_t err = paging_map(table, (usize)va, pa, size, perms, attr_index,
+				 shareability, privilege_execution,
 				 underprivilege_execution);
 
 	if (EOK != err) {
@@ -89,18 +90,19 @@ void *vm_map(usize pa, usize size, AllocRegion *region, PagePerms perms,
 void *vm_mem_map(usize pa, usize size)
 {
 	DEBUG("mapping mem: pa = %p size = %d", pa, size);
-	return vm_map(pa, size, &kernel_mem_region, EL1_READ_WRITE_EL0_NONE,
-		      ATTR_INDEX_NORMAL, SHAREABLE_INNER_SHAREABLE,
-		      NOT_EXECUTABLE, NOT_EXECUTABLE);
+	return vm_map(kernel_page_table, pa, size, &kernel_mem_region,
+		      EL1_READ_WRITE_EL0_NONE, ATTR_INDEX_NORMAL,
+		      SHAREABLE_INNER_SHAREABLE, NOT_EXECUTABLE,
+		      NOT_EXECUTABLE);
 }
 
 /* map a new virtual device page, doesnt allocate it. */
 void *vm_mmio_map(usize pa, usize size)
 {
 	DEBUG("mapping mmio: pa = %p size = %d", pa, size);
-	return vm_map(pa, size, &mmio_region, EL1_READ_WRITE_EL0_NONE,
-		      ATTR_INDEX_DEVICE, SHAREABLE_NON_SHAREABLE,
-		      NOT_EXECUTABLE, NOT_EXECUTABLE);
+	return vm_map(kernel_page_table, pa, size, &mmio_region,
+		      EL1_READ_WRITE_EL0_NONE, ATTR_INDEX_DEVICE,
+		      SHAREABLE_NON_SHAREABLE, NOT_EXECUTABLE, NOT_EXECUTABLE);
 }
 
 /*
@@ -108,7 +110,8 @@ void *vm_mmio_map(usize pa, usize size)
  *
  * Prefer using specializations like vm_mem_unmap, vm_mmio_unmap
  */
-errno_t vm_unmap(void *va, usize size, AllocRegion *region)
+errno_t vm_unmap(TableDescriptor *table, void *va, usize size,
+		 AllocRegion *region)
 {
 	if (!IS_PAGE_ALIGNED(size)) {
 		WARN("given size is not page aligned");
@@ -116,26 +119,26 @@ errno_t vm_unmap(void *va, usize size, AllocRegion *region)
 	}
 
 	region_free(region, va);
-	paging_unmap(kernel_page_table, (usize)va, size);
+	paging_unmap(table, (usize)va, size);
 	return EOK;
 }
 
 /* unmaps an already mapped mem page, doesnt deallocate it. */
 void vm_mem_unmap(void *addr, usize size)
 {
-	vm_unmap(addr, size, &kernel_mem_region);
+	vm_unmap(kernel_page_table, addr, size, &kernel_mem_region);
 }
 
 /* unmaps an already mapped mmio page, doesnt deallocate it. */
 void vm_mmio_unmap(void *addr, usize size)
 {
-	vm_unmap(addr, size, &mmio_region);
+	vm_unmap(kernel_page_table, addr, size, &mmio_region);
 }
 
 /* allocates and map n virtual pages  */
-void *vm_alloc(usize size, AllocRegion *region, PagePerms perms,
-	       AttrIndex attr_index, PageShareability shareability,
-	       ExecPerms privilege_execution,
+void *vm_alloc(TableDescriptor *table, usize size, AllocRegion *region,
+	       PagePerms perms, AttrIndex attr_index,
+	       PageShareability shareability, ExecPerms privilege_execution,
 	       ExecPerms underprivilege_execution)
 {
 	usize page_count = size / PAGE_SIZE;
@@ -153,9 +156,9 @@ void *vm_alloc(usize size, AllocRegion *region, PagePerms perms,
 			panic("ran out of physical memory");
 		}
 
-		errno_t err = paging_map(kernel_page_table, (usize)va, pa,
-					 PAGE_SIZE, perms, attr_index,
-					 shareability, privilege_execution,
+		errno_t err = paging_map(table, (usize)va, pa, PAGE_SIZE, perms,
+					 attr_index, shareability,
+					 privilege_execution,
 					 underprivilege_execution);
 
 		if (EOK != err) {
@@ -175,9 +178,10 @@ void *vm_alloc(usize size, AllocRegion *region, PagePerms perms,
 void *vm_alloc_mem(usize size)
 {
 	DEBUG("alloc & map mem: size = %d", size);
-	return vm_alloc(size, &kernel_mem_region, EL1_READ_WRITE_EL0_NONE,
-			ATTR_INDEX_NORMAL, SHAREABLE_INNER_SHAREABLE,
-			NOT_EXECUTABLE, NOT_EXECUTABLE);
+	return vm_alloc(kernel_page_table, size, &kernel_mem_region,
+			EL1_READ_WRITE_EL0_NONE, ATTR_INDEX_NORMAL,
+			SHAREABLE_INNER_SHAREABLE, NOT_EXECUTABLE,
+			NOT_EXECUTABLE);
 }
 
 /*
@@ -186,13 +190,14 @@ void *vm_alloc_mem(usize size)
 void *vm_alloc_mmio(usize size)
 {
 	DEBUG("mapping mmio: size = %d", size);
-	return vm_alloc(size, &mmio_region, EL1_READ_WRITE_EL0_NONE,
-			ATTR_INDEX_DEVICE, SHAREABLE_NON_SHAREABLE,
-			NOT_EXECUTABLE, NOT_EXECUTABLE);
+	return vm_alloc(kernel_page_table, size, &mmio_region,
+			EL1_READ_WRITE_EL0_NONE, ATTR_INDEX_DEVICE,
+			SHAREABLE_NON_SHAREABLE, NOT_EXECUTABLE,
+			NOT_EXECUTABLE);
 }
 
 /* frees and unmaps n virtual pages  */
-void vm_free(void *addr, AllocRegion *region)
+void vm_free(TableDescriptor *table, void *addr, AllocRegion *region)
 {
 	RegionAllocation *allocation = region_find(region, addr);
 	if (IS_ERR(allocation)) {
@@ -201,8 +206,8 @@ void vm_free(void *addr, AllocRegion *region)
 
 	for (usize page = 0; page < allocation->page_count; page++) {
 		void *va = (u8 *)addr + page * PAGE_SIZE;
-		usize pa = paging_lookup(kernel_page_table, (usize)va);
-		vm_unmap(va, PAGE_SIZE, region);
+		usize pa = paging_lookup(table, (usize)va);
+		paging_unmap(kernel_page_table, (usize)va, PAGE_SIZE);
 		pmm_free(pa);
 	}
 
@@ -213,11 +218,11 @@ void vm_free(void *addr, AllocRegion *region)
 /* frees and unmaps n virtual pages from mem region */
 void vm_free_mem(void *addr)
 {
-	vm_free(addr, &kernel_mem_region);
+	vm_free(kernel_page_table, addr, &kernel_mem_region);
 }
 
 /* frees and unmaps n virtual pages from mmio region */
 void vm_free_mmio(void *addr)
 {
-	vm_free(addr, &mmio_region);
+	vm_free(kernel_page_table, addr, &mmio_region);
 }

@@ -16,9 +16,10 @@ void vm_set_kernel_page_table(void);
  *
  * prefer using specializations like vm_mem_map, vm_mmio_map
  */
-void *vm_map(usize pa, usize size, AllocRegion *region, PagePerms perms,
-	     AttrIndex attr_index, PageShareability shareability,
-	     ExecPerms privilege_execution, ExecPerms underprivilege_execution);
+void *vm_map(TableDescriptor *table, usize pa, usize size, AllocRegion *region,
+	     PagePerms perms, AttrIndex attr_index,
+	     PageShareability shareability, ExecPerms privilege_execution,
+	     ExecPerms underprivilege_execution);
 
 /* map a new virtual memory page, doesnt allocate it. */
 void *vm_mem_map(usize pa, usize size);
@@ -31,7 +32,8 @@ void *vm_mmio_map(usize pa, usize size);
  *
  * Prefer using specializations like vm_mem_unmap, vm_mmio_unmap
  */
-errno_t vm_unmap(void *va, usize size, AllocRegion *region);
+errno_t vm_unmap(TableDescriptor *table, void *va, usize size,
+		 AllocRegion *region);
 
 /* unmaps an already mapped mem page, doesnt deallocate it. */
 void vm_mem_unmap(void *page, usize size);
@@ -44,9 +46,9 @@ void vm_mmio_unmap(void *page, usize size);
  *
  * Prefer using specializations like vm_alloc_mem, vm_alloc_mmio
  */
-void *vm_alloc(usize size, AllocRegion *region, PagePerms perms,
-	       AttrIndex attr_index, PageShareability shareability,
-	       ExecPerms privilege_execution,
+void *vm_alloc(TableDescriptor *table, usize size, AllocRegion *region,
+	       PagePerms perms, AttrIndex attr_index,
+	       PageShareability shareability, ExecPerms privilege_execution,
 	       ExecPerms underprivilege_execution);
 
 /*
@@ -63,7 +65,7 @@ void *vm_alloc_mmio(usize size);
  * unmaps and deallocates already mapped page.
  * prefer using specializations: vm_free_mmio, vm_free_mem
  */
-void vm_free(void *addr, AllocRegion *region);
+void vm_free(TableDescriptor *table, void *addr, AllocRegion *region);
 
 /* frees and unmaps n virtual pages from mem region */
 void vm_free_mem(void *addr);
