@@ -8,6 +8,7 @@ typedef void (*task_fn_type)(void *arg);
 
 struct WaitQueue;
 struct Cpu;
+struct Process;
 
 typedef enum {
 	TASK_READY = 0,
@@ -32,6 +33,9 @@ typedef struct {
 	IntrusiveNode wait_node;
 	struct WaitQueue *waiting_on;
 
+	IntrusiveNode process_node;
+	struct Process *process;
+
 	usize sleep_until;
 
 	task_fn_type entry;
@@ -40,8 +44,8 @@ typedef struct {
 
 void task_trampoline(void);
 
-void task_init(Task *task, task_fn_type task_fn, void *arg, usize tid,
-	       const i8 *name);
+void task_init(struct Process *p, Task *task, task_fn_type task_fn, void *arg,
+	       usize tid, const i8 *name);
 
 /* exits current task */
 void task_exit(Task *task);

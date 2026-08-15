@@ -1,8 +1,5 @@
 #include "core/task.h"
-#include "aarch64/aarch64.h"
 #include "core/cpu.h"
-#include "core/task_manager.h"
-#include "debug/assert.h"
 #include "ds/intrusivelist.h"
 #include "irq/irq_controller.h"
 #include "sched/scheduler.h"
@@ -11,7 +8,6 @@
 #include "mm/kheap.h"
 #include "string.h"
 #include "config.h"
-#include "sync/wait_queue.h"
 
 typedef void (*task_fn)(void *arg);
 
@@ -30,12 +26,13 @@ void task_trampoline(void)
 	panic("trampoline ended?");
 }
 
-void task_init(Task *task, task_fn_type task_fn, void *arg, usize tid,
-	       const i8 *name)
+void task_init(struct Process *p, Task *task, task_fn_type task_fn, void *arg,
+	       usize tid, const i8 *name)
 {
 	task->tid = tid;
 	task->name = name;
 	task->stack = kalloc(TASK_STACK_SIZE);
+	task->process = p;
 
 	memset(&task->context, 0, sizeof(task->context));
 	task->context.sp = (usize)task->stack + TASK_STACK_SIZE;

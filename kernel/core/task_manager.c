@@ -40,14 +40,15 @@ void task_manager_init(void)
 	task_manager.task_id_count = 1;
 }
 
-Task *task_manager_create(task_fn_type task_fn, void *arg, const i8 *name)
+Task *task_manager_create(struct Process *p, task_fn_type task_fn, void *arg,
+			  const i8 *name)
 {
 	Cpu *cpu = scheduler_pick_cpu();
-	return task_manager_create_with_cpu(task_fn, arg, name, cpu);
+	return task_manager_create_with_cpu(p, task_fn, arg, name, cpu);
 }
 
-Task *task_manager_create_with_cpu(task_fn_type task_fn, void *arg,
-				   const i8 *name, Cpu *cpu)
+Task *task_manager_create_with_cpu(struct Process *p, task_fn_type task_fn,
+				   void *arg, const i8 *name, Cpu *cpu)
 {
 	DEBUG("creating task = %s on cpu = %d", name, cpu->cpuid);
 	Task *task = kalloc(sizeof(Task));
@@ -55,7 +56,7 @@ Task *task_manager_create_with_cpu(task_fn_type task_fn, void *arg,
 
 	spinlock_acquire_scoped(&task_manager.lock);
 
-	task_init(task, task_fn, arg, task_manager.task_id_count++, name);
+	task_init(p, task, task_fn, arg, task_manager.task_id_count++, name);
 	intrusivelist_insert_tail(&task_manager.tasks, &task->global_node);
 
 	return task;
@@ -65,7 +66,7 @@ Task *task_manager_create_idle_task(void)
 {
 	Task *task = kalloc(sizeof(Task));
 	task->cpu = (struct Cpu *)this_cpu();
-	task_init(task, task_idle, nullptr, 0, "Idle task");
+	task_init(nullptr, task, task_idle, nullptr, 0, "Idle task");
 	return task;
 }
 
@@ -73,7 +74,7 @@ Task *task_manager_create_cleanup_task(void)
 {
 	Task *task = kalloc(sizeof(Task));
 	task->cpu = (struct Cpu *)this_cpu();
-	task_init(task, task_cleanup, nullptr, UINT64_MAX, "Clean up");
+	task_init(nullptr, task, task_cleanup, nullptr, UINT64_MAX, "Clean up");
 	return task;
 }
 

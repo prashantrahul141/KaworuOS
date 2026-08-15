@@ -57,6 +57,7 @@ C_SOURCES := $D/common/manager.c \
 			$K/boot/fdt.c \
 			$K/boot/limine_responses.c \
 			$K/core/cpu.c \
+			$K/core/process.c \
 			$K/core/task.c \
 			$K/core/task_manager.c \
 			$K/core/timer.c \
