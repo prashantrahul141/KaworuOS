@@ -149,7 +149,7 @@ void paging_switch_kernel_table(TableDescriptor *kernel_page_table)
 
 void paging_switch_user_table(TableDescriptor *user_page_table)
 {
-	DEBUG("swapping user page table to %p", user_page_table);
+	TRACE("swapping user page table to %p", user_page_table);
 
 	/* write user pages to TTB0_EL1 */
 	w_ttbr0_el1(pmm_virt_to_phys(user_page_table));
