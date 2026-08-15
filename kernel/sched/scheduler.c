@@ -1,9 +1,13 @@
 #include "sched/scheduler.h"
 #include "aarch64/context.h"
 #include "core/cpu.h"
+#include "core/process.h"
 #include "core/timer.h"
 #include "debug/assert.h"
 #include "ds/intrusivelist.h"
+#include "mm/address_space.h"
+#include "mm/paging.h"
+#include "mm/vmm.h"
 #include "sync/wait_queue.h"
 #include "irq/irq_controller.h"
 #include "sched/scheduler_policy.h"
@@ -197,6 +201,23 @@ static Task *scheduler_pick_next(Cpu *cpu)
 	return next;
 }
 
+static void switch_address_space(Task *prev, Task *next)
+{
+	TableDescriptor *prev_as = vm_get_kernel_user_page_table();
+	if (nullptr != prev && nullptr != prev->process) {
+		prev_as = ((Process *)prev->process)->address_space->table;
+	}
+
+	TableDescriptor *next_as = vm_get_kernel_user_page_table();
+	if (nullptr != next && nullptr != next->process) {
+		next_as = ((Process *)next->process)->address_space->table;
+	}
+
+	if (prev_as != next_as) {
+		paging_switch_user_table(next_as);
+	}
+}
+
 void scheduler_switch(void)
 {
 	/* save current irq state locally in this task's scheduler "context" */
@@ -270,6 +291,7 @@ void scheduler_switch(void)
 	      next->name);
 
 	if (nullptr != prev) {
+		switch_address_space(prev, next);
 		context_switch(&prev->context, &next->context);
 
 		/* restore this task's irq state after coming back */
@@ -290,6 +312,7 @@ void scheduler_switch(void)
 	       "idle selected while runnable task exists");
 
 	ExecutionContext bootstrap;
+	switch_address_space(prev, next);
 	context_switch(&bootstrap, &next->context);
 
 	panic("bootstrap context returned");
