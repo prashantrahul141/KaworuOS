@@ -62,4 +62,6 @@ constexpr usize USER_VM_RANGE_BASE = 0x0000000000010000;
 /* ~1GB */
 constexpr usize USER_VM_RANGE_SIZE = ((usize)1) << 30;
 
+constexpr usize USER_PROGRAM_START_VM = 0x400000;
+
 #endif // _MEMLAYOUT_H_
