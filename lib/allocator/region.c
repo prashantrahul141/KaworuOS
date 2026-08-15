@@ -1,8 +1,10 @@
 #include "region.h"
+#include "allocator/bitmap.h"
 #include "debug/assert.h"
 #include "debug/panic.h"
 #include "error.h"
 #include "memlayout.h"
+#include "mm/kheap.h"
 #include "sync/spinlock.h"
 #include "string.h"
 
@@ -14,6 +16,49 @@ void region_init(AllocRegion *region, const i8 *msg)
 	       SIZE_TO_BITMAP_BYTES(region->allocator.page_count * PAGE_SIZE));
 	memset(region->allocations, 0,
 	       sizeof(*region->allocations) * region->allocations_size);
+}
+
+AllocRegion *region_create(usize base, usize size, usize max_allocations,
+			   const i8 *name)
+{
+	AllocRegion *region = kalloc(sizeof(AllocRegion));
+	if (IS_ERR(region)) {
+		return ERR_TO_PTR(-ENOMEM);
+	}
+
+	usize bitmap_bytes_count = SIZE_TO_BITMAP_BYTES(size);
+	u8 *bitmap = kalloc(bitmap_bytes_count);
+	if (IS_ERR(bitmap)) {
+		kfree(region);
+		return ERR_TO_PTR(-ENOMEM);
+	}
+
+	RegionAllocation *allocs =
+		kalloc(sizeof(RegionAllocation) * max_allocations);
+	if (IS_ERR(bitmap)) {
+		kfree(bitmap);
+		kfree(region);
+		return ERR_TO_PTR(-ENOMEM);
+	}
+
+	spinlock_init(&region->lock, name);
+	region->allocator.bitmap = bitmap;
+	region->allocator.page_count = size / PAGE_SIZE;
+	region->allocator.pool = (u8 *)base;
+	region->allocations = allocs;
+	region->allocations_size = max_allocations;
+
+	return region;
+}
+
+/*
+ * fre dynamically creates region
+ */
+void region_destroy(AllocRegion *region)
+{
+	kfree(region->allocator.bitmap);
+	kfree(region->allocations);
+	kfree(region);
 }
 
 RegionAllocation *region_find(AllocRegion *region, void *addr)

@@ -34,6 +34,15 @@ typedef struct {
 		.allocations_size = SIZE_TO_BITMAP_BYTES((size))                \
 	};
 
+/*
+ * for dynamically creating new regions
+ */
+AllocRegion *region_create(usize base, usize size, usize max_allocations,
+			   const i8 *name);
+
+/*
+ * init static allocated region
+ */
 void region_init(AllocRegion *region, const i8 *msg);
 
 RegionAllocation *region_find(AllocRegion *region, void *addr);
@@ -41,5 +50,7 @@ RegionAllocation *region_find(AllocRegion *region, void *addr);
 void *region_alloc(AllocRegion *region, usize page_count);
 
 usize region_free(AllocRegion *region, void *addr);
+
+void region_destroy(AllocRegion *region);
 
 #endif // _REGION_H_
