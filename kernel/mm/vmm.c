@@ -1,5 +1,6 @@
 #include "mm/vmm.h"
 #include "aarch64/aarch64.h"
+#include "core/task.h"
 #include "debug/log.h"
 #include "debug/panic.h"
 #include "error.h"
@@ -15,10 +16,15 @@
  * process has its own) and kernel space.
  * The kernel virtual address space's root translation table is stored in
  * TTB1_EL1
- * And user space address space's root translation table is stored in
- * TTB0_EL1
  */
 TableDescriptor *kernel_page_table;
+
+/*
+ *
+ * And user space address space's root translation table is stored in
+ * TTB0_EL1, this is used to kernel threads only.
+ */
+TableDescriptor *kernel_user_table;
 
 /*
  * Each region has its own lock and its own apis.
@@ -39,6 +45,13 @@ void vm_init(void)
 		      str_err(PTR_TO_ERR(kernel_page_table)));
 	}
 
+	kernel_user_table = paging_create_table();
+	if (IS_ERR(kernel_user_table)) {
+		panic("could not allocate for kernel thread user page table, "
+		      "returned = %s",
+		      str_err(PTR_TO_ERR(kernel_user_table)));
+	}
+
 	/* setup kernel paging */
 	paging_kernel_init(kernel_page_table);
 	vm_set_kernel_page_table();
@@ -52,6 +65,12 @@ void vm_init(void)
 void vm_set_kernel_page_table(void)
 {
 	paging_switch_kernel_table(kernel_page_table);
+}
+
+/* get kernal user page table */
+TableDescriptor *vm_get_kernel_user_page_table(void)
+{
+	return kernel_user_table;
 }
 
 /*

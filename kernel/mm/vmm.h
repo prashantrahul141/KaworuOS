@@ -11,6 +11,9 @@ void vm_init(void);
 /* set kernal page table for current cpu */
 void vm_set_kernel_page_table(void);
 
+/* get kernal user page table */
+TableDescriptor *vm_get_kernel_user_page_table(void);
+
 /*
  * Allocates and maps virtual address
  *
