@@ -38,6 +38,18 @@ endmenu
 
 
 
+menu "Memory"
+
+config VM_MAX_USER_ALLOCATIONS
+    int "Maximum number vm allocation per user process"
+    default 256
+    help
+      Sets the maximum number of vm allocations a user process is allowed to do
+
+endmenu
+
+
+
 menu "Scheduler"
 
 choice SCHEDULER_POLICY
