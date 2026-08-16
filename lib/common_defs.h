@@ -20,6 +20,7 @@
 #define PACKED	       __attribute__((packed))
 #define USED	       __attribute__((used))
 #define UNUSED	       __attribute__((unused))
+#define NORETURN       __attribute__((noreturn))
 
 #define NO_SANITIZE(rule) __attribute__((no_sanitize(rule)))
 
