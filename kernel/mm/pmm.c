@@ -81,11 +81,7 @@ void pmm_free(usize phy_addr)
 		      phy_addr, PAGE_SIZE);
 	}
 
-	// zeroout
-	void *virt_addr = pmm_phys_to_virt(phy_addr);
-	memset(virt_addr, 0, PAGE_SIZE);
-
-	PhyChunk *p = virt_addr;
+	PhyChunk *p = pmm_phys_to_virt(phy_addr);
 	spinlock_acquire_scoped(&pmm.spinlock);
 	p->next = pmm.free_list;
 	pmm.free_list = p;
