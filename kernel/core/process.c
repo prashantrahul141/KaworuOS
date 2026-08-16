@@ -14,6 +14,9 @@ void process_init(Process *proc, usize pid, const i8 *name, AddressSpace *as)
 	proc->address_space = as;
 
 	intrusivelist_init(&proc->threads);
+
+	proc->exiting = false;
+	proc->exit_code = 0;
 }
 
 void process_add_thread(Process *proc, Task *thread)

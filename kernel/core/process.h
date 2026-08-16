@@ -25,6 +25,9 @@ typedef struct {
 	ProcessState state;
 	IntrusiveList threads;
 	struct Process *parent;
+
+	bool exiting;
+	i64 exit_code;
 } Process;
 
 void process_init(Process *proc, usize pid, const i8 *name, AddressSpace *as);
