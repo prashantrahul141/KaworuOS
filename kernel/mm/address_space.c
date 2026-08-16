@@ -56,6 +56,8 @@ void address_space_destroy(AddressSpace *as)
 	}
 
 	region_destroy(as->user_region);
+	// TODO: currently it does not clean pages which are directly mapped and
+	// not allocated
 	paging_destroy_table(as->table);
 	kfree(as);
 }
