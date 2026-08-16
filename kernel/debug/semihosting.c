@@ -64,15 +64,15 @@ usize sh_call(SemiHostingOperations op, void *params)
 
 void sh_exit(u64 code)
 {
-	sh_call(SYS_EXIT, &code);
+	sh_call(SH_SYS_EXIT, &code);
 }
 
 void sh_write0(u8 *str)
 {
-	sh_call(SYS_WRITE0, str);
+	sh_call(SH_SYS_WRITE0, str);
 }
 
 void sh_writec(u8 ch)
 {
-	sh_call(SYS_WRITEC, &ch);
+	sh_call(SH_SYS_WRITEC, &ch);
 }
