@@ -1,13 +1,12 @@
 #include "mm/pmm.h"
+#include "boot/memmap.h"
 #include "debug/assert.h"
 #include "error.h"
-#include "limine.h"
 #include "debug/panic.h"
 #include "sync/spinlock.h"
 #include "memlayout.h"
 #include "common_defs.h"
 #include "string.h"
-#include "boot/limine_responses.h"
 
 typedef struct PhyChunk PhyChunk;
 
@@ -27,34 +26,35 @@ static void pmm_free_range(usize start, usize end);
 void pmm_init(void)
 {
 	INFO("Initializing physical page allocator");
-	if (nullptr == limine_memmap()) {
-		panic("memory was not mapped by limine");
-	}
-
-	if (nullptr == limine_hhdm()) {
-		panic("hhdm failed?");
-	}
-
-	DEBUG("hddm offset = %p", limine_hhdm()->offset);
+	DEBUG("hddm offset = %p", memmap_hddm_offset());
 
 	spinlock_init(&pmm.spinlock, "pmm");
 
 	DEBUG("creating freelist");
 	UNUSED usize count = 1;
-	for (usize index = 0; index < limine_memmap()->entry_count; index++) {
-		struct limine_memmap_entry *entry =
-			limine_memmap()->entries[index];
-		switch (entry->type) {
-		case LIMINE_MEMMAP_USABLE: {
+
+	MemMapTable *memmap_table = memmap_get_table();
+	for (usize index = 0; index < memmap_table->count; index++) {
+		MemMapEntry entry = memmap_table->entries[index];
+		switch (entry.type) {
+		case MEMMAP_ACPI_RECLAIMABLE:
+		case MEMMAP_USABLE: {
 			DEBUG("entry [%d] base = %p, length = %p, end = "
 			      "%p",
-			      count, entry->base, entry->length,
-			      entry->base + entry->length);
-			pmm_free_range(entry->base,
-				       entry->base + entry->length);
+			      count, entry.base, entry.length,
+			      entry.base + entry.length);
+			pmm_free_range(entry.base, entry.base + entry.length);
 			count++;
 			break;
 		}
+		case MEMMAP_RESERVED:
+		case MEMMAP_ACPI_NVS:
+		case MEMMAP_BAD_MEMORY:
+		case MEMMAP_BOOTLOADER_RECLAIMABLE:
+		case MEMMAP_EXECUTABLE_AND_MODULES:
+		case MEMMAP_FRAMEBUFFER:
+		case MEMMAP_RESERVED_MAPPED:
+		case MEMMAP_UNKNOWN:
 		default:
 			break;
 		}
@@ -93,7 +93,7 @@ void pmm_free(usize phy_addr)
  */
 void *pmm_phys_to_virt(usize phy)
 {
-	return (void *)(phy + limine_hhdm()->offset);
+	return (void *)(phy + memmap_hddm_offset());
 }
 
 /*
@@ -102,18 +102,11 @@ void *pmm_phys_to_virt(usize phy)
 usize pmm_virt_to_phys(const void *virt)
 {
 	usize v = (usize)virt;
-	ASSERT(v >= limine_hhdm()->offset,
-	       "virtual address (%p) is smaller "
-	       "than hhdm offset (%p)",
-	       v, limine_hhdm()->offset);
-	return v - limine_hhdm()->offset;
-}
-
-/* converts virtual to physical for kernel symbols */
-usize kernel_virt_to_phys(usize va)
-{
-	return limine_kernel_address()->physical_base +
-	       (va - limine_kernel_address()->virtual_base);
+	usize offset = memmap_hddm_offset();
+	ASSERT(v >= offset,
+	       "virtual address (%p) is smaller than hhdm offset (%p)", v,
+	       offset);
+	return v - offset;
 }
 
 static void pmm_free_range(usize start, usize end)
