@@ -60,6 +60,7 @@ C_SOURCES := $D/common/manager.c \
 			$K/core/cpu.c \
 			$K/core/process.c \
 			$K/core/process_manager.c \
+			$K/core/syscall.c \
 			$K/core/task.c \
 			$K/core/task_manager.c \
 			$K/core/timer.c \
