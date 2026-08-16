@@ -2,6 +2,7 @@
 #include "aarch64/context.h"
 #include "core/cpu.h"
 #include "core/process.h"
+#include "core/task_manager.h"
 #include "core/timer.h"
 #include "debug/assert.h"
 #include "ds/intrusivelist.h"
@@ -193,12 +194,20 @@ static Task *scheduler_pick_next(Cpu *cpu)
 		return cpu->cleanup_task;
 	}
 
-	Task *next = scheduler_policy_pick_next(cpu);
-	if (next == nullptr) {
-		next = cpu->idle;
-	}
+	for (;;) {
+		Task *next = scheduler_policy_pick_next(cpu);
+		if (next == nullptr) {
+			return cpu->idle;
+		}
 
-	return next;
+		if (is_task_process_exiting(next)) {
+			task_manager_set_state(next, TASK_DEAD);
+			cpu->needs_cleanup = true;
+			continue;
+		}
+
+		return next;
+	}
 }
 
 static void switch_address_space(Task *prev, Task *next)
@@ -220,7 +229,8 @@ static void switch_address_space(Task *prev, Task *next)
 
 void scheduler_switch(void)
 {
-	/* save current irq state locally in this task's scheduler "context" */
+	/* save current irq state locally in this task's scheduler
+	 * "context" */
 	bool irq_was_enabled = irq_local_is_enable();
 	irq_local_disable();
 
@@ -230,7 +240,8 @@ void scheduler_switch(void)
 	Task *prev = cpu->current;
 
 	if (nullptr != prev) {
-		ASSERT((Cpu *)prev->cpu == cpu, "current task belongs to "
+		ASSERT((Cpu *)prev->cpu == cpu, "current task belongs "
+						"to "
 						"another cpu");
 		ASSERT(prev->state != TASK_BLOCKED ||
 			       prev->waiting_on != nullptr,
@@ -239,15 +250,18 @@ void scheduler_switch(void)
 		       "ready task is waiting on a wait queue");
 
 		/*
-		 * if the current task is still runnable, put it back on the
-		 * run queue before selecting the next task
+		 * if the current task is still runnable, put it back on
+		 * the run queue before selecting the next task
 		 */
 		if (prev != cpu->idle && prev != cpu->cleanup_task &&
 		    TASK_RUNNING == prev->state) {
-			ASSERT(prev->waiting_on == nullptr, "running task is "
+			ASSERT(prev->waiting_on == nullptr, "running "
+							    "task is "
 							    "waiting "
-							    "on a wait queue");
-			ASSERT((Cpu *)prev->cpu == cpu, "running task belongs "
+							    "on a wait "
+							    "queue");
+			ASSERT((Cpu *)prev->cpu == cpu, "running task "
+							"belongs "
 							"to "
 							"another cpu");
 
@@ -261,21 +275,24 @@ void scheduler_switch(void)
 	/* pick the next task */
 	Task *next = scheduler_pick_next(cpu);
 
-	ASSERT((Cpu *)next->cpu == cpu, "selected task belongs to another cpu");
+	ASSERT((Cpu *)next->cpu == cpu, "selected task belongs to "
+					"another cpu");
 	ASSERT(next->state == TASK_READY || next == cpu->idle ||
 		       next == cpu->cleanup_task,
 	       "scheduler "
 	       "selected non "
 	       "ready task");
-	ASSERT(next->waiting_on == nullptr, "scheduler selected task waiting "
+	ASSERT(next->waiting_on == nullptr, "scheduler selected task "
+					    "waiting "
 					    "on a wait queue");
 
 	next->state = TASK_RUNNING;
 	cpu->current = next;
 
 	/*
-	 * if we are already running the chosen task, there is nothing to do
-	 * this happens when the run queue is empty and we're already in idle
+	 * if we are already running the chosen task, there is nothing
+	 * to do this happens when the run queue is empty and we're
+	 * already in idle
 	 */
 	if (prev == next) {
 		ASSERT(next == cpu->idle || next->state == TASK_RUNNING,
@@ -300,7 +317,8 @@ void scheduler_switch(void)
 		}
 
 		/*
-		 * we resume execution here when this task is scheduled again.
+		 * we resume execution here when this task is scheduled
+		 * again.
 		 */
 		return;
 	}
