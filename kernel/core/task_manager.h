@@ -25,4 +25,7 @@ Task *task_manager_find_dead_task(void);
 
 void task_manager_remove_task(Task *task);
 
+/* set state of a task with lock held */
+void task_manager_set_state(Task *task, TaskState state);
+
 #endif // _TASK_MANAGER_H_

@@ -1,5 +1,6 @@
 #include "core/task_manager.h"
 #include "aarch64/aarch64.h"
+#include "core/process.h"
 #include "core/task.h"
 #include "debug/assert.h"
 #include "debug/log.h"
@@ -166,6 +167,12 @@ void task_manager_remove_task(Task *task)
 	intrusivelist_remove(&task_manager.tasks, &task->global_node);
 }
 
+void task_manager_set_state(Task *task, TaskState state)
+{
+	spinlock_acquire_scoped(&task_manager.lock);
+	task->state = state;
+}
+
 /*
  * The idle task.
  * Each cpu owns a separate copy of this task.
@@ -218,6 +225,9 @@ static void task_cleanup(void *arg)
 		       "waiting ");
 
 		task_manager_remove_task(dead);
+		if (dead->process != nullptr) {
+			process_remove_thread((Process *)dead->process, dead);
+		}
 		task_destroy(dead);
 	}
 }
