@@ -22,7 +22,7 @@ static_assert(offsetof(ExceptionFrame, x0) == 16, "wrong offset for x0");
 static_assert(offsetof(ExceptionFrame, reserved2) == 296, "wrong offset for "
 							  "reserved2");
 
-void exception_handler(ExceptionFrame *frame);
+bool exception_handler(ExceptionFrame *frame);
 
 void unhandled_exception_handler(ExceptionFrame *frame);
 

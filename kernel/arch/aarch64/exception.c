@@ -1,6 +1,7 @@
 #include "aarch64/exception.h"
 #include "aarch64/aarch64.h"
 #include "common_defs.h"
+#include "core/syscall.h"
 #include "io/console.h"
 #include "irq/irq_controller.h"
 
@@ -13,14 +14,15 @@ typedef struct {
 static inline void print_regs(ExceptionFrame *frame);
 static inline EcDecoded print_exception_class_info(ExceptionFrame *frame);
 
-void exception_handler(ExceptionFrame *frame)
+bool exception_handler(ExceptionFrame *frame)
 {
 	irq_local_disable();
 
-	if (EXTRACT_BITS(frame->ESR_EL1, 31, 26) == 0b010101) {
-		printf("SVC @ %p with id %d\n", frame->x0);
+	if (is_syscall(frame)) {
+		printf("SVC @ = %d\n", frame->ELR_EL1, frame->x8);
 		console_flush();
-		return;
+		bool should_resched = syscall_dispatch(frame);
+		return should_resched;
 	}
 
 	printf("Caught exception:\n");
@@ -31,6 +33,8 @@ void exception_handler(ExceptionFrame *frame)
 		while (1)
 			cpu_relax();
 	}
+
+	return false;
 }
 
 void unhandled_exception_handler(ExceptionFrame *frame)
