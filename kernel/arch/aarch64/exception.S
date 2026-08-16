@@ -320,6 +320,7 @@ curr_el_spx_serror_handler:
 lower_el_aarch64_sync_handler:
     save_registers
     bl exception_handler
+    cbnz x0, preempt
     restore_registers
     eret
 
