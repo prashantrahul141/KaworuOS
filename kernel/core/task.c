@@ -1,5 +1,6 @@
 #include "core/task.h"
 #include "core/cpu.h"
+#include "core/process.h"
 #include "core/task_manager.h"
 #include "ds/intrusivelist.h"
 #include "error.h"
@@ -102,4 +103,13 @@ bool task_comparator_sleep_until(IntrusiveNode *a, IntrusiveNode *b)
 	Task *first = container_of(a, Task, wait_node);
 	Task *second = container_of(b, Task, wait_node);
 	return first->sleep_until > second->sleep_until;
+}
+
+/*
+ * check if this task's process is exiting
+ */
+bool is_task_process_exiting(const Task *task)
+{
+	return task != nullptr && task->process != nullptr &&
+	       ((Process *)task->process)->exiting;
 }

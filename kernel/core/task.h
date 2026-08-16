@@ -64,4 +64,9 @@ void task_destroy(Task *task);
  */
 bool task_comparator_sleep_until(IntrusiveNode *a, IntrusiveNode *b);
 
+/*
+ * check if this task's process is exiting
+ */
+bool is_task_process_exiting(const Task *task);
+
 #endif // _TASK_H_
