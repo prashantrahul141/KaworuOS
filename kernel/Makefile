@@ -57,6 +57,7 @@ C_SOURCES := $D/common/manager.c \
 			$K/arch/aarch64/exception.c \
 			$K/boot/fdt.c \
 			$K/boot/limine_responses.c \
+			$K/boot/memmap.c \
 			$K/core/cpu.c \
 			$K/core/process.c \
 			$K/core/process_manager.c \

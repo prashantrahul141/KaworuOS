@@ -2,7 +2,6 @@
 #include "aarch64/aarch64.h"
 #include "common_defs.h"
 #include "config.h"
-#include "debug/log.h"
 #include "limine.h"
 #include "types.h"
 
