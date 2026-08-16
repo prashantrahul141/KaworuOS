@@ -54,7 +54,7 @@ errno_t task_init_user(struct Process *p, Task *task, usize user_entry,
 		       usize stack, usize tid, const i8 *name);
 
 /* exits current task */
-void task_exit(Task *task);
+NORETURN void task_exit(Task *task);
 
 /* destroies given task */
 void task_destroy(Task *task);

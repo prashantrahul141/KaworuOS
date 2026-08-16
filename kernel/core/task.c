@@ -1,5 +1,6 @@
 #include "core/task.h"
 #include "core/cpu.h"
+#include "core/task_manager.h"
 #include "ds/intrusivelist.h"
 #include "error.h"
 #include "irq/irq_controller.h"
@@ -23,7 +24,6 @@ void task_trampoline(void)
 	irq_local_enable();
 	task->entry(task->arg);
 	DEBUG("task = %s exited", task->name);
-	cpu->needs_cleanup = true;
 	task_exit(task);
 	panic("trampoline ended?");
 }
@@ -79,10 +79,12 @@ errno_t task_init(struct Process *p, Task *task, task_fn_type task_fn,
 	return EOK;
 }
 
-void task_exit(Task *task)
+NORETURN void task_exit(Task *task)
 {
-	task->state = TASK_DEAD;
+	this_cpu()->needs_cleanup = true;
+	task_manager_set_state(task, TASK_DEAD);
 	yield();
+	UNREACHABLE();
 }
 
 void task_destroy(Task *task)
