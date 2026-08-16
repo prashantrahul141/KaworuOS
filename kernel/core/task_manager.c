@@ -225,8 +225,17 @@ static void task_cleanup(void *arg)
 		       "waiting ");
 
 		task_manager_remove_task(dead);
-		if (dead->process != nullptr) {
+		Process *proc = (Process *)dead->process;
+		if (proc != nullptr) {
 			process_remove_thread((Process *)dead->process, dead);
+
+			if (proc->exiting && 0 == process_thread_count(proc)) {
+				DEBUG("last thread existed for process %s, "
+				      "cleaning address space",
+				      proc->name);
+				address_space_destroy(proc->address_space);
+				proc->address_space = nullptr;
+			}
 		}
 		task_destroy(dead);
 	}
