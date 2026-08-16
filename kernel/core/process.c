@@ -1,7 +1,9 @@
 #include "core/process.h"
+#include "core/cpu.h"
 #include "mm/address_space.h"
 #include "core/task.h"
 #include "sync/spinlock.h"
+#include "core/syscall.h"
 
 void process_init(Process *proc, usize pid, const i8 *name, AddressSpace *as)
 {
@@ -35,4 +37,18 @@ usize process_thread_count(Process *proc)
 {
 	spinlock_acquire_scoped(&proc->lock);
 	return intrusivelist_count(&proc->threads);
+}
+
+NORETURN SYSCALL_DEFINE1(exit, i32, status)
+{
+	Cpu *cpu = this_cpu();
+	Task *task = cpu->current;
+
+	Process *proc = (Process *)task->process;
+	proc->exit_code = status;
+	proc->exiting = true;
+	proc->state = PROCESS_ZOMBIE;
+
+	INFO("exiting task = %s with status code = %d", proc->name, status);
+	task_exit(task);
 }

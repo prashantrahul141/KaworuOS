@@ -2,7 +2,9 @@
 #define _PROCESS_H_
 
 #include "mm/address_space.h"
+#include "core/syscall.h"
 #include "core/task.h"
+#include "types.h"
 #include "sync/spinlock.h"
 
 typedef enum {
@@ -40,5 +42,7 @@ void process_add_thread(Process *proc, Task *task);
 void process_remove_thread(Process *proc, Task *thread);
 
 usize process_thread_count(Process *proc);
+
+NORETURN SYSCALL_DEFINE1_H(exit, i32, status)
 
 #endif // _PROCESS_H_
