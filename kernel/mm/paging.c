@@ -12,6 +12,7 @@
 #include "string.h"
 #include "types.h"
 #include "debug/panic.h"
+#include "boot/memmap.h"
 
 constexpr usize PAGE_SHIFT = 12;
 constexpr usize PT_INDEX_MASK = 0x1FF;

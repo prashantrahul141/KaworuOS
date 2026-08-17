@@ -2,6 +2,7 @@
 #define _INIT_H_
 
 #include "aarch64/aarch64.h"
+#include "boot/memmap.h"
 #include "common_defs.h"
 #include "io/console.h"
 #include "core/cpu.h"

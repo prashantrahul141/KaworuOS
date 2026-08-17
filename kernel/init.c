@@ -3,6 +3,7 @@
 void kernel_main(void)
 {
 	limine_responses_save();
+	memmap_save_init();
 	cpu_cache_current_cpu();
 	console_init(true);
 
