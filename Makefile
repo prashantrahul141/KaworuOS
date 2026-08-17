@@ -75,7 +75,11 @@ syncconfig:
 # building ---------------------
 build: $(ISO) ## Build kernel iso
 
-$(ISO): kernel | setup-iso-dir
+$(ISO): kernel \
+        iso/boot/$(NAME) \
+        iso/boot/limine/limine.conf \
+        iso/boot/limine/limine-uefi-cd.bin \
+        iso/EFI/BOOT/BOOTAA64.EFI
 	@printf "\tXORRISO %s\n" $(ISO)
 	@xorriso -as mkisofs -R -r -J \
 		-hfsplus -apm-block-size 2048 \
@@ -84,29 +88,31 @@ $(ISO): kernel | setup-iso-dir
 		iso -o $(ISO) > /dev/null 2>&1
 	@printf "\niso file: %s\n" $(ISO)
 
-setup-iso-dir: iso/boot/$(NAME) iso/boot/limine/limine.conf iso/boot/limine/limine-uefi-cd.bin iso/EFI/BOOT/BOOTAA64.EFI
+iso/boot/$(NAME): kernel | iso/boot/limine
+	@printf "\tCOPY %s\n" $@
+	@cp $(ELF) $@
 
-# copy files
-iso/.dirs:
-	@printf "\tMKDIR iso\n"
-	@mkdir -p iso/boot/limine iso/EFI/BOOT
-	@touch $@
-iso/boot/$(NAME): $(ELF) | iso/.dirs
+iso/boot/limine/limine.conf: limine.conf | iso/boot/limine
 	@printf "\tCOPY %s\n" $@
 	@cp $< $@
-iso/boot/limine/limine.conf: limine.conf | iso/.dirs
+
+iso/boot/limine/limine-uefi-cd.bin: thirdparty/limine-binaries/limine-uefi-cd.bin | iso/boot/limine
 	@printf "\tCOPY %s\n" $@
 	@cp $< $@
-iso/boot/limine/limine-uefi-cd.bin: thirdparty/limine-binaries/limine-uefi-cd.bin | iso/.dirs
+
+iso/EFI/BOOT/BOOTAA64.EFI: thirdparty/limine-binaries/BOOTAA64.EFI | iso/EFI/BOOT
 	@printf "\tCOPY %s\n" $@
 	@cp $< $@
-iso/EFI/BOOT/BOOTAA64.EFI: thirdparty/limine-binaries/BOOTAA64.EFI | iso/.dirs
-	@printf "\tCOPY %s\n" $@
-	@cp $< $@
+
+iso/boot/limine:
+	@mkdir -p $@
+
+iso/EFI/BOOT:
+	@mkdir -p $@
 
 .PHONY: kernel
 kernel:
-	@make -C kernel/
+	@$(MAKE) -C kernel/
 
 # running ---------------------
 .PHONY: run

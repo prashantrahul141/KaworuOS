@@ -41,20 +41,31 @@ L = ../lib
 U = ../user
 D = ../drivers
 TH = ../thirdparty
+
+
 # files are in the order of what `fd` returns
-ASM_SOURCES = $K/arch/aarch64/context_switch.S \
+
+
+# kernel asm sources
+_KERNEL_ASM_SOURCES= $K/arch/aarch64/context_switch.S \
 			  $K/arch/aarch64/exception.S \
 			  $K/arch/aarch64/secondary_entry.S \
 			  $K/arch/aarch64/start.S \
 			  $K/arch/aarch64/user_entry_trampoline.S
+ASM_SOURCES = $(_KERNEL_ASM_SOURCES)
+
 ASM_OBJS = $(ASM_SOURCES:=.o)
 
-C_SOURCES := $D/common/manager.c \
+
+# driver code
+_DRIVER_C_SOURCES := $D/common/manager.c \
 			$D/framebuffer/framebuffer.c \
 			$D/irqchip/arm-gicv2.c \
 			$D/timer/arm-timer.c \
-			$D/uart/pl011.c \
-			$K/arch/aarch64/exception.c \
+			$D/uart/pl011.c
+
+# core kernel
+_KERNEL_C_SOURCES := $K/arch/aarch64/exception.c \
 			$K/boot/fdt.c \
 			$K/boot/limine_responses.c \
 			$K/boot/memmap.c \
@@ -81,8 +92,10 @@ C_SOURCES := $D/common/manager.c \
 			$K/sync/run_queue.c \
 			$K/sync/semaphore.c \
 			$K/sync/spinlock.c \
-			$K/sync/wait_queue.c \
-			$L/allocator/arena.c \
+			$K/sync/wait_queue.c
+
+# library
+_LIB_C_SOURCES := $L/allocator/arena.c \
 			$L/allocator/bitmap.c \
 			$L/allocator/freelist.c \
 			$L/allocator/region.c \
@@ -93,15 +106,16 @@ C_SOURCES := $D/common/manager.c \
 			$L/stdlib.c \
 			$L/string.c
 
+C_SOURCES := $(_DRIVER_C_SOURCES) $(_KERNEL_C_SOURCES) $(_LIB_C_SOURCES)
+C_OBJS = $(C_SOURCES:=.o)
 
+# thirdparty
 _LIBFDT_SRCS := fdt.c fdt_ro.c fdt_wip.c fdt_sw.c fdt_rw.c fdt_strerror.c fdt_empty_tree.c \
 	fdt_addresses.c fdt_overlay.c fdt_check.c
 LIBFDT_SRCS := $(addprefix $(TH)/libfdt/, $(_LIBFDT_SRCS))
 FLANTERM_SRCS := $(TH)/Flanterm/src/flanterm.c \
 				$(TH)/Flanterm/src/flanterm_backends/fb.c
 EXTERNAL_C_SOURCES = $(LIBFDT_SRCS) $(FLANTERM_SRCS)
-
-C_OBJS = $(C_SOURCES:=.o)
 C_EXTERNAL_OBJS = $(EXTERNAL_C_SOURCES:=.e.o)
 
 OBJS = $(ASM_OBJS) $(C_OBJS) $(C_EXTERNAL_OBJS)
