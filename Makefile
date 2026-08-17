@@ -1,6 +1,6 @@
 # Version
 export VERSION_MAJOR = 0
-export VERSION_MINOR = 4
+export VERSION_MINOR = 5
 
 CONFIG_FREE_TARGETS := help menuconfig defconfig debugconfig clean cleanall cleandebug cleanconfig
 # Require .config for everything else
@@ -168,7 +168,7 @@ help: # Show this help
 
 # create releases
 .PHONY: release_kernel
-rkf = kaworuos-elf-$(VERSION_MAJOR).$(VERSION_MINOR)
+rkf = kaworuos-kernel-$(VERSION_MAJOR).$(VERSION_MINOR)
 release_kernel: $(ISO)
 	mkdir -p $(rkf)/
 	cp $(ISO) $(rkf)/
