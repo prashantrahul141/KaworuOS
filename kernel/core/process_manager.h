@@ -12,6 +12,11 @@ void proc_manager_init(void);
 Process *proc_manager_create(const i8 *name);
 
 /*
+ * destroys process
+ */
+void proc_manager_remove_destroy(Process *proc);
+
+/*
  * creates a new process with the given process entry point
  */
 Process *proc_manager_create_exec(const i8 *name, usize program_pa,

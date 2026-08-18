@@ -34,9 +34,6 @@ typedef struct {
 
 void process_init(Process *proc, usize pid, const i8 *name, AddressSpace *as);
 
-/* TODO: implement */
-void process_destroy(Process *proc);
-
 void process_add_thread(Process *proc, Task *task);
 
 void process_remove_thread(Process *proc, Task *thread);

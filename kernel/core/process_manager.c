@@ -1,6 +1,7 @@
 #include "core/process_manager.h"
 #include "core/task.h"
 #include "core/task_manager.h"
+#include "debug/assert.h"
 #include "debug/log.h"
 #include "mm/address_space.h"
 #include "core/process.h"
@@ -115,4 +116,27 @@ Process *proc_manager_create_exec(const i8 *name, usize program_pa,
 	process_add_thread(proc, task);
 	scheduler_enqueue(task);
 	return proc;
+}
+
+/*
+ * destroys process
+ */
+void proc_manager_remove_destroy(Process *proc)
+{
+	spinlock_acquire_scoped(&proc_manager.lock);
+	ASSERT(proc->state == PROCESS_ZOMBIE, "removing & destroying a non "
+					      "zombie process");
+	DEBUG("destroying process: %s", proc->name);
+
+	usize thread_count = intrusivelist_count(&proc->threads);
+	ASSERT(thread_count > 0, "destroying task which has %d (> 0) threads",
+	       thread_count);
+
+	intrusivelist_remove(&proc_manager.process_list, &proc->manager_node);
+
+	if (proc->address_space != nullptr) {
+		address_space_destroy(proc->address_space);
+	}
+
+	kfree(proc);
 }
