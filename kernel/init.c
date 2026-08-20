@@ -1,4 +1,11 @@
 #include "init.h"
+#include "memlayout.h"
+#include "mm/address_space.h"
+#include "mm/paging.h"
+#include "mm/pmm.h"
+#include <string.h>
+
+extern symbol user_init;
 
 void kernel_main(void)
 {
@@ -34,6 +41,10 @@ void kernel_main(void)
 
 	printf("\nHello from kaworu\n\n");
 	console_flush();
+
+	usize p = pmm_alloc();
+	memcpy(pmm_phys_to_virt(p), user_init, PAGE_SIZE);
+	proc_manager_create_exec("init", p, PAGE_SIZE, USER_PROGRAM_START_VM);
 
 	scheduler_init();
 
