@@ -304,8 +304,8 @@ void scheduler_switch(void)
 		return;
 	}
 
-	DEBUG("switching task from = %s to = %s", prev ? prev->name : "nil",
-	      next->name);
+	DEBUG("(cpu = %d) switching task from = %s to = %s", cpu->cpuid,
+	      prev ? prev->name : "nil", next->name);
 
 	if (nullptr != prev) {
 		switch_address_space(prev, next);
