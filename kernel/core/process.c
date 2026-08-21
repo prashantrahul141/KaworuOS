@@ -39,3 +39,15 @@ usize process_thread_count(Process *proc)
 	spinlock_acquire_scoped(&proc->lock);
 	return intrusivelist_count(&proc->threads);
 }
+
+SYSCALL_DEFINE0(getpid)
+{
+	Task *task = this_cpu()->current;
+	ASSERT(task != nullptr, "task cant be null");
+
+	Process *proc = (Process *)task->process;
+	ASSERT(proc != nullptr, "proc cant be null");
+
+	return (SyscallReturn){ .ret = (i64)proc->pid,
+				.should_resched = false };
+}

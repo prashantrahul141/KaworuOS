@@ -41,4 +41,6 @@ void process_remove_thread(Process *proc, Task *thread);
 
 usize process_thread_count(Process *proc);
 
+SYSCALL_DECLARE(getpid);
+
 #endif // _PROCESS_H_
