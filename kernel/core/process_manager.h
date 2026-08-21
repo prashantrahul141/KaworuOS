@@ -2,6 +2,8 @@
 #define _PROCESS_MANAGER_H_
 
 #include "core/process.h"
+#include "core/syscall.h"
+#include "core/syscall_table.h"
 #include "types.h"
 
 void proc_manager_init(void);
@@ -21,5 +23,11 @@ void proc_manager_remove_destroy(Process *proc);
  */
 Process *proc_manager_create_exec(const i8 *name, usize program_pa,
 				  usize program_size, usize entry);
+
+SYSCALL_DECLARE(fork);
+
+SYSCALL_DECLARE(exit);
+
+SYSCALL_DECLARE(yield);
 
 #endif // _PROCESS_MANAGER_H_

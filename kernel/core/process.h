@@ -1,9 +1,9 @@
 #ifndef _PROCESS_H_
 #define _PROCESS_H_
 
+#include "core/syscall.h"
 #include "core/syscall_table.h"
 #include "mm/address_space.h"
-#include "core/syscall.h"
 #include "core/task.h"
 #include "types.h"
 #include "sync/spinlock.h"
@@ -40,9 +40,5 @@ void process_add_thread(Process *proc, Task *task);
 void process_remove_thread(Process *proc, Task *thread);
 
 usize process_thread_count(Process *proc);
-
-SYSCALL_DECLARE(exit);
-
-SYSCALL_DECLARE(yield);
 
 #endif // _PROCESS_H_

@@ -140,3 +140,33 @@ void proc_manager_remove_destroy(Process *proc)
 
 	kfree(proc);
 }
+
+SYSCALL_DEFINE0(fork)
+{
+	Cpu *cpu = this_cpu();
+	Task *task = cpu->current;
+
+	const Process *proc = (Process *)task->process;
+
+	return (SyscallReturn){ .should_resched = false, .ret = EOK };
+}
+
+SYSCALL_DEFINE1(exit, i64, status)
+{
+	Cpu *cpu = this_cpu();
+	Task *task = cpu->current;
+
+	Process *proc = (Process *)task->process;
+	proc->exit_code = status;
+	proc->exiting = true;
+	proc->state = PROCESS_ZOMBIE;
+
+	DEBUG("exiting task = %s with status code = %d", proc->name, status);
+	task_exit(task);
+	UNREACHABLE();
+}
+
+SYSCALL_DEFINE0(yield)
+{
+	return (SyscallReturn){ .should_resched = true, .ret = EOK };
+}

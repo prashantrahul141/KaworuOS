@@ -1,11 +1,11 @@
 #include "core/process.h"
-#include "common_defs.h"
 #include "core/cpu.h"
 #include "core/syscall_table.h"
+#include "core/syscall.h"
+#include "debug/assert.h"
 #include "mm/address_space.h"
 #include "core/task.h"
 #include "sync/spinlock.h"
-#include "core/syscall.h"
 
 void process_init(Process *proc, usize pid, const i8 *name, AddressSpace *as)
 {
@@ -38,24 +38,4 @@ usize process_thread_count(Process *proc)
 {
 	spinlock_acquire_scoped(&proc->lock);
 	return intrusivelist_count(&proc->threads);
-}
-
-SYSCALL_DEFINE1(exit, i64, status)
-{
-	Cpu *cpu = this_cpu();
-	Task *task = cpu->current;
-
-	Process *proc = (Process *)task->process;
-	proc->exit_code = status;
-	proc->exiting = true;
-	proc->state = PROCESS_ZOMBIE;
-
-	DEBUG("exiting task = %s with status code = %d", proc->name, status);
-	task_exit(task);
-	UNREACHABLE();
-}
-
-SYSCALL_DEFINE0(yield)
-{
-	return (SyscallReturn){ .should_resched = true, .ret = EOK };
 }
