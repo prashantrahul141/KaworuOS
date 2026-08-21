@@ -4,16 +4,17 @@
 #include "common_defs.h"
 #include "types.h"
 
-#define ERR_LIST                         \
-	X(EOK) /* ok! */                 \
-	X(ENOMEM) /* no memory */        \
-	X(EINVAL) /* invalid argument */ \
-	X(ENODEV) /* no such device */   \
-	X(ENOENT) /* no such entity */   \
-	X(EBUSY) /* in use */            \
-	X(EPERM) /* no perms */          \
-	X(ENOSYS) /* not implemented */  \
-	X(EFAULT) /* bad address? */     \
+#define ERR_LIST                              \
+	X(EOK) /* ok! */                      \
+	X(ENOMEM) /* no memory */             \
+	X(EINVAL) /* invalid argument */      \
+	X(ENODEV) /* no such device */        \
+	X(ENOENT) /* no such entity */        \
+	X(EBUSY) /* in use */                 \
+	X(EPERM) /* no perms */               \
+	X(ENOSYS) /* not implemented */       \
+	X(EFAULT) /* bad address? */          \
+	X(ENAMETOOLONG) /* string too long */ \
 	X(EMAXERR) /* max count for errors */
 
 #define X(i) i,
