@@ -86,6 +86,7 @@ _KERNEL_C_SOURCES := $K/arch/aarch64/exception.c \
 			$K/mm/kheap.c \
 			$K/mm/paging.c \
 			$K/mm/pmm.c \
+			$K/mm/uaccess.c \
 			$K/mm/vmm.c \
 			$K/sched/scheduler.c \
 			$K/sched/scheduler_policy.c \
