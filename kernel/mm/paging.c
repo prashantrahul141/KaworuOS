@@ -236,15 +236,25 @@ void paging_unmap(TableDescriptor *page, usize va, usize size)
 	tlb_flush();
 }
 
+PageDescriptor *paging_lookup_desc(TableDescriptor *table, u64 va)
+{
+	return walk_pagetable(table, va, false);
+}
+
+usize paging_page_to_pa(PageDescriptor *pde, u64 va)
+{
+	return PAGE_DESC_TO_PA(pde->field.output_address) |
+	       (va & (PAGE_SIZE - 1));
+}
+
 usize paging_lookup(TableDescriptor *table, u64 va)
 {
-	PageDescriptor *pde = walk_pagetable(table, va, false);
+	PageDescriptor *pde = paging_lookup_desc(table, va);
 	if (IS_ERR(pde)) {
 		return 0;
 	}
 
-	return PAGE_DESC_TO_PA(pde->field.output_address) |
-	       (va & (PAGE_SIZE - 1));
+	return paging_page_to_pa(pde, va);
 }
 
 /* walks the given page table and return leaf descriptor */

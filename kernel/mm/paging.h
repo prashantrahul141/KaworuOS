@@ -46,7 +46,7 @@ typedef union {
 	u64 raw;
 
 	struct {
-		u64 is_valid : 1;
+		IsValid is_valid : 1;
 		u64 is_table : 1;
 		u64 ignored1 : 10;
 		u64 next_level_address : 36;
@@ -54,7 +54,7 @@ typedef union {
 		u64 ignored2 : 8;
 		u64 pxn_table : 1;
 		u64 xn_table : 1;
-		u64 ap_table : 2;
+		PagePerms ap_table : 2;
 		u64 ns_table : 1;
 	} field;
 } PACKED TableDescriptor;
@@ -64,20 +64,23 @@ typedef union {
 	u64 raw;
 
 	struct {
-		u64 is_valid : 1;
+		IsValid is_valid : 1;
 		u64 is_page : 1;
-		u64 attr_index : 3;
+		AttrIndex attr_index : 3;
 		u64 ns : 1;
-		u64 ap : 2;
-		u64 sh : 2;
-		u64 af : 1;
+		/* read write perms for both el0 and el1, see PagePerms enum*/
+		PagePerms ap : 2;
+		PageShareability sh : 2;
+		AccessFlag af : 1;
 		u64 nG : 1;
 		u64 output_address : 36;
 		u64 reserved0 : 3;
 		u64 dbm : 1;
 		u64 contiguous : 1;
-		u64 pxn : 1;
-		u64 uxn_xn : 1;
+		/* privilege execution*/
+		ExecPerms pxn : 1;
+		/* underprivilege execution*/
+		ExecPerms uxn_xn : 1;
 		u64 reserved1 : 4;
 		u64 pbha : 4;
 		u64 ignored : 1;
@@ -124,7 +127,17 @@ errno_t paging_map(TableDescriptor *table, usize va, usize pa, usize size,
  */
 void paging_unmap(TableDescriptor *page, usize va, usize size);
 
+/*
+ * lookup page leaf entry from va
+ */
+PageDescriptor *paging_lookup_desc(TableDescriptor *table, u64 va);
+
 /* loops up physical address for the given va. */
 usize paging_lookup(TableDescriptor *table, u64 va);
+
+/*
+ * converts va from a PageDescriptor to pa
+ */
+usize paging_page_to_pa(PageDescriptor *pde, u64 va);
 
 #endif // _VM_MEM_H_

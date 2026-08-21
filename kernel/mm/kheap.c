@@ -56,7 +56,8 @@ static void grow_heap(usize size)
 	      size);
 	ASSERT(size != 0, "size is 0");
 	if (kheap.freelist.capacity + size > MAX_HEAP_SIZE) {
-		WARN("trying to grow heap more than its max size");
+		WARN("trying to grow heap more (by %p) than its max size (%p)",
+		     size, MAX_HEAP_SIZE);
 		return;
 	}
 

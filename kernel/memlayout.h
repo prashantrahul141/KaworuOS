@@ -58,9 +58,10 @@ constexpr usize KERNEL_VM_RANGE_SIZE = ((usize)1 << 30); // ~1GB
 constexpr usize KERNEL_MMIO_RANGE_START = 0xffffffff90000000UL;
 constexpr usize KERNEL_MMIO_RANGE_SIZE = ((usize)256 << 20); // ~256MB
 
-constexpr usize USER_VM_RANGE_BASE = 0x0000000000010000;
+constexpr usize USER_VM_RANGE_BASE = 0x10000;
 /* ~1GB */
 constexpr usize USER_VM_RANGE_SIZE = ((usize)1) << 30;
+constexpr usize USER_VM_RANGE_END = USER_VM_RANGE_BASE + USER_VM_RANGE_SIZE;
 
 constexpr usize USER_PROGRAM_START_VM = 0x400000;
 
