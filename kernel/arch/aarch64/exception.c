@@ -11,7 +11,6 @@ typedef struct {
 	bool halt;
 } EcDecoded;
 
-static inline void print_regs(ExceptionFrame *frame);
 static inline EcDecoded print_exception_class_info(ExceptionFrame *frame);
 
 bool exception_handler(ExceptionFrame *frame)
@@ -27,7 +26,7 @@ bool exception_handler(ExceptionFrame *frame)
 
 	printf("Caught exception:\n");
 	EcDecoded ec = print_exception_class_info(frame);
-	print_regs(frame);
+	dump_exception_frame(frame);
 	console_flush();
 	if (ec.halt) {
 		while (1)
@@ -42,13 +41,13 @@ void unhandled_exception_handler(ExceptionFrame *frame)
 	irq_local_disable();
 	printf("Unhandled exception:\n");
 	print_exception_class_info(frame);
-	print_regs(frame);
+	dump_exception_frame(frame);
 	console_flush();
 	while (1)
 		cpu_relax();
 }
 
-static inline void print_regs(ExceptionFrame *frame)
+void dump_exception_frame(const ExceptionFrame *frame)
 {
 	printf("Registers:\n");
 #define P(reg, frame) printf("\t" #reg " = %p\n", (frame)->reg)

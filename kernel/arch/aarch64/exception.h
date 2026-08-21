@@ -26,4 +26,6 @@ bool exception_handler(ExceptionFrame *frame);
 
 void unhandled_exception_handler(ExceptionFrame *frame);
 
+void dump_exception_frame(const ExceptionFrame *frame);
+
 #endif // _EXCEPTION_H_
