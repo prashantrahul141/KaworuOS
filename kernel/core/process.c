@@ -1,5 +1,7 @@
 #include "core/process.h"
+#include "common_defs.h"
 #include "core/cpu.h"
+#include "core/syscall_table.h"
 #include "mm/address_space.h"
 #include "core/task.h"
 #include "sync/spinlock.h"
@@ -14,7 +16,6 @@ void process_init(Process *proc, usize pid, const i8 *name, AddressSpace *as)
 
 	proc->state = PROCESS_RUNNING;
 	proc->address_space = as;
-
 	intrusivelist_init(&proc->threads);
 
 	proc->exiting = false;
@@ -39,7 +40,7 @@ usize process_thread_count(Process *proc)
 	return intrusivelist_count(&proc->threads);
 }
 
-NORETURN SYSCALL_DEFINE1(exit, i32, status)
+SYSCALL_DEFINE1(exit, i64, status)
 {
 	Cpu *cpu = this_cpu();
 	Task *task = cpu->current;
@@ -49,6 +50,12 @@ NORETURN SYSCALL_DEFINE1(exit, i32, status)
 	proc->exiting = true;
 	proc->state = PROCESS_ZOMBIE;
 
-	INFO("exiting task = %s with status code = %d", proc->name, status);
+	DEBUG("exiting task = %s with status code = %d", proc->name, status);
 	task_exit(task);
+	UNREACHABLE();
+}
+
+SYSCALL_DEFINE0(yield)
+{
+	return (SyscallReturn){ .should_resched = true, .ret = EOK };
 }

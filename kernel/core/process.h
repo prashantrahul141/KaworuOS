@@ -1,6 +1,7 @@
 #ifndef _PROCESS_H_
 #define _PROCESS_H_
 
+#include "core/syscall_table.h"
 #include "mm/address_space.h"
 #include "core/syscall.h"
 #include "core/task.h"
@@ -40,6 +41,8 @@ void process_remove_thread(Process *proc, Task *thread);
 
 usize process_thread_count(Process *proc);
 
-NORETURN SYSCALL_DEFINE1_H(exit, i32, status)
+SYSCALL_DECLARE(exit);
+
+SYSCALL_DECLARE(yield);
 
 #endif // _PROCESS_H_
