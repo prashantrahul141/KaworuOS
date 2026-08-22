@@ -14,6 +14,10 @@ static inline bool bm_is_page_allocated(const AllocBitMap *alloc, usize page);
 static inline usize bm_find_n_free_pages(const AllocBitMap *alloc,
 					 usize page_count);
 static inline void bm_set_page_allocate(AllocBitMap *alloc, usize page);
+static inline void bm_set_page_free(AllocBitMap *alloc, usize page);
+static inline bool bm_get_page_allocated(const AllocBitMap *alloc, usize page);
+static inline void *bm_page_to_addr(const AllocBitMap *alloc, usize page);
+static inline usize bm_addr_to_page(const AllocBitMap *alloc, void *addr);
 
 void *bitmap_alloc(AllocBitMap *alloc, usize page_count)
 {
@@ -25,6 +29,26 @@ void *bitmap_alloc(AllocBitMap *alloc, usize page_count)
 	}
 
 	return bm_allocate(alloc, free_n_pos, page_count);
+}
+
+/*
+ * mark the given range of pages as allocated, without allocating from the
+ * pool
+ */
+errno_t bitmap_reserve(AllocBitMap *alloc, void *addr, usize page_count)
+{
+	usize page = bm_addr_to_page(alloc, addr);
+	for (usize pos = page; pos < page + page_count; pos++) {
+		if (bm_is_page_allocated(alloc, pos)) {
+			WARN("trying to reserve already allocated pages, addr "
+			     "= %p",
+			     addr);
+			return -ENOMEM;
+		}
+	}
+
+	bm_allocate(alloc, page, page_count);
+	return EOK;
 }
 
 void bitmap_free(AllocBitMap *alloc, void *addr, usize page_count)
@@ -93,15 +117,6 @@ static inline usize bm_find_n_free_pages(const AllocBitMap *alloc,
 
 	return SIZE_MAX;
 }
-
-/*
- * these are here because i dont want other functions to be able to call these.
- * instead use bm_allocate, bm_free, bm_is_page_allocated
- */
-static inline void bm_set_page_free(AllocBitMap *alloc, usize page);
-static inline bool bm_get_page_allocated(const AllocBitMap *alloc, usize page);
-static inline void *bm_page_to_addr(const AllocBitMap *alloc, usize page);
-static inline usize bm_addr_to_page(const AllocBitMap *alloc, void *addr);
 
 static inline bool bm_is_page_allocated(const AllocBitMap *alloc, usize page)
 {

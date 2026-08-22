@@ -18,6 +18,13 @@ typedef struct {
 } AllocBitMap;
 
 void *bitmap_alloc(AllocBitMap *alloc, usize page_count);
+
+/*
+ * mark the given range of pages as allocated, without allocating from the
+ * pool
+ */
+errno_t bitmap_reserve(AllocBitMap *alloc, void *addr, usize page_count);
+
 void bitmap_free(AllocBitMap *alloc, void *addr, usize size);
 
 /* copy allocation state from src to dst */
