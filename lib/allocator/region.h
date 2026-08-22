@@ -19,7 +19,7 @@ typedef struct {
 	SpinLock lock;
 	AllocBitMap allocator;
 	RegionAllocation *allocations;
-	usize allocations_size;
+	usize max_allocations_count;
 } AllocRegion;
 
 #define STATIC_ALLOC_VM_REGION(name, addr, size)                                \
@@ -31,7 +31,7 @@ typedef struct {
 			       .page_count = (size) / (PAGE_SIZE),              \
 			       .pool = (u8 *)(addr) },                          \
 		.allocations = _allocations_storage_##name,                     \
-		.allocations_size = SIZE_TO_BITMAP_BYTES((size))                \
+		.max_allocations_count = SIZE_TO_BITMAP_BYTES((size))           \
 	};
 
 /*
@@ -48,6 +48,9 @@ void region_init(AllocRegion *region, const i8 *msg);
 RegionAllocation *region_find(AllocRegion *region, void *addr);
 
 void *region_alloc(AllocRegion *region, usize page_count);
+
+/* copy state of region allocator from src to dst */
+errno_t region_copy(AllocRegion *dst, AllocRegion *src);
 
 usize region_free(AllocRegion *region, void *addr);
 

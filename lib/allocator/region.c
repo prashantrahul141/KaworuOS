@@ -15,7 +15,7 @@ void region_init(AllocRegion *region, const i8 *msg)
 	memset(region->allocator.bitmap, 0,
 	       SIZE_TO_BITMAP_BYTES(region->allocator.page_count * PAGE_SIZE));
 	memset(region->allocations, 0,
-	       sizeof(*region->allocations) * region->allocations_size);
+	       sizeof(*region->allocations) * region->max_allocations_count);
 }
 
 AllocRegion *region_create(usize base, usize size, usize max_allocations,
@@ -46,9 +46,56 @@ AllocRegion *region_create(usize base, usize size, usize max_allocations,
 	region->allocator.page_count = size / PAGE_SIZE;
 	region->allocator.pool = (u8 *)base;
 	region->allocations = allocs;
-	region->allocations_size = max_allocations;
+	region->max_allocations_count = max_allocations;
 
 	return region;
+}
+
+/* copy state of region allocator from src to dst */
+errno_t region_copy(AllocRegion *dst, AllocRegion *src)
+{
+	if (dst == src) {
+		return EOK;
+	}
+
+	spinlock_acquire_scoped(&dst->lock);
+	spinlock_acquire_scoped(&src->lock);
+
+	if (dst->max_allocations_count < src->max_allocations_count) {
+		WARN("tried copying region with less memory");
+		return -ENOMEM;
+	}
+
+	if (dst->allocator.page_count < src->allocator.page_count) {
+		WARN("tried copying region with less pages");
+		return -ENOMEM;
+	}
+
+	/* copy allocator state */
+	errno_t err = bitmap_copy(&dst->allocator, &src->allocator);
+	if (err != EOK) {
+		return err;
+	}
+
+	/* copy allocations regions */
+	memcpy(dst->allocations, src->allocations,
+	       sizeof(RegionAllocation) * src->max_allocations_count);
+
+	/* translate vms from src's pool to dst's pool */
+	const usize delta =
+		(usize)dst->allocator.pool - (usize)src->allocator.pool;
+	if (delta == 0) {
+		return EOK;
+	}
+
+	for (usize i = 0; i < src->max_allocations_count; i++) {
+		if (dst->allocations[i].va != nullptr) {
+			dst->allocations[i].va =
+				(u8 *)((usize)dst->allocations[i].va + delta);
+		}
+	}
+
+	return EOK;
 }
 
 /*
@@ -63,7 +110,7 @@ void region_destroy(AllocRegion *region)
 
 RegionAllocation *region_find(AllocRegion *region, void *addr)
 {
-	for (size_t i = 0; i < region->allocations_size; i++) {
+	for (size_t i = 0; i < region->max_allocations_count; i++) {
 		if (addr == region->allocations[i].va) {
 			return &region->allocations[i];
 		}
