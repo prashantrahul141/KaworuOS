@@ -13,6 +13,7 @@ static inline void bm_free(AllocBitMap *alloc, void *addr, usize page_count);
 static inline bool bm_is_page_allocated(const AllocBitMap *alloc, usize page);
 static inline usize bm_find_n_free_pages(const AllocBitMap *alloc,
 					 usize page_count);
+static inline void bm_set_page_allocate(AllocBitMap *alloc, usize page);
 
 void *bitmap_alloc(AllocBitMap *alloc, usize page_count)
 {
@@ -33,9 +34,29 @@ void bitmap_free(AllocBitMap *alloc, void *addr, usize page_count)
 	bm_free(alloc, addr, page_count);
 }
 
-void alloc_bitmap_init(AllocBitMap *alloc, void *pool, usize pool_size)
+/* copy allocation state from src to dst */
+errno_t bitmap_copy(AllocBitMap *dst, const AllocBitMap *src)
 {
-	ASSERT(IS_PAGE_ALIGNED((usize)pool), "pool is not page aligned");
+	if (dst->page_count < src->page_count) {
+		WARN("tried to copy bitmap but destination has less memory "
+		     "than source");
+		return -ENOMEM;
+	}
+
+	memset(dst->bitmap, 0,
+	       SIZE_TO_BITMAP_BYTES(dst->page_count * PAGE_SIZE));
+
+	for (usize page_i = 0; page_i < src->page_count; page_i++) {
+		if (bm_is_page_allocated(src, page_i)) {
+			bm_set_page_allocate(dst, page_i);
+		}
+	}
+
+	return EOK;
+}
+
+void bitmap_init_alloc(AllocBitMap *alloc, void *pool, usize pool_size)
+{
 	ASSERT(IS_PAGE_ALIGNED(pool_size), "pool_size is not page aligned");
 
 	usize bitmap_bytes = SIZE_TO_BITMAP_BYTES(pool_size);
@@ -77,7 +98,6 @@ static inline usize bm_find_n_free_pages(const AllocBitMap *alloc,
  * these are here because i dont want other functions to be able to call these.
  * instead use bm_allocate, bm_free, bm_is_page_allocated
  */
-static inline void bm_set_page_allocate(AllocBitMap *alloc, usize page);
 static inline void bm_set_page_free(AllocBitMap *alloc, usize page);
 static inline bool bm_get_page_allocated(const AllocBitMap *alloc, usize page);
 static inline void *bm_page_to_addr(const AllocBitMap *alloc, usize page);

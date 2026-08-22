@@ -6,6 +6,7 @@
 #ifndef _BITMAP_H_
 #define _BITMAP_H_
 
+#include "error.h"
 #include "types.h"
 
 #define SIZE_TO_BITMAP_BYTES(size) (((size) / PAGE_SIZE + 7) / 8)
@@ -19,6 +20,9 @@ typedef struct {
 void *bitmap_alloc(AllocBitMap *alloc, usize page_count);
 void bitmap_free(AllocBitMap *alloc, void *addr, usize size);
 
-void alloc_bitmap_init(AllocBitMap *alloc, void *pool, usize pool_size);
+/* copy allocation state from src to dst */
+errno_t bitmap_copy(AllocBitMap *dst, const AllocBitMap *src);
+
+void bitmap_init_alloc(AllocBitMap *alloc, void *pool, usize pool_size);
 
 #endif // _BITMAP_H_
