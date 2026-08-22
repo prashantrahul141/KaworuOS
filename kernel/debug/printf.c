@@ -1,5 +1,6 @@
 #include "debug/printf.h"
 #include "io/console.h"
+#include "io/io.h"
 #include <stdarg.h>
 #include "types.h"
 
@@ -27,10 +28,7 @@ void vprintf(const i8 *fmt, va_list ap)
 {
 	i8 printf_buffer[PRINT_BUFFER_SIZE];
 	usize wrote = __vsnprintf(printf_buffer, PRINT_BUFFER_SIZE, fmt, ap);
-	IOEvent e = { .msg = printf_buffer,
-		      .len = wrote,
-		      .bg = IO_DEFAULT_COLOR_BG,
-		      .fg = IO_DEFAULT_COLOR_FG };
+	IOEvent e = io_event_default(printf_buffer, wrote);
 	console_write(e);
 }
 

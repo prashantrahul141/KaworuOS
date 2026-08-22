@@ -199,10 +199,7 @@ void console_set_buffering(bool buffering)
 
 errno_t console_write_char(i8 c)
 {
-	IOEvent e = { .msg = &c,
-		      .len = 1,
-		      .bg = IO_DEFAULT_COLOR_BG,
-		      .fg = IO_DEFAULT_COLOR_FG };
+	IOEvent e = io_event_default(&c, 1);
 	return console_write(e);
 }
 

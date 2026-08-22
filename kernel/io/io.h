@@ -66,4 +66,12 @@ typedef struct {
 	usize len;
 } IOEvent;
 
+static inline IOEvent io_event_default(const i8 *msg, usize len)
+{
+	return (IOEvent){ .msg = msg,
+			  .len = len,
+			  .bg = IO_DEFAULT_COLOR_BG,
+			  .fg = IO_DEFAULT_COLOR_FG };
+}
+
 #endif // _IO_H_
