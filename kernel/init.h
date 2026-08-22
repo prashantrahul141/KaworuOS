@@ -23,6 +23,7 @@
 #include "framebuffer/framebuffer.h"
 #include "debug/semihosting.h"
 #include "core/task_manager.h"
+#include "core/syscall_table.h"
 
 /*
  * Kernel's entry point in C.

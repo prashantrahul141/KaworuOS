@@ -1,19 +1,29 @@
 #include "core/syscall_table.h"
 #include "core/process_manager.h"
 #include "core/process.h"
+#include "string.h"
 
 /* keep this sorted for sanity */
-static syscall_function_type global_syscall_table[] = {
-	[SYS_YIELD] = sys_yield,
-	[SYS_GETPID] = sys_getpid,
-	[SYS_EXIT] = sys_exit,
-};
+static syscall_function_type global_syscall_table[MAX_SYSCALL_COUNT] = {};
 
 syscall_function_type syscall_table_retrieve(usize syscall_id)
 {
-	if (syscall_id > sizeof(global_syscall_table)) {
+	if (syscall_id >= MAX_SYSCALL_COUNT) {
 		return nullptr;
 	}
 
 	return global_syscall_table[syscall_id];
+}
+
+void syscall_build_table(void)
+{
+	memset(&global_syscall_table, 0, sizeof(global_syscall_table));
+
+#define S(c, f) global_syscall_table[(c)] = (f)
+	/* keep this sorted */
+	S(SYS_YIELD, sys_yield);
+	S(SYS_GETPID, sys_getpid);
+	S(SYS_EXIT, sys_exit);
+	S(SYS_GETPPID, sys_getppid);
+#undef S
 }

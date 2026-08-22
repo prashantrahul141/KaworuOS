@@ -22,6 +22,9 @@ enum {
 	SYS_GETPPID = 110,
 };
 
+/* this should be the last syscall id + 1 */
+constexpr usize MAX_SYSCALL_COUNT = 111;
+
 typedef struct {
 	i64 ret;
 	bool should_resched;
@@ -30,5 +33,7 @@ typedef struct {
 typedef SyscallReturn (*syscall_function_type)(const ExceptionFrame *frame);
 
 syscall_function_type syscall_table_retrieve(usize syscall_id);
+
+void syscall_build_table(void);
 
 #endif // _SYSCALL_TABLE_H_
