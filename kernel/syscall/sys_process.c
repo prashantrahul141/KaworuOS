@@ -17,6 +17,7 @@ SYSCALL_DEFINE0(fork, frame)
 		return (SyscallReturn){ .ret = PTR_TO_ERR(new_proc),
 					.should_resched = false };
 	}
+	new_proc->parent = (struct Process *)proc;
 
 	return (SyscallReturn){ .ret = (i64)new_proc->pid,
 				.should_resched = true };
