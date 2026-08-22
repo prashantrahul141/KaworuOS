@@ -47,9 +47,6 @@ static errno_t address_space_copy(AddressSpace *dst, const AddressSpace *src)
 	     src_alloc_count++) {
 		RegionAllocation *src_alloc =
 			&src->user_region->allocations[src_alloc_count];
-		if (nullptr == src_alloc) {
-			continue;
-		}
 
 		/* for each page in this allocation */
 		for (usize src_page_count = 0;
@@ -85,6 +82,8 @@ static errno_t address_space_copy(AddressSpace *dst, const AddressSpace *src)
 				pmm_free(dst_pa);
 				goto copy_cleanup;
 			}
+
+			mapped_pages++;
 		}
 	}
 
