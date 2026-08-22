@@ -1,5 +1,7 @@
 #include "core/task_manager.h"
 #include "aarch64/aarch64.h"
+#include "aarch64/context.h"
+#include "aarch64/user_entry_trampoline.h"
 #include "core/process.h"
 #include "core/task.h"
 #include "debug/assert.h"
@@ -9,6 +11,7 @@
 #include "mm/kheap.h"
 #include "sched/scheduler.h"
 #include "sync/spinlock.h"
+#include "string.h"
 
 typedef struct {
 	SpinLock lock;
@@ -67,6 +70,33 @@ Task *task_manager_create_user(struct Process *p, usize user_entry,
 	intrusivelist_insert_tail(&task_manager.tasks, &task->global_node);
 
 	return task;
+}
+
+Task *task_manager_create_user_from(struct Process *p, const Task *src,
+				    const ExceptionFrame *src_frame)
+{
+	Task *dst = task_manager_create_user(p, (usize)src->entry,
+					     src->user_stack, src->name);
+	if (IS_ERR(dst)) {
+		WARN("failed to create new task");
+		return dst;
+	}
+
+	if (nullptr == src_frame) {
+		return dst;
+	}
+
+	usize stack_top = ((usize)dst->stack + TASK_STACK_SIZE);
+
+	ExceptionFrame *child_frame =
+		(ExceptionFrame *)(stack_top - sizeof(ExceptionFrame));
+	memcpy(child_frame, src_frame, sizeof(ExceptionFrame));
+
+	child_frame->x0 = 0;
+	dst->context.lr = (u64)child_return_trampoline;
+	dst->context.sp = (usize)child_frame;
+
+	return dst;
 }
 
 Task *task_manager_create(struct Process *p, task_fn_type task_fn, void *arg,
