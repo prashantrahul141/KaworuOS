@@ -1,7 +1,26 @@
 #include "syscall/sys_process.h"
 #include "core/cpu.h"
 #include "core/process.h"
+#include "core/process_manager.h"
 #include "debug/assert.h"
+
+SYSCALL_DEFINE0(fork, frame)
+{
+	const Task *task = this_cpu()->current;
+	ASSERT(task != nullptr, "task cant be null");
+
+	Process *proc = (Process *)task->process;
+	ASSERT(proc != nullptr, "proc cant be null");
+
+	Process *new_proc = proc_manager_create_exec_from(proc, task, frame);
+	if (IS_ERR(new_proc)) {
+		return (SyscallReturn){ .ret = PTR_TO_ERR(new_proc),
+					.should_resched = false };
+	}
+
+	return (SyscallReturn){ .ret = (i64)new_proc->pid,
+				.should_resched = true };
+}
 
 SYSCALL_DEFINE1(exit, frame, i64, status)
 {

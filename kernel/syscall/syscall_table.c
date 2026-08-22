@@ -1,7 +1,5 @@
 #include "syscall/syscall_table.h"
 #include "syscall/sys_process.h"
-#include "core/process_manager.h"
-#include "core/process.h"
 #include "string.h"
 
 /* keep this sorted for sanity */
@@ -24,6 +22,7 @@ void syscall_build_table(void)
 	/* keep this sorted */
 	S(SYS_YIELD, sys_yield);
 	S(SYS_GETPID, sys_getpid);
+	S(SYS_FORK, sys_fork);
 	S(SYS_EXIT, sys_exit);
 	S(SYS_GETPPID, sys_getppid);
 #undef S
