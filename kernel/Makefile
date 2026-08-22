@@ -94,6 +94,7 @@ _KERNEL_C_SOURCES := $K/arch/aarch64/exception.c \
 			$K/sync/semaphore.c \
 			$K/sync/spinlock.c \
 			$K/sync/wait_queue.c \
+			$K/syscall/sys_io.c \
 			$K/syscall/sys_process.c \
 			$K/syscall/syscall.c \
 			$K/syscall/syscall_table.c

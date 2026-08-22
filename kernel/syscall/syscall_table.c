@@ -1,4 +1,5 @@
 #include "syscall/syscall_table.h"
+#include "syscall/sys_io.h"
 #include "syscall/sys_process.h"
 #include "string.h"
 
@@ -20,6 +21,7 @@ void syscall_build_table(void)
 
 #define S(c, f) global_syscall_table[(c)] = (f)
 	/* keep this sorted */
+	S(SYS_WRITE, sys_write);
 	S(SYS_YIELD, sys_yield);
 	S(SYS_GETPID, sys_getpid);
 	S(SYS_FORK, sys_fork);

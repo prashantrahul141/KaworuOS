@@ -18,8 +18,7 @@ bool exception_handler(ExceptionFrame *frame)
 	irq_local_disable();
 
 	if (is_syscall(frame)) {
-		printf("SVC = %d\n", frame->x8);
-		console_flush();
+		DEBUG("SVC = %d\n", frame->x8);
 		bool should_resched = syscall_dispatch(frame);
 		return should_resched;
 	}

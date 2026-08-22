@@ -6,6 +6,7 @@
 
 SYSCALL_DEFINE0(fork, frame)
 {
+	DEBUG("FORK: ");
 	const Task *task = this_cpu()->current;
 	ASSERT(task != nullptr, "task cant be null");
 
@@ -25,6 +26,7 @@ SYSCALL_DEFINE0(fork, frame)
 
 SYSCALL_DEFINE1(exit, frame, i64, status)
 {
+	DEBUG("EXIT: status = %d", status);
 	UNUSED_ARG(frame);
 
 	const Cpu *cpu = this_cpu();
@@ -40,12 +42,14 @@ SYSCALL_DEFINE1(exit, frame, i64, status)
 
 SYSCALL_DEFINE0(yield, frame)
 {
+	DEBUG("YIELD: ");
 	UNUSED_ARG(frame);
 	return (SyscallReturn){ .should_resched = true, .ret = EOK };
 }
 
 SYSCALL_DEFINE0(getpid, frame)
 {
+	DEBUG("GETPID: ");
 	UNUSED_ARG(frame);
 	const Task *task = this_cpu()->current;
 	ASSERT(task != nullptr, "task cant be null");
@@ -59,6 +63,7 @@ SYSCALL_DEFINE0(getpid, frame)
 
 SYSCALL_DEFINE0(getppid, frame)
 {
+	DEBUG("GETPPID: ");
 	UNUSED_ARG(frame);
 	const Task *task = this_cpu()->current;
 	ASSERT(task != nullptr, "task cant be null");
