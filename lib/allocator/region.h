@@ -49,6 +49,11 @@ RegionAllocation *region_find(AllocRegion *region, void *addr);
 
 void *region_alloc(AllocRegion *region, usize page_count);
 
+/*
+ * reserve the given va range in the region, marking it as allocated
+ */
+errno_t region_reserve(AllocRegion *region, void *va, usize page_count);
+
 /* copy state of region allocator from src to dst */
 errno_t region_copy(AllocRegion *dst, AllocRegion *src);
 

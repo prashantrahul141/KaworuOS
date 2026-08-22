@@ -121,7 +121,9 @@ RegionAllocation *region_find(AllocRegion *region, void *addr)
 void *region_alloc(AllocRegion *region, usize page_count)
 {
 	ASSERT(page_count > 0, "Page count is zero?");
+
 	spinlock_acquire_scoped(&region->lock);
+
 	RegionAllocation *vm_allocation = region_find(region, nullptr);
 	if (IS_ERR(vm_allocation)) {
 		return ERR_TO_PTR(-ENOMEM);
@@ -135,6 +137,29 @@ void *region_alloc(AllocRegion *region, usize page_count)
 	*vm_allocation =
 		(RegionAllocation){ .va = va, .page_count = page_count };
 	return va;
+}
+
+/*
+ * reserve the given va range in the region, marking it as allocated
+ */
+errno_t region_reserve(AllocRegion *region, void *va, usize page_count)
+{
+	ASSERT(page_count > 0, "Page count is zero?");
+
+	spinlock_acquire_scoped(&region->lock);
+
+	RegionAllocation *allocation = region_find(region, nullptr);
+	if (IS_ERR(allocation)) {
+		return -ENOMEM;
+	}
+
+	errno_t err = bitmap_reserve(&region->allocator, va, page_count);
+	if (EOK != err) {
+		return err;
+	}
+
+	*allocation = (RegionAllocation){ .va = va, .page_count = page_count };
+	return EOK;
 }
 
 usize region_free(AllocRegion *region, void *addr)
