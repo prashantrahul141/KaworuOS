@@ -1,4 +1,5 @@
-#include "core/syscall_table.h"
+#include "syscall/syscall_table.h"
+#include "syscall/sys_process.h"
 #include "core/process_manager.h"
 #include "core/process.h"
 #include "string.h"

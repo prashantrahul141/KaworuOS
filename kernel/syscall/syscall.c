@@ -1,6 +1,6 @@
-#include "core/syscall.h"
+#include "syscall/syscall.h"
 #include "aarch64/exception.h"
-#include "core/syscall_table.h"
+#include "syscall/syscall_table.h"
 #include "error.h"
 
 bool syscall_dispatch(ExceptionFrame *frame)

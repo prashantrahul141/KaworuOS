@@ -73,8 +73,6 @@ _KERNEL_C_SOURCES := $K/arch/aarch64/exception.c \
 			$K/core/cpu.c \
 			$K/core/process.c \
 			$K/core/process_manager.c \
-			$K/core/syscall.c \
-			$K/core/syscall_table.c \
 			$K/core/task.c \
 			$K/core/task_manager.c \
 			$K/core/timer.c \
@@ -95,7 +93,10 @@ _KERNEL_C_SOURCES := $K/arch/aarch64/exception.c \
 			$K/sync/run_queue.c \
 			$K/sync/semaphore.c \
 			$K/sync/spinlock.c \
-			$K/sync/wait_queue.c
+			$K/sync/wait_queue.c \
+			$K/syscall/sys_process.c \
+			$K/syscall/syscall.c \
+			$K/syscall/syscall_table.c
 
 # library
 _LIB_C_SOURCES := $L/allocator/arena.c \

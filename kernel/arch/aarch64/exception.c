@@ -1,7 +1,7 @@
 #include "aarch64/exception.h"
 #include "aarch64/aarch64.h"
 #include "common_defs.h"
-#include "core/syscall.h"
+#include "syscall/syscall.h"
 #include "io/console.h"
 #include "irq/irq_controller.h"
 
