@@ -33,10 +33,16 @@ void *address_space_alloc(AddressSpace *as, usize size, PagePerms perms,
 			  ExecPerms uxn);
 
 /*
- * mapping for user space
+ * mapping for user space, does not take the ownership
  */
-errno_t address_space_map(AddressSpace *as, usize va, usize pa, usize size,
-			  PagePerms perms, ExecPerms uxn);
+errno_t address_space_map_unowned(AddressSpace *as, usize va, usize pa,
+				  usize size, PagePerms perms, ExecPerms uxn);
+
+/*
+ * mapping for user space, takes the ownership
+ */
+errno_t address_space_map_owned(AddressSpace *as, usize va, usize pa,
+				usize size, PagePerms perms, ExecPerms uxn);
 
 /*
  * destroy and clean entire address space and the memory it allocated
