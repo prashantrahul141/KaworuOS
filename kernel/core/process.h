@@ -43,4 +43,6 @@ usize process_thread_count(Process *proc);
 
 SYSCALL_DECLARE(getpid);
 
+SYSCALL_DECLARE(getppid);
+
 #endif // _PROCESS_H_

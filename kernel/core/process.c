@@ -51,3 +51,21 @@ SYSCALL_DEFINE0(getpid)
 	return (SyscallReturn){ .ret = (i64)proc->pid,
 				.should_resched = false };
 }
+
+SYSCALL_DEFINE0(getppid)
+{
+	Task *task = this_cpu()->current;
+	ASSERT(task != nullptr, "task cant be null");
+
+	Process *proc = (Process *)task->process;
+	ASSERT(proc != nullptr, "proc cant be null");
+
+	/* this can be null */
+	Process *parent_proc = (Process *)proc->parent;
+
+	DEBUG("parent_proc = %p", parent_proc);
+
+	i64 ret = parent_proc == nullptr ? 0 : (i64)parent_proc->pid;
+
+	return (SyscallReturn){ ret, .should_resched = false };
+}
