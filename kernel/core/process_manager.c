@@ -88,10 +88,10 @@ Process *proc_manager_create_exec(const i8 *name, usize program_pa,
 	}
 	usize ustack_top = ((usize)ustack) + USER_TASK_STACK_SIZE;
 
-	errno_t err = address_space_map(as, USER_PROGRAM_START_VM, program_pa,
-					program_size,
-					EL1_READ_ONLY_EL0_READ_ONLY,
-					EXECUTABLE);
+	errno_t err = address_space_map_owned(as, USER_PROGRAM_START_VM,
+					      program_pa, program_size,
+					      EL1_READ_ONLY_EL0_READ_ONLY,
+					      EXECUTABLE);
 	if (EOK != err) {
 		address_space_destroy(as);
 		kfree(proc);
