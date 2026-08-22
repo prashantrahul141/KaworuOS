@@ -3,9 +3,11 @@
 #include "core/process.h"
 #include "debug/assert.h"
 
-SYSCALL_DEFINE1(exit, i64, status)
+SYSCALL_DEFINE1(exit, frame, i64, status)
 {
-	Cpu *cpu = this_cpu();
+	UNUSED_ARG(frame);
+
+	const Cpu *cpu = this_cpu();
 	Task *task = cpu->current;
 
 	Process *proc = (Process *)task->process;
@@ -16,33 +18,36 @@ SYSCALL_DEFINE1(exit, i64, status)
 	UNREACHABLE();
 }
 
-SYSCALL_DEFINE0(yield)
+SYSCALL_DEFINE0(yield, frame)
 {
+	UNUSED_ARG(frame);
 	return (SyscallReturn){ .should_resched = true, .ret = EOK };
 }
 
-SYSCALL_DEFINE0(getpid)
+SYSCALL_DEFINE0(getpid, frame)
 {
-	Task *task = this_cpu()->current;
+	UNUSED_ARG(frame);
+	const Task *task = this_cpu()->current;
 	ASSERT(task != nullptr, "task cant be null");
 
-	Process *proc = (Process *)task->process;
+	const Process *proc = (Process *)task->process;
 	ASSERT(proc != nullptr, "proc cant be null");
 
 	return (SyscallReturn){ .ret = (i64)proc->pid,
 				.should_resched = false };
 }
 
-SYSCALL_DEFINE0(getppid)
+SYSCALL_DEFINE0(getppid, frame)
 {
-	Task *task = this_cpu()->current;
+	UNUSED_ARG(frame);
+	const Task *task = this_cpu()->current;
 	ASSERT(task != nullptr, "task cant be null");
 
-	Process *proc = (Process *)task->process;
+	const Process *proc = (Process *)task->process;
 	ASSERT(proc != nullptr, "proc cant be null");
 
 	/* this can be null */
-	Process *parent_proc = (Process *)proc->parent;
+	const Process *parent_proc = (Process *)proc->parent;
 
 	DEBUG("parent_proc = %p", parent_proc);
 
