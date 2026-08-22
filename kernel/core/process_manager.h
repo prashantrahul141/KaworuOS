@@ -1,6 +1,7 @@
 #ifndef _PROCESS_MANAGER_H_
 #define _PROCESS_MANAGER_H_
 
+#include "aarch64/exception.h"
 #include "core/process.h"
 #include "types.h"
 
@@ -10,6 +11,13 @@ void proc_manager_init(void);
  * creates new process without a single task in it
  */
 Process *proc_manager_create(const i8 *name);
+
+/*
+ * creates from an existing process
+ */
+Process *proc_manager_create_exec_from(const Process *src_proc,
+				       const Task *src_task,
+				       const ExceptionFrame *src_frame);
 
 /*
  * destroys process

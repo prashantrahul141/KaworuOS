@@ -1,4 +1,5 @@
 #include "core/process_manager.h"
+#include "aarch64/exception.h"
 #include "core/task.h"
 #include "core/task_manager.h"
 #include "debug/assert.h"
@@ -116,6 +117,49 @@ Process *proc_manager_create_exec(const i8 *name, usize program_pa,
 	process_add_thread(proc, task);
 	scheduler_enqueue(task);
 	return proc;
+}
+
+/*
+ * creates from an existing process
+ */
+Process *proc_manager_create_exec_from(const Process *src_proc,
+				       const Task *src_task,
+				       const ExceptionFrame *src_frame)
+{
+	DEBUG("creating new process from: %s", src_proc->name);
+	spinlock_acquire_scoped(&proc_manager.lock);
+
+	Process *dst = kalloc(sizeof(Process));
+	if (IS_ERR(dst)) {
+		WARN("failed creating process %s", src_proc->name);
+		return dst;
+	}
+
+	AddressSpace *as = address_space_create_from(src_proc->address_space);
+	if (IS_ERR(as)) {
+		kfree(dst);
+		WARN("failed to copy address space from proc: %s",
+		     src_proc->name);
+		return ERR_TO_PTR(-ENOMEM);
+	}
+
+	process_init(dst, proc_manager.pid_count++, src_proc->name, as);
+
+	Task *dst_task = task_manager_create_user_from((struct Process *)dst,
+						       src_task, src_frame);
+	if (IS_ERR(dst_task)) {
+		address_space_destroy(as);
+		kfree(dst);
+		WARN("failed to create user task for user: %s", src_proc->name);
+		return ERR_TO_PTR(-ENOMEM);
+	}
+
+	intrusivelist_insert_tail(&proc_manager.process_list,
+				  &dst->manager_node);
+
+	process_add_thread(dst, dst_task);
+	scheduler_enqueue(dst_task);
+	return dst;
 }
 
 /*
