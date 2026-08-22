@@ -57,4 +57,14 @@ USED static inline void *container_of_impl(void *ptr, usize off)
 #define container_of(ptr, type, member) \
 	((type *)container_of_impl((ptr), offsetof(type, member)))
 
+#define __MAP0(m, ...)
+#define __MAP1(m, t, a)	     m(t, a)
+#define __MAP2(m, t, a, ...) m(t, a), __MAP1(m, __VA_ARGS__)
+#define __MAP3(m, t, a, ...) m(t, a), __MAP2(m, __VA_ARGS__)
+#define __MAP4(m, t, a, ...) m(t, a), __MAP3(m, __VA_ARGS__)
+#define __MAP5(m, t, a, ...) m(t, a), __MAP4(m, __VA_ARGS__)
+#define __MAP6(m, t, a, ...) m(t, a), __MAP5(m, __VA_ARGS__)
+
+#define __MAP(n, m, ...) __MAP##n(m, __VA_ARGS__)
+
 #endif // _COMMON_DEFS_H_
