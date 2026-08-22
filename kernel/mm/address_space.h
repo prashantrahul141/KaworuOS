@@ -45,6 +45,11 @@ errno_t address_space_map_owned(AddressSpace *as, usize va, usize pa,
 				usize size, PagePerms perms, ExecPerms uxn);
 
 /*
+ * creates a new virtual address space from an existing one
+ */
+AddressSpace *address_space_create_from(const AddressSpace *src);
+
+/*
  * destroy and clean entire address space and the memory it allocated
  */
 void address_space_destroy(AddressSpace *as);

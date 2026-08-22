@@ -36,6 +36,118 @@ AddressSpace *address_space_create(void)
 	return as;
 }
 
+static errno_t address_space_copy(AddressSpace *dst, const AddressSpace *src)
+{
+	usize mapped_pages = 0;
+	errno_t ret = EOK;
+
+	/* for each allocation in this address space */
+	for (usize src_alloc_count = 0;
+	     src_alloc_count < src->user_region->max_allocations_count;
+	     src_alloc_count++) {
+		RegionAllocation *src_alloc =
+			&src->user_region->allocations[src_alloc_count];
+		if (nullptr == src_alloc) {
+			continue;
+		}
+
+		/* for each page in this allocation */
+		for (usize src_page_count = 0;
+		     src_page_count < src_alloc->page_count; src_page_count++) {
+			usize va = (usize)src_alloc->va +
+				   (src_page_count * PAGE_SIZE);
+
+			PageDescriptor *src_pde =
+				paging_lookup_desc(src->table, va);
+			if (!src_pde->field.is_valid ||
+			    !src_pde->field.is_page) {
+				WARN("tried copying unmapped page");
+				continue;
+			}
+
+			usize src_pa = paging_page_to_pa(src_pde, va);
+			usize dst_pa = pmm_alloc();
+			if (IS_ERR((void *)dst_pa)) {
+				ERROR("failed to allocate for copying address "
+				      "space");
+				goto copy_cleanup;
+			}
+
+			memcpy(pmm_phys_to_virt(dst_pa),
+			       pmm_phys_to_virt(src_pa), PAGE_SIZE);
+
+			ret = paging_map(dst->table, va, dst_pa, PAGE_SIZE,
+					 src_pde->field.ap,
+					 src_pde->field.attr_index,
+					 src_pde->field.sh, src_pde->field.pxn,
+					 src_pde->field.uxn_xn);
+			if (EOK != ret) {
+				pmm_free(dst_pa);
+				goto copy_cleanup;
+			}
+		}
+	}
+
+	return ret;
+
+copy_cleanup:
+	for (usize mapped_alloc_count = 0;
+	     mapped_alloc_count < dst->user_region->max_allocations_count &&
+	     mapped_pages > 0;
+	     mapped_alloc_count++) {
+		RegionAllocation *mapped_alloc =
+			&dst->user_region->allocations[mapped_alloc_count];
+		if (nullptr == mapped_alloc) {
+			continue;
+		}
+
+		for (usize mapped_page_count = 0;
+		     mapped_page_count < mapped_alloc->page_count &&
+		     mapped_pages > 0;
+		     mapped_page_count++, mapped_pages--) {
+			usize va = (usize)mapped_alloc->va +
+				   (mapped_page_count * PAGE_SIZE);
+
+			usize pa = paging_lookup(dst->table, va);
+			if (0 != pa) {
+				pmm_free(pa);
+			}
+		}
+	}
+
+	return ret;
+}
+
+/*
+ * creates a new virtual address space from an existing one,
+ * copying it
+ */
+AddressSpace *address_space_create_from(const AddressSpace *src)
+{
+	AddressSpace *dst = address_space_create();
+	if (IS_ERR(dst)) {
+		return dst;
+	}
+
+	/* copy allocator state */
+	errno_t ret = region_copy(dst->user_region, src->user_region);
+	if (EOK != ret) {
+		address_space_destroy(dst);
+		WARN("failed copying region for address space");
+		return ERR_TO_PTR(ret);
+	}
+
+	/* copy page table entries */
+	ret = address_space_copy(dst, src);
+	if (EOK != ret) {
+		address_space_destroy(dst);
+		WARN("failed copying mappings for address space");
+		return ERR_TO_PTR(ret);
+	}
+
+	return dst;
+}
+
 void *address_space_alloc(AddressSpace *as, usize size, PagePerms perms,
 			  ExecPerms uxn)
 {
