@@ -48,6 +48,9 @@ AllocRegion *region_create(usize base, usize size, usize max_allocations,
 	region->allocations = allocs;
 	region->max_allocations_count = max_allocations;
 
+	memset(region->allocations, 0,
+	       sizeof(RegionAllocation) * region->max_allocations_count);
+
 	return region;
 }
 
