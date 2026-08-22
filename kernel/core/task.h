@@ -4,6 +4,9 @@
 #include "aarch64/context.h"
 #include "ds/intrusivelist.h"
 #include "error.h"
+#include "config.h"
+
+constexpr usize TASK_STACK_SIZE = (1 << CONFIG_PER_TASK_STACK_SIZE_SHIFT);
 
 typedef void (*task_fn_type)(void *arg);
 

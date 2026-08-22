@@ -10,12 +10,9 @@
 #include "debug/panic.h"
 #include "mm/kheap.h"
 #include "string.h"
-#include "config.h"
 #include "aarch64/user_entry_trampoline.h"
 
 typedef void (*task_fn)(void *arg);
-
-constexpr usize TASK_STACK_SIZE = (1 << CONFIG_PER_TASK_STACK_SIZE_SHIFT);
 
 void task_trampoline(void)
 {
