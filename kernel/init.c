@@ -1,18 +1,17 @@
 #include "init.h"
 #include "memlayout.h"
-#include "mm/address_space.h"
-#include "mm/paging.h"
 #include "mm/pmm.h"
 #include <string.h>
 
 extern symbol user_init;
+extern symbol user_init_c;
 
 void kernel_main(void)
 {
 	limine_responses_save();
 	memmap_save_init();
 	cpu_cache_current_cpu();
-	console_init(true);
+	console_init(false);
 
 #ifdef CONFIG_ENABLE_SEMIHOSTING
 	semihosting_init();
@@ -44,7 +43,7 @@ void kernel_main(void)
 	console_flush();
 
 	usize p = pmm_alloc();
-	memcpy(pmm_phys_to_virt(p), user_init, PAGE_SIZE);
+	memcpy(pmm_phys_to_virt(p), user_init_c, PAGE_SIZE);
 	proc_manager_create_exec("init", p, PAGE_SIZE, USER_PROGRAM_START_VM);
 
 	scheduler_init();
