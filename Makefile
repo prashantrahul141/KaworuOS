@@ -11,16 +11,16 @@ ifeq ($(filter $(MAKECMDGOALS),$(CONFIG_FREE_TARGETS)),)
   include .config
 endif
 
-NAME = KaworuOS
+NAME = kaworu
 
-# Point to the uefi firmware for qemu (not the directory, the firmware file itself)
-# UEFI_FIRMWARE :=
-
-ELF = kernel/$(NAME).elf
+# kernel compilation is done by meson
+BUILD_DIR = build
+CROSS_FILE = toolchain/aarch64-clang.ini
+ELF = $(BUILD_DIR)/$(NAME).elf
 ISO = $(NAME).iso
 
 # qemu flags for virt
-# WARN: dont forget to update in release run scripts
+# dont forget to update in release/run scripts
 QEMU_MACHINE := virt,acpi=off
 QEMU_FLAGS := -cpu cortex-a72 \
 			-m $(CONFIG_QEMU_PHYSICAL_MEMORY_MB)M \
@@ -31,7 +31,6 @@ QEMU_FLAGS := -cpu cortex-a72 \
 			-drive if=pflash,unit=0,format=raw,file=$(UEFI_FIRMWARE),readonly=on \
 			-cdrom $(ISO) \
 			-smp $(CONFIG_QEMU_CPU_COUNT)
-
 
 ifeq ($(CONFIG_QEMU_WITH_DISPLAY),y)
 	 QEMU_FLAGS += -serial stdio
@@ -48,35 +47,30 @@ GDB_FLAGS = -ex "target remote :1234" -ex "set scheduler-locking step" -ex "b st
 all: build
 
 # configuration -------------------------------
-export MENUCONFIG_STYLE = monochrome
 .PHONY: menuconfig
-menuconfig: _menuconfig syncconfig ## Configure the kernel using ncurses tui
-_menuconfig:
+menuconfig: ## Configure the kernel using ncurses tui
 	@printf "\tMENU\n"
-	@menuconfig
+	@MENUCONFIG_STYLE=monochrome scripts/configure.py $(CURDIR) $(CURDIR)/$(BUILD_DIR) $(CURDIR)/$(CROSS_FILE) menuconfig ""
 
 .PHONY: defconfig
-defconfig: _defconfig syncconfig ## Use default kernel config
-_defconfig:
-	@printf "\tCOPY configs/defaultconfig\n"
-	@defconfig configs/defaultconfig > /dev/null
+defconfig: ## Use default kernel config
+	@printf "\tCONFIG configs/defaultconfig\n"
+	@scripts/configure.py $(CURDIR) $(CURDIR)/$(BUILD_DIR) $(CURDIR)/$(CROSS_FILE) defconfig configs/defaultconfig
 
 .PHONY: debugconfig
-debugconfig: _debugconfig syncconfig ## Use debug kernel config
-_debugconfig:
-	@printf "\tCOPY configs/debugconfig\n"
-	@defconfig configs/debugconfig> /dev/null
-
-.PHONY: syncconfig
-syncconfig:
-	@printf "\tSYNC\n"
-	@genconfig
+debugconfig: ## Use debug kernel config
+	@printf "\tCONFIG configs/debugconfig\n"
+	@scripts/configure.py $(CURDIR) $(CURDIR)/$(BUILD_DIR) $(CURDIR)/$(CROSS_FILE) defconfig configs/debugconfig
 
 # building ---------------------
+.PHONY: kernel
+kernel: ## Build the kernel elf (runs meson compile)
+	@printf "\tMESON\n"
+	@meson compile -C $(BUILD_DIR)
+
 build: $(ISO) ## Build kernel iso
 
-$(ISO): kernel \
-        iso/boot/$(NAME) \
+$(ISO): iso/boot/$(NAME).elf \
         iso/boot/limine/limine.conf \
         iso/boot/limine/limine-uefi-cd.bin \
         iso/EFI/BOOT/BOOTAA64.EFI
@@ -88,8 +82,8 @@ $(ISO): kernel \
 		iso -o $(ISO) > /dev/null 2>&1
 	@printf "\niso file: %s\n" $(ISO)
 
-iso/boot/$(NAME): kernel | iso/boot/limine
-	@printf "\tCOPY %s\n" $@
+iso/boot/$(NAME).elf: kernel | iso/boot/limine
+	@printf "\tCOPY %s\n"
 	@cp $(ELF) $@
 
 iso/boot/limine/limine.conf: limine.conf | iso/boot/limine
@@ -110,71 +104,56 @@ iso/boot/limine:
 iso/EFI/BOOT:
 	@mkdir -p $@
 
-.PHONY: kernel
-kernel:
-	@$(MAKE) -C kernel/
-
 # running ---------------------
 .PHONY: run
 run: $(ISO) ## Run the kernel inside qemu
 	qemu-system-aarch64 -M $(QEMU_MACHINE) $(QEMU_FLAGS)
 
-# cleaning -------------------
-.PHONY: cleanall
-cleanall: clean cleanconfig cleandebug ## Clean all build, config and debug files
-
-.PHONY: clean
-clean: cleandebug ## Clean only iso and build files
-	rm -f $(ISO)
-	rm -rf iso
-	$(MAKE) -C kernel/ clean
-
-.PHONY: cleanconfig
-cleanconfig: ## Clean only config files
-	rm -f config.h .config
-
-.PHONY: cleandebug
-cleandebug:
-	rm -rf stripped.elf
-	rm -rf *.objdump
-
-# hacking ------------------
-.PHONY: clang-tidy
-clang-tidy: $(ELF)  ## Run clang-tidy on the entire source
-	run-clang-tidy -source-filter ".*\.(c|h)" -quiet -allow-no-checks
-
-.PHONY: gdb
-gdb: ## Run gdb debugger
-	gdb $(ELF) $(GDB_FLAGS)
-
-.PHONY: pwndbg
-pwndbg: ## Run pwndbg debugger
-	pwndbg $(ELF) $(GDB_FLAGS)
-
-.PHONY: stripped
-stripped: $(ELF)
-	llvm-strip --strip-debug $(ELF) -o stripped.elf
-
-.PHONY: objdump
-objdump: $(ELF) stripped
-	llvm-objdump --disassemble-all --line-numbers --full-contents stripped.elf > dump.objdump
-
 .PHONY: rund
-rund: $(ISO)
+rund: $(ISO) ## Run the kernel inside qemu with a gdb stub
 	qemu-system-aarch64 -M $(QEMU_MACHINE) $(QEMU_FLAGS) -s -S
 
 .PHONY: qemu_dump_dts
-qemu_dump_dts:
+qemu_dump_dts: ## Dump the qemu virt device tree
 	qemu-system-aarch64 -machine $(QEMU_MACHINE),dumpdtb=virt.dtb $(QEMU_FLAGS)
 	dtc -I dtb -O dts -o virt.dts virt.dtb
 
-.PHONY: help
-help: # Show this help
-	@sed -nE 's/^([[:alnum:]_.-]+):.*##[[:space:]]*(.*)/\1\t\2/p' $(MAKEFILE_LIST) | column -ts $$'\t'
+# hacking ------------------
+.PHONY: clang-tidy
+clang-tidy: kernel ## Run clang-tidy on the entire source
+	run-clang-tidy -source-filter ".*\.(c|h)" -quiet -allow-no-checks
+
+.PHONY: gdb
+gdb: kernel ## Run gdb debugger
+	gdb $(ELF) $(GDB_FLAGS)
+
+.PHONY: pwndbg
+pwndbg: kernel ## Run pwndbg debugger
+	pwndbg $(ELF) $(GDB_FLAGS)
+
+.PHONY: stripped
+stripped: kernel ## Strip debug symbols into stripped.elf
+	llvm-strip --strip-debug $(ELF) -o stripped.elf
+
+.PHONY: objdump
+objdump: stripped ## Disassemble the stripped elf into dump.objdump
+	llvm-objdump --disassemble-all --line-numbers --full-contents stripped.elf > dump.objdump
+
+# cleaning -------------------
+.PHONY: cleanall
+cleanall: clean ## Clean all build, config and debug files
+	rm -f config.h .config $(BUILD_DIR)/.prev.config.h
+	rm -f stripped.elf dump.objdump
+
+.PHONY: clean
+clean: ## Clean only build and iso files
+	rm -f $(ISO)
+	rm -rf iso
+	rm -rf build/
 
 # create releases
 .PHONY: release_kernel
-rkf = kaworuos-kernel-$(VERSION_MAJOR).$(VERSION_MINOR)
+rkf = $(NAME)os-kernel-$(VERSION_MAJOR).$(VERSION_MINOR)
 release_kernel: $(ISO)
 	mkdir -p $(rkf)/
 	cp $(ISO) $(rkf)/
@@ -183,7 +162,7 @@ release_kernel: $(ISO)
 	rm -rf $(rkf)
 
 .PHONY: release_full
-rff = kaworuos-full-$(VERSION_MAJOR).$(VERSION_MINOR)
+rff = $(NAME)os-full-$(VERSION_MAJOR).$(VERSION_MINOR)
 release_full: $(ISO)
 	mkdir -p $(rff)/
 	cp $(ISO) $(rff)/
@@ -192,4 +171,6 @@ release_full: $(ISO)
 	tar -czvf $(rff).tar.gz $(rff)/
 	rm -rf $(rff)
 
--include $(DEPS)
+.PHONY: help
+help: ## Show this help
+	@sed -nE 's/^([[:alnum:]_.-]+):.*##[[:space:]]*(.*)/\1\t\2/p' $(MAKEFILE_LIST) | column -ts $$'\t'

@@ -47,6 +47,8 @@
                 gdb
                 dtc
                 gnumake
+                ninja
+                meson
                 bear
                 python313Packages.kconfiglib
               ];
