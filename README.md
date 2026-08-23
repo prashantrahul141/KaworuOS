@@ -16,6 +16,8 @@ lld
 xorriso # to create iso image
 
 qemu # to run
+meson
+ninja
 gnumake # ofcourse
 python313Packages.kconfiglib
 
