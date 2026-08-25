@@ -1,6 +1,7 @@
 #ifndef _PROCESS_H_
 #define _PROCESS_H_
 
+#include "ds/intrusivelist.h"
 #include "mm/address_space.h"
 #include "core/task.h"
 #include "types.h"
@@ -25,7 +26,11 @@ typedef struct {
 
 	ProcessState state;
 	IntrusiveList threads;
+
 	struct Process *parent;
+
+	IntrusiveNode parent_node;
+	IntrusiveList children;
 
 	bool exiting;
 	i64 exit_code;
@@ -40,5 +45,15 @@ void process_add_thread(Process *proc, Task *task);
 void process_remove_thread(Process *proc, Task *thread);
 
 usize process_thread_count(Process *proc);
+
+/*
+ * add child proc as as child of the given parent process
+ */
+void process_add_child(Process *parent, Process *child);
+
+/*
+ * set parent of the given child process to the given parent process
+ */
+void process_set_parent(Process *parent, Process *child);
 
 #endif // _PROCESS_H_

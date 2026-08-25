@@ -1,4 +1,5 @@
 #include "core/process.h"
+#include "ds/intrusivelist.h"
 #include "mm/address_space.h"
 #include "core/task.h"
 #include "sync/spinlock.h"
@@ -12,7 +13,11 @@ void process_init(Process *proc, usize pid, const i8 *name, AddressSpace *as)
 
 	proc->state = PROCESS_RUNNING;
 	proc->address_space = as;
+
 	intrusivelist_init(&proc->threads);
+
+	intrusivelist_init(&proc->children);
+	intrusivelist_node_init(&proc->parent_node);
 
 	proc->exiting = false;
 	proc->exit_code = 0;
@@ -41,4 +46,18 @@ usize process_thread_count(Process *proc)
 {
 	spinlock_acquire_scoped(&proc->lock);
 	return intrusivelist_count(&proc->threads);
+}
+
+void process_add_child(Process *parent, Process *child)
+{
+	spinlock_acquire_scoped(&parent->lock);
+	spinlock_acquire_scoped(&child->lock);
+	intrusivelist_insert_tail(&parent->children, &child->parent_node);
+}
+
+void process_set_parent(Process *parent, Process *child)
+{
+	spinlock_acquire_scoped(&parent->lock);
+	spinlock_acquire_scoped(&child->lock);
+	child->parent = (struct Process *)parent;
 }
