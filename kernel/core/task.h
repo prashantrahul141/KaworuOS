@@ -72,4 +72,9 @@ bool task_comparator_sleep_until(IntrusiveNode *a, IntrusiveNode *b);
  */
 bool is_task_process_exiting(const Task *task);
 
+/*
+ * get current task
+ */
+Task *task_get_current(void);
+
 #endif // _TASK_H_

@@ -110,3 +110,16 @@ bool is_task_process_exiting(const Task *task)
 	return task != nullptr && task->process != nullptr &&
 	       ((Process *)task->process)->exiting;
 }
+
+/*
+ * get current task
+ */
+Task *task_get_current(void)
+{
+	Task *task = this_cpu()->current;
+	if (nullptr == task) {
+		return ERR_TO_PTR(-ENOENT);
+	}
+
+	return task;
+}
