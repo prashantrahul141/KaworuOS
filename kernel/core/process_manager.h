@@ -19,6 +19,14 @@ Process *proc_manager_create_exec_from_elf(const i8 *name, const void *elf,
 Process *proc_manager_create(const i8 *name);
 
 /*
+ * creates child from an existing process
+ */
+Process *
+proc_manager_create_exec_child_from(Process *parent_proc,
+				    const Task *parent_task,
+				    const ExceptionFrame *parent_frame);
+
+/*
  * creates from an existing process
  */
 Process *proc_manager_create_exec_from(const Process *src_proc,

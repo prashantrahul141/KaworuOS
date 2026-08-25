@@ -161,6 +161,22 @@ Process *proc_manager_create_exec(const i8 *name, usize program_pa,
 }
 
 /*
+ * creates child from an existing process
+ */
+Process *proc_manager_create_exec_child_from(Process *parent,
+					     const Task *parent_task,
+					     const ExceptionFrame *parent_frame)
+{
+	Process *child = proc_manager_create_exec_from(parent, parent_task,
+						       parent_frame);
+
+	process_add_child(parent, child);
+	process_set_parent(parent, child);
+
+	return child;
+}
+
+/*
  * creates from an existing process
  */
 Process *proc_manager_create_exec_from(const Process *src_proc,
