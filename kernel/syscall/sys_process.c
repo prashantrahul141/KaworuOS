@@ -13,12 +13,12 @@ SYSCALL_DEFINE0(fork, frame)
 	Process *proc = (Process *)task->process;
 	ASSERT(proc != nullptr, "proc cant be null");
 
-	Process *new_proc = proc_manager_create_exec_from(proc, task, frame);
+	Process *new_proc =
+		proc_manager_create_exec_child_from(proc, task, frame);
 	if (IS_ERR(new_proc)) {
 		return (SyscallReturn){ .ret = PTR_TO_ERR(new_proc),
 					.should_resched = false };
 	}
-	new_proc->parent = (struct Process *)proc;
 
 	return (SyscallReturn){ .ret = (i64)new_proc->pid,
 				.should_resched = true };
