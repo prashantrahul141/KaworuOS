@@ -85,4 +85,5 @@ https://github.com/gmarino2048/64bit-os-tutorial            # thank you @gmarino
 https://lowenware.com/blog/aarch64-mmu-programming/ \
 https://developer.arm.com/documentation/ddi0487/latest \
 https://developer.arm.com/documentation/ddi0601/latest \
-https://cs140e.sergio.bz/docs/ARMv8-Reference-Manual.pdf
+https://cs140e.sergio.bz/docs/ARMv8-Reference-Manual.pdf \
+https://gist.github.com/x0nu11byt3/bcb35c3de461e5fb66173071a2379779 # thank you @x0nu11byt3

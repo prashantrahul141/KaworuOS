@@ -58,6 +58,7 @@
               export CC=clang
               export LD=ld.lld
               export OBJDUMP=llvm-objdump
+              export OBJCOPY=llvm-objcopy
               export READELF=llvm-readelf
             '';
           };

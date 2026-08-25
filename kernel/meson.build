@@ -16,6 +16,8 @@ foreach file : [
     'debug/log.c',
     'debug/printf.c',
     'debug/semihosting.c',
+    # exec
+    'exec/elf.c',
     # io
     'io/console.c',
     # irq
