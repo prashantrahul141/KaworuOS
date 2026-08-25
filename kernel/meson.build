@@ -43,8 +43,6 @@ foreach file : [
     'syscall/sys_process.c',
     'syscall/syscall.c',
     'syscall/syscall_table.c',
-    # user
-    '../user/user_init.c',
 ]
     kernel_c_sources += files(project_root / 'kernel' / file)
 endforeach
@@ -55,7 +53,6 @@ foreach file : [
     'arch/aarch64/secondary_entry.S',
     'arch/aarch64/start.S',
     'arch/aarch64/user_entry_trampoline.S',
-    '../user/user_init.S',
 ]
     kernel_asm_sources += files(project_root / 'kernel' / file)
 endforeach

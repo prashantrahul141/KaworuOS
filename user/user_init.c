@@ -1,7 +1,7 @@
 #include "types.h"
 #include "syscall/syscall_table.h"
 
-void user_init_c();
+void _start(void);
 
 static UNUSED void sys_write(u64 fd, const i8 *buf, u64 buf_count)
 {
@@ -46,7 +46,7 @@ static UNUSED i64 sys_fork(void)
 	return x0;
 }
 
-void user_init_c()
+void _start(void)
 {
 	i8 msg[13];
 	msg[0] = 0x68;

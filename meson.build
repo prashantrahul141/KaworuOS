@@ -44,7 +44,7 @@ endforeach
 
 # compiler args -----------------
 common_warning_flags = ['-Wno-unused-command-line-argument']
-kernel_warning_flags = [
+warning_flags = [
     '-Wall',
     '-Wextra',
     '-Wpedantic',
@@ -80,7 +80,7 @@ kernel_warning_flags = [
 
 # warning as errors?
 if kconfig.get('CONFIG_WARNING_AS_ERROR', 'false') == 'true'
-    kernel_warning_flags += ['-Werror']
+    warning_flags += ['-Werror']
 endif
 
 # common across all translation units
@@ -108,10 +108,13 @@ endif
 common_c_flags = ['-ffreestanding', '-nostdlib']
 
 # used in kernel c sources only
-kernel_c_flags = common_flags + common_c_flags + kernel_warning_flags
+kernel_c_flags = common_flags + common_c_flags + warning_flags
 
 # used in thirdparty c sources only
 thirdparty_c_flags = common_flags + common_c_flags + common_warning_flags
+
+# user program files
+user_c_flags = common_flags + common_c_flags + warning_flags
 
 # include directories -----------------
 include_dirs = [
@@ -129,11 +132,14 @@ include_dirs = [
 kernel_c_sources = []
 kernel_asm_sources = []
 thirdparty_c_sources = []
+user_c_sources = []
+user_asm_sources = []
 
 subdir('kernel')
 subdir('drivers')
 subdir('lib')
 subdir('thirdparty')
+subdir('user')
 
 # static libs -----------------
 kaworu_lib = static_library(
@@ -149,6 +155,21 @@ thirdparty_lib = static_library(
     thirdparty_c_sources,
     include_directories: include_dirs,
     c_args: thirdparty_c_flags,
+    install: false,
+)
+
+user_lib = executable(
+    'userinit',
+    user_c_sources,
+    include_directories: include_dirs,
+    c_args: user_c_flags,
+    link_args: [
+        '-fuse-ld=lld',
+        '-nostdlib',
+        '-nodefaultlibs',
+        '-nostartfiles',
+        '-Wl,-T,' + project_root / 'user/user.ld',
+    ],
     install: false,
 )
 
