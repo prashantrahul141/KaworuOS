@@ -8,6 +8,12 @@
 void proc_manager_init(void);
 
 /*
+ * starts process from an elf file
+ */
+Process *proc_manager_create_exec_from_elf(const i8 *name, const void *elf,
+					   const usize elf_size);
+
+/*
  * creates new process without a single task in it
  */
 Process *proc_manager_create(const i8 *name);

@@ -4,6 +4,7 @@
 #include "core/task_manager.h"
 #include "debug/assert.h"
 #include "debug/log.h"
+#include "exec/elf.h"
 #include "mm/address_space.h"
 #include "core/process.h"
 #include "mm/kheap.h"
@@ -51,6 +52,46 @@ Process *proc_manager_create(const i8 *name)
 
 	intrusivelist_insert_tail(&proc_manager.process_list,
 				  &proc->manager_node);
+	return proc;
+}
+
+Process *proc_manager_create_exec_from_elf(const i8 *name, const void *elf,
+					   const usize elf_size)
+{
+	Process *proc = proc_manager_create(name);
+
+	ElfLoadResult load_result = { 0 };
+	errno_t err =
+		elf_load(elf, elf_size, proc->address_space, &load_result);
+	if (EOK != err) {
+		proc_manager_remove_destroy(proc);
+		return ERR_TO_PTR(err);
+	}
+
+	void *ustack = address_space_alloc(proc->address_space,
+					   USER_TASK_STACK_SIZE,
+					   EL1_READ_WRITE_EL0_READ_WRITE,
+					   NOT_EXECUTABLE);
+	if (IS_ERR(ustack)) {
+		proc_manager_remove_destroy(proc);
+		WARN("failed to allocate stack for proc: %s", name);
+		return ERR_TO_PTR(-ENOMEM);
+	}
+	usize ustack_top = ((usize)ustack) + USER_TASK_STACK_SIZE;
+
+	Task *task = task_manager_create_user(
+		(struct Process *)proc, load_result.entry, ustack_top, name);
+	if (IS_ERR(task)) {
+		proc_manager_remove_destroy(proc);
+		WARN("failed to create user task: %s", name);
+		return ERR_TO_PTR(-ENOMEM);
+	}
+
+	intrusivelist_insert_tail(&proc_manager.process_list,
+				  &proc->manager_node);
+
+	process_add_thread(proc, task);
+	scheduler_enqueue(task);
 	return proc;
 }
 
