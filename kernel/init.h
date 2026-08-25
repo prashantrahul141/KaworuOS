@@ -16,6 +16,7 @@
 #include "mm/kheap.h"
 #include "irq/irq_controller.h"
 #include "debug/printf.h"
+#include "core/process_manager.h"
 #include "common/manager.h"
 #include "boot/limine_responses.h"
 #include "boot/fdt.h"
