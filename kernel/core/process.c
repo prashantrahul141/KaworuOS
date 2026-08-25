@@ -1,5 +1,7 @@
 #include "core/process.h"
+#include "core/cpu.h"
 #include "ds/intrusivelist.h"
+#include "error.h"
 #include "mm/address_space.h"
 #include "core/task.h"
 #include "sync/spinlock.h"
@@ -60,4 +62,19 @@ void process_set_parent(Process *parent, Process *child)
 	spinlock_acquire_scoped(&parent->lock);
 	spinlock_acquire_scoped(&child->lock);
 	child->parent = (struct Process *)parent;
+}
+
+Process *process_get_current(void)
+{
+	Task *current_task = this_cpu()->current;
+	if (nullptr == current_task) {
+		return ERR_TO_PTR(-ENOENT);
+	}
+
+	Process *parent = (Process *)current_task->process;
+	if (nullptr == parent) {
+		return ERR_TO_PTR(-ENOENT);
+	}
+
+	return parent;
 }

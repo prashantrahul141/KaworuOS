@@ -56,4 +56,9 @@ void process_add_child(Process *parent, Process *child);
  */
 void process_set_parent(Process *parent, Process *child);
 
+/*
+ * get current process running
+ */
+Process *process_get_current(void);
+
 #endif // _PROCESS_H_
