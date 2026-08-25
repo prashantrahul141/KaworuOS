@@ -13,6 +13,7 @@ foreach file : [
     'core/task_manager.c',
     'core/timer.c',
     # debug
+    'debug/log.c',
     'debug/printf.c',
     'debug/semihosting.c',
     # io

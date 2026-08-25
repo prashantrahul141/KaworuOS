@@ -180,10 +180,10 @@ config ENABLE_SEMIHOSTING
       Enables semihosting support
 
 choice LOGGING_LEVEL
-    prompt "Logging level"
+    prompt "Default logging level"
     default LOGGING_LEVEL_DEBUG
     help
-      Sets the minimum logging level
+      Sets the minimum logging level, this can be overidden at runtime.
 config LOGGING_LEVEL_TRACE
     bool "Trace"
 
