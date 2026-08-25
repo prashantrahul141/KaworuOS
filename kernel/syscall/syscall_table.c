@@ -1,6 +1,7 @@
 #include "syscall/syscall_table.h"
 #include "syscall/sys_io.h"
 #include "syscall/sys_process.h"
+#include "syscall/sys_sched.h"
 #include "string.h"
 
 /* keep this sorted for sanity */

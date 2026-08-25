@@ -5,8 +5,6 @@ SYSCALL_DECLARE(fork);
 
 SYSCALL_DECLARE(exit);
 
-SYSCALL_DECLARE(yield);
-
 SYSCALL_DECLARE(getpid);
 
 SYSCALL_DECLARE(getppid);

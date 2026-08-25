@@ -41,6 +41,7 @@ foreach file : [
     # syscall
     'syscall/sys_io.c',
     'syscall/sys_process.c',
+    'syscall/sys_sched.c',
     'syscall/syscall.c',
     'syscall/syscall_table.c',
 ]

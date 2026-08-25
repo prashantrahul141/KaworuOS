@@ -40,13 +40,6 @@ SYSCALL_DEFINE1(exit, frame, i64, status)
 	UNREACHABLE();
 }
 
-SYSCALL_DEFINE0(yield, frame)
-{
-	DEBUG("YIELD: ");
-	UNUSED_ARG(frame);
-	return (SyscallReturn){ .should_resched = true, .ret = EOK };
-}
-
 SYSCALL_DEFINE0(getpid, frame)
 {
 	DEBUG("GETPID: ");
