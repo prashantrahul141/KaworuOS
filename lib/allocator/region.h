@@ -7,7 +7,6 @@
 #define _REGION_H_
 
 #include "allocator/bitmap.h"
-#include "sync/spinlock.h"
 
 typedef struct {
 	void *va;
@@ -16,7 +15,7 @@ typedef struct {
 static_assert(sizeof(RegionAllocation) == 16, "VMAllocation is not 16 bytes?");
 
 typedef struct {
-	SpinLock lock;
+	const i8 *name;
 	AllocBitMap allocator;
 	RegionAllocation *allocations;
 	usize max_allocations_count;

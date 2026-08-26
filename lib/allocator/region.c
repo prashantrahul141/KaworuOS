@@ -5,12 +5,10 @@
 #include "error.h"
 #include "memlayout.h"
 #include "mm/kheap.h"
-#include "sync/spinlock.h"
 #include "string.h"
 
 void region_init(AllocRegion *region, const i8 *msg)
 {
-	spinlock_init(&region->lock, msg);
 	DEBUG("region init name = %s, allocations_count = %p", msg, 1);
 	memset(region->allocator.bitmap, 0,
 	       SIZE_TO_BITMAP_BYTES(region->allocator.page_count * PAGE_SIZE));
@@ -25,6 +23,8 @@ AllocRegion *region_create(usize base, usize size, usize max_allocations,
 	if (IS_ERR(region)) {
 		return ERR_TO_PTR(-ENOMEM);
 	}
+
+	region->name = name;
 
 	usize bitmap_bytes_count = SIZE_TO_BITMAP_BYTES(size);
 	u8 *bitmap = kalloc(bitmap_bytes_count);
@@ -41,7 +41,6 @@ AllocRegion *region_create(usize base, usize size, usize max_allocations,
 		return ERR_TO_PTR(-ENOMEM);
 	}
 
-	spinlock_init(&region->lock, name);
 	region->allocator.bitmap = bitmap;
 	region->allocator.page_count = size / PAGE_SIZE;
 	region->allocator.pool = (u8 *)base;
@@ -60,9 +59,6 @@ errno_t region_copy(AllocRegion *dst, AllocRegion *src)
 	if (dst == src) {
 		return EOK;
 	}
-
-	spinlock_acquire_scoped(&dst->lock);
-	spinlock_acquire_scoped(&src->lock);
 
 	if (dst->max_allocations_count < src->max_allocations_count) {
 		WARN("tried copying region with less memory");
@@ -125,8 +121,6 @@ void *region_alloc(AllocRegion *region, usize page_count)
 {
 	ASSERT(page_count > 0, "Page count is zero?");
 
-	spinlock_acquire_scoped(&region->lock);
-
 	RegionAllocation *vm_allocation = region_find(region, nullptr);
 	if (IS_ERR(vm_allocation)) {
 		return ERR_TO_PTR(-ENOMEM);
@@ -149,8 +143,6 @@ errno_t region_reserve(AllocRegion *region, void *va, usize page_count)
 {
 	ASSERT(page_count > 0, "Page count is zero?");
 
-	spinlock_acquire_scoped(&region->lock);
-
 	RegionAllocation *allocation = region_find(region, nullptr);
 	if (IS_ERR(allocation)) {
 		return -ENOMEM;
@@ -167,8 +159,6 @@ errno_t region_reserve(AllocRegion *region, void *va, usize page_count)
 
 usize region_free(AllocRegion *region, void *addr)
 {
-	spinlock_acquire_scoped(&region->lock);
-
 	RegionAllocation *vm_allocation = region_find(region, addr);
 	if (IS_ERR(vm_allocation)) {
 		panic("tried freeing non existent allocation addr = %p", addr);
