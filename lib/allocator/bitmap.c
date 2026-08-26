@@ -21,7 +21,7 @@ static inline usize bm_addr_to_page(const AllocBitMap *alloc, void *addr);
 
 void *bitmap_alloc(AllocBitMap *alloc, usize page_count)
 {
-	DEBUG("alloc alloc->pool = %p, page_count = %d", alloc->pool,
+	TRACE("alloc alloc->pool = %p, page_count = %d", alloc->pool,
 	      page_count);
 	usize free_n_pos = bm_find_n_free_pages(alloc, page_count);
 	if (SIZE_MAX == free_n_pos) {
@@ -53,7 +53,7 @@ errno_t bitmap_reserve(AllocBitMap *alloc, void *addr, usize page_count)
 
 void bitmap_free(AllocBitMap *alloc, void *addr, usize page_count)
 {
-	DEBUG("freeing alloc->pool = %p, page_count = %d", alloc->pool,
+	TRACE("freeing alloc->pool = %p, page_count = %d", alloc->pool,
 	      page_count);
 	bm_free(alloc, addr, page_count);
 }

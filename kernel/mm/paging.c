@@ -212,7 +212,7 @@ errno_t paging_map(TableDescriptor *table, usize va, usize pa, usize size,
 
 void paging_unmap(TableDescriptor *page, usize va, usize size)
 {
-	DEBUG("Unmap va = %p, size = %p", va, size);
+	TRACE("Unmap va = %p, size = %p", va, size);
 
 	if (!IS_PAGE_ALIGNED(va)) {
 		panic("va = %p is not page aligned (%p)", va, PAGE_SIZE);

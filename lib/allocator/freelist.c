@@ -20,7 +20,7 @@ void freelist_init(FreeList *freelist, void *pool, const usize size)
 
 void *freelist_alloc(FreeList *freelist, const usize size)
 {
-	DEBUG("alloc pool = %p, size = %d", freelist->head, size);
+	TRACE("alloc pool = %p, size = %d", freelist->head, size);
 	FreeListBlockEntry *entry = freelist->head;
 	ASSERT(nullptr != entry, "head is null");
 	ASSERT(0 != size, "allocation size is zero");
@@ -79,7 +79,7 @@ void *freelist_alloc(FreeList *freelist, const usize size)
 
 void freelist_free(FreeList *freelist, void *ptr)
 {
-	DEBUG("free pool = %p, ptr = %p", freelist->head, ptr);
+	TRACE("free pool = %p, ptr = %p", freelist->head, ptr);
 	FreeListBlockEntry *current = freelist->head;
 	ASSERT(nullptr != current, "head is null");
 	ASSERT(nullptr != ptr, "ptr is null");

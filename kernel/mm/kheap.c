@@ -27,7 +27,7 @@ void kheap_init()
 
 void *kalloc(usize size)
 {
-	DEBUG("kalloc size = %d", size);
+	TRACE("kalloc size = %d", size);
 	spinlock_acquire_scoped(&kheap.lock);
 	void *alloc = freelist_alloc(&kheap.freelist, size);
 	if (IS_ERR(alloc)) {
@@ -44,7 +44,7 @@ void *kalloc(usize size)
 
 void kfree(void *ptr)
 {
-	DEBUG("kfree ptr = %p", ptr);
+	TRACE("kfree ptr = %p", ptr);
 	ASSERT(ptr != nullptr, "ptr is null");
 	spinlock_acquire_scoped(&kheap.lock);
 	freelist_free(&kheap.freelist, ptr);
