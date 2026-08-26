@@ -31,6 +31,7 @@ void syscall_build_table(void)
 	S(SYS_GETPID, sys_getpid);
 	S(SYS_FORK, sys_fork);
 	S(SYS_EXIT, sys_exit);
+	S(SYS_WAIT4, sys_wait4);
 	S(SYS_GETPPID, sys_getppid);
 #undef S
 }
