@@ -1,6 +1,5 @@
 #include "mm/vmm.h"
 #include "aarch64/aarch64.h"
-#include "core/task.h"
 #include "debug/log.h"
 #include "debug/panic.h"
 #include "error.h"
@@ -9,68 +8,83 @@
 #include "mm/paging.h"
 #include "allocator/region.h"
 #include "error.h"
-
-/*
- * Kernel root page table, start of address translation tree for kernel.
- * On aarch64, the virtual address space is divided into user space (each
- * process has its own) and kernel space.
- * The kernel virtual address space's root translation table is stored in
- * TTB1_EL1
- */
-TableDescriptor *kernel_page_table;
-
-/*
- *
- * And user space address space's root translation table is stored in
- * TTB0_EL1, this is used to kernel threads only.
- */
-TableDescriptor *kernel_user_table;
+#include "sync/spinlock.h"
 
 /*
  * Each region has its own lock and its own apis.
  */
-STATIC_ALLOC_VM_REGION(kernel_mem_region, KERNEL_VM_RANGE_BASE,
+STATIC_ALLOC_VM_REGION(_kernel_mem_region, KERNEL_VM_RANGE_BASE,
 		       KERNEL_VM_RANGE_SIZE)
-STATIC_ALLOC_VM_REGION(mmio_region, KERNEL_MMIO_RANGE_START,
+STATIC_ALLOC_VM_REGION(_kernel_mmio_region, KERNEL_MMIO_RANGE_START,
 		       KERNEL_MMIO_RANGE_SIZE)
+
+typedef struct {
+	SpinLock lock;
+	/*
+	 * Kernel root page table, start of address translation tree for kernel.
+	 * On aarch64, the virtual address space is divided into user space
+	 * (each process has its own) and kernel space. The kernel virtual
+	 * address space's root translation table is stored in TTB1_EL1
+	 */
+	TableDescriptor *kernel_page_table;
+	/*
+	 *
+	 * And user space address space's root translation table is stored in
+	 * TTB0_EL1, this is used to kernel threads only.
+	 */
+	TableDescriptor *kernel_user_table;
+	AllocRegion kernel_mem_region;
+	AllocRegion kernel_mmio_region;
+} KernelAddressSpace;
+
+static KernelAddressSpace as = {
+	.kernel_page_table = nullptr,
+	.kernel_user_table = nullptr,
+};
 
 /* initialize virtual memory manager */
 void vm_init(void)
 {
 	INFO("Initializing virtual memory manager");
 
-	kernel_page_table = paging_create_table();
-	if (IS_ERR(kernel_page_table)) {
+	spinlock_init(&as.lock, "Kernel address space");
+
+	as.kernel_page_table = paging_create_table();
+	if (IS_ERR(as.kernel_page_table)) {
 		panic("could not allocate for kernel page table, returned = %s",
-		      str_err(PTR_TO_ERR(kernel_page_table)));
+		      str_err(PTR_TO_ERR(as.kernel_page_table)));
 	}
 
-	kernel_user_table = paging_create_table();
-	if (IS_ERR(kernel_user_table)) {
+	as.kernel_user_table = paging_create_table();
+	if (IS_ERR(as.kernel_user_table)) {
 		panic("could not allocate for kernel thread user page table, "
 		      "returned = %s",
-		      str_err(PTR_TO_ERR(kernel_user_table)));
+		      str_err(PTR_TO_ERR(as.kernel_user_table)));
 	}
 
 	/* setup kernel paging */
-	paging_kernel_init(kernel_page_table);
+	paging_kernel_init(as.kernel_page_table);
 	vm_set_kernel_page_table();
 
+	as.kernel_mem_region = _kernel_mem_region;
+	as.kernel_mmio_region = _kernel_mmio_region;
+
 	/* setup regions */
-	region_init(&kernel_mem_region, "kernel heap region");
-	region_init(&mmio_region, "mmio region");
+	region_init(&as.kernel_mem_region, "kernel heap region");
+	region_init(&as.kernel_mmio_region, "mmio region");
 }
 
 /* set kernal page table for current cpu */
 void vm_set_kernel_page_table(void)
 {
-	paging_switch_kernel_table(kernel_page_table);
+	spinlock_acquire_scoped(&as.lock);
+	paging_switch_kernel_table(as.kernel_page_table);
 }
 
 /* get kernal user page table */
 TableDescriptor *vm_get_kernel_user_page_table(void)
 {
-	return kernel_user_table;
+	return as.kernel_user_table;
 }
 
 /*
@@ -109,7 +123,8 @@ void *vm_map(TableDescriptor *table, usize pa, usize size, AllocRegion *region,
 void *vm_mem_map(usize pa, usize size)
 {
 	DEBUG("mapping mem: pa = %p size = %d", pa, size);
-	return vm_map(kernel_page_table, pa, size, &kernel_mem_region,
+	spinlock_acquire_scoped(&as.lock);
+	return vm_map(as.kernel_page_table, pa, size, &as.kernel_mem_region,
 		      EL1_READ_WRITE_EL0_NONE, ATTR_INDEX_NORMAL,
 		      SHAREABLE_INNER_SHAREABLE, NOT_EXECUTABLE,
 		      NOT_EXECUTABLE);
@@ -119,7 +134,8 @@ void *vm_mem_map(usize pa, usize size)
 void *vm_mmio_map(usize pa, usize size)
 {
 	DEBUG("mapping mmio: pa = %p size = %d", pa, size);
-	return vm_map(kernel_page_table, pa, size, &mmio_region,
+	spinlock_acquire_scoped(&as.lock);
+	return vm_map(as.kernel_page_table, pa, size, &as.kernel_mmio_region,
 		      EL1_READ_WRITE_EL0_NONE, ATTR_INDEX_DEVICE,
 		      SHAREABLE_NON_SHAREABLE, NOT_EXECUTABLE, NOT_EXECUTABLE);
 }
@@ -145,13 +161,15 @@ errno_t vm_unmap(TableDescriptor *table, void *va, usize size,
 /* unmaps an already mapped mem page, doesnt deallocate it. */
 void vm_mem_unmap(void *addr, usize size)
 {
-	vm_unmap(kernel_page_table, addr, size, &kernel_mem_region);
+	spinlock_acquire_scoped(&as.lock);
+	vm_unmap(as.kernel_page_table, addr, size, &as.kernel_mem_region);
 }
 
 /* unmaps an already mapped mmio page, doesnt deallocate it. */
 void vm_mmio_unmap(void *addr, usize size)
 {
-	vm_unmap(kernel_page_table, addr, size, &mmio_region);
+	spinlock_acquire_scoped(&as.lock);
+	vm_unmap(as.kernel_page_table, addr, size, &as.kernel_mmio_region);
 }
 
 /* allocates and map n virtual pages  */
@@ -164,7 +182,7 @@ void *vm_alloc(TableDescriptor *table, usize size, AllocRegion *region,
 	u8 *start = region_alloc(region, page_count);
 	if (IS_ERR(start)) {
 		WARN("failed to allocate vm size = %d, region name = %s", size,
-		     region->lock.name);
+		     region->name);
 		return ERR_TO_PTR(-ENOMEM);
 	}
 
@@ -197,7 +215,8 @@ void *vm_alloc(TableDescriptor *table, usize size, AllocRegion *region,
 void *vm_alloc_mem(usize size)
 {
 	DEBUG("alloc & map mem: size = %d", size);
-	return vm_alloc(kernel_page_table, size, &kernel_mem_region,
+	spinlock_acquire_scoped(&as.lock);
+	return vm_alloc(as.kernel_page_table, size, &as.kernel_mem_region,
 			EL1_READ_WRITE_EL0_NONE, ATTR_INDEX_NORMAL,
 			SHAREABLE_INNER_SHAREABLE, NOT_EXECUTABLE,
 			NOT_EXECUTABLE);
@@ -209,7 +228,8 @@ void *vm_alloc_mem(usize size)
 void *vm_alloc_mmio(usize size)
 {
 	DEBUG("mapping mmio: size = %d", size);
-	return vm_alloc(kernel_page_table, size, &mmio_region,
+	spinlock_acquire_scoped(&as.lock);
+	return vm_alloc(as.kernel_page_table, size, &as.kernel_mmio_region,
 			EL1_READ_WRITE_EL0_NONE, ATTR_INDEX_DEVICE,
 			SHAREABLE_NON_SHAREABLE, NOT_EXECUTABLE,
 			NOT_EXECUTABLE);
@@ -239,11 +259,13 @@ void vm_free(TableDescriptor *table, void *addr, AllocRegion *region)
 /* frees and unmaps n virtual pages from mem region */
 void vm_free_mem(void *addr)
 {
-	vm_free(kernel_page_table, addr, &kernel_mem_region);
+	spinlock_acquire_scoped(&as.lock);
+	vm_free(as.kernel_page_table, addr, &as.kernel_mem_region);
 }
 
 /* frees and unmaps n virtual pages from mmio region */
 void vm_free_mmio(void *addr)
 {
-	vm_free(kernel_page_table, addr, &mmio_region);
+	spinlock_acquire_scoped(&as.lock);
+	vm_free(as.kernel_page_table, addr, &as.kernel_mmio_region);
 }
