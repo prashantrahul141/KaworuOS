@@ -67,4 +67,6 @@ USED static inline void *container_of_impl(void *ptr, usize off)
 
 #define __MAP(n, m, ...) __MAP##n(m, __VA_ARGS__)
 
+#define ARRAY_SIZE(arr) (sizeof(arr) / sizeof(*(arr)))
+
 #endif // _COMMON_DEFS_H_
