@@ -172,6 +172,8 @@ void scheduler_wake_blocked(Task *blocked)
  */
 void scheduler_wake_all(WaitQueue *wq)
 {
+	DEBUG("waking up %d tasks in %s waitqueue", waitqueue_count(wq),
+	      wq->lock.name);
 	for (;;) {
 		Task *blocked = waitqueue_dequeue(wq);
 		if (nullptr == blocked) {
@@ -183,7 +185,7 @@ void scheduler_wake_all(WaitQueue *wq)
 		ASSERT(blocked->waiting_on == nullptr ||
 			       (WaitQueue *)blocked->waiting_on == wq,
 		       "task is waiting on a different wait queue");
-
+		blocked->state = TASK_READY;
 		scheduler_enqueue(blocked);
 	}
 }
