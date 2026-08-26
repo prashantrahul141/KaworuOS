@@ -1,7 +1,7 @@
 #include "error.h"
 #include "types.h"
 
-#define X(i) #i,
+#define X(variant, num) [num] = #variant,
 static const i8 *error_strings[] = { ERR_LIST };
 #undef X
 
