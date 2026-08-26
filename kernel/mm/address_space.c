@@ -11,12 +11,14 @@
 #include "mm/vmm.h"
 #include "string.h"
 
-AddressSpace *address_space_create(void)
+AddressSpace *address_space_create(const i8 *name)
 {
 	AddressSpace *as = kalloc(sizeof(AddressSpace));
 	if (IS_ERR(as)) {
 		return ERR_TO_PTR(-ENOMEM);
 	}
+
+	spinlock_init(&as->lock, name);
 
 	as->table = paging_create_table();
 	if (IS_ERR(as->table)) {
@@ -121,9 +123,10 @@ copy_cleanup:
  * creates a new virtual address space from an existing one,
  * copying it
  */
-AddressSpace *address_space_create_from(const AddressSpace *src)
+AddressSpace *address_space_create_from(AddressSpace *src)
 {
-	AddressSpace *dst = address_space_create();
+	spinlock_acquire_scoped(&src->lock);
+	AddressSpace *dst = address_space_create(src->lock.name);
 	if (IS_ERR(dst)) {
 		return dst;
 	}
@@ -150,6 +153,7 @@ AddressSpace *address_space_create_from(const AddressSpace *src)
 void *address_space_alloc(AddressSpace *as, usize size, PagePerms perms,
 			  ExecPerms uxn)
 {
+	spinlock_acquire_scoped(&as->lock);
 	return vm_alloc(as->table, size, as->user_region, perms,
 			ATTR_INDEX_NORMAL, SHAREABLE_INNER_SHAREABLE,
 			NOT_EXECUTABLE, uxn);
@@ -162,6 +166,7 @@ errno_t address_space_map_owned(AddressSpace *as, usize va, usize pa,
 				usize size, PagePerms perms, ExecPerms uxn)
 {
 	ASSERT(IS_PAGE_ALIGNED(size), "size is not page aligned");
+	spinlock_acquire_scoped(&as->lock);
 
 	usize page_count = size / PAGE_SIZE;
 	if (0 == page_count) {
@@ -186,12 +191,14 @@ errno_t address_space_map_owned(AddressSpace *as, usize va, usize pa,
 errno_t address_space_map_unowned(AddressSpace *as, usize va, usize pa,
 				  usize size, PagePerms perms, ExecPerms uxn)
 {
+	spinlock_acquire_scoped(&as->lock);
 	return paging_map(as->table, va, pa, size, perms, ATTR_INDEX_NORMAL,
 			  SHAREABLE_INNER_SHAREABLE, NOT_EXECUTABLE, uxn);
 }
 
 void address_space_destroy(AddressSpace *as)
 {
+	spinlock_acquire(&as->lock);
 	for (usize i = 0; i < as->user_region->max_allocations_count; i++) {
 		RegionAllocation *alloc = &as->user_region->allocations[i];
 		if (nullptr != alloc->va) {

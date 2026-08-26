@@ -41,7 +41,7 @@ Process *proc_manager_create(const i8 *name)
 		return proc;
 	}
 
-	AddressSpace *as = address_space_create();
+	AddressSpace *as = address_space_create(name);
 	if (IS_ERR(as)) {
 		kfree(proc);
 		WARN("failed to create address space from proc: %s", name);
@@ -108,7 +108,7 @@ Process *proc_manager_create_exec(const i8 *name, usize program_pa,
 		return proc;
 	}
 
-	AddressSpace *as = address_space_create();
+	AddressSpace *as = address_space_create(name);
 	if (IS_ERR(as)) {
 		kfree(proc);
 		WARN("failed to create address space from proc: %s", name);

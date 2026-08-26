@@ -15,8 +15,10 @@
 
 #include "allocator/region.h"
 #include "mm/paging.h"
+#include "sync/spinlock.h"
 
 typedef struct {
+	SpinLock lock;
 	TableDescriptor *table;
 	AllocRegion *user_region;
 } AddressSpace;
@@ -24,7 +26,7 @@ typedef struct {
 /*
  * create new virtual address space
  */
-AddressSpace *address_space_create(void);
+AddressSpace *address_space_create(const i8 *name);
 
 /*
  * allocate and map size bytes memory
@@ -47,7 +49,7 @@ errno_t address_space_map_owned(AddressSpace *as, usize va, usize pa,
 /*
  * creates a new virtual address space from an existing one
  */
-AddressSpace *address_space_create_from(const AddressSpace *src);
+AddressSpace *address_space_create_from(AddressSpace *src);
 
 /*
  * destroy and clean entire address space and the memory it allocated
