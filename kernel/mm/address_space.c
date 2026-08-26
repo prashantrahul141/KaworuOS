@@ -13,6 +13,7 @@
 
 AddressSpace *address_space_create(const i8 *name)
 {
+	DEBUG("creating address space name = %s", name);
 	AddressSpace *as = kalloc(sizeof(AddressSpace));
 	if (IS_ERR(as)) {
 		return ERR_TO_PTR(-ENOMEM);
@@ -153,10 +154,29 @@ AddressSpace *address_space_create_from(AddressSpace *src)
 void *address_space_alloc(AddressSpace *as, usize size, PagePerms perms,
 			  ExecPerms uxn)
 {
+	TRACE("allocating size = %d on address space = %s", size,
+	      as->lock.name);
 	spinlock_acquire_scoped(&as->lock);
 	return vm_alloc(as->table, size, as->user_region, perms,
 			ATTR_INDEX_NORMAL, SHAREABLE_INNER_SHAREABLE,
 			NOT_EXECUTABLE, uxn);
+}
+
+static errno_t address_space_map_unowned_impl(AddressSpace *as, usize va,
+					      usize pa, usize size,
+					      PagePerms perms, ExecPerms uxn)
+{
+	TRACE("mapping unowned size = %d on address space = %s at pa = %d",
+	      size, as->lock.name, pa);
+	return paging_map(as->table, va, pa, size, perms, ATTR_INDEX_NORMAL,
+			  SHAREABLE_INNER_SHAREABLE, NOT_EXECUTABLE, uxn);
+}
+
+errno_t address_space_map_unowned(AddressSpace *as, usize va, usize pa,
+				  usize size, PagePerms perms, ExecPerms uxn)
+{
+	spinlock_acquire_scoped(&as->lock);
+	return address_space_map_unowned_impl(as, va, pa, size, perms, uxn);
 }
 
 /*
@@ -165,6 +185,8 @@ void *address_space_alloc(AddressSpace *as, usize size, PagePerms perms,
 errno_t address_space_map_owned(AddressSpace *as, usize va, usize pa,
 				usize size, PagePerms perms, ExecPerms uxn)
 {
+	TRACE("mapping owned size = %d on address space = %s at pa = %d", size,
+	      as->lock.name, pa);
 	ASSERT(IS_PAGE_ALIGNED(size), "size is not page aligned");
 	spinlock_acquire_scoped(&as->lock);
 
@@ -179,21 +201,13 @@ errno_t address_space_map_owned(AddressSpace *as, usize va, usize pa,
 		return err;
 	}
 
-	err = address_space_map_unowned(as, va, pa, size, perms, uxn);
+	err = address_space_map_unowned_impl(as, va, pa, size, perms, uxn);
 	if (EOK != err) {
 		region_free(as->user_region, (void *)va);
 		return err;
 	}
 
 	return EOK;
-}
-
-errno_t address_space_map_unowned(AddressSpace *as, usize va, usize pa,
-				  usize size, PagePerms perms, ExecPerms uxn)
-{
-	spinlock_acquire_scoped(&as->lock);
-	return paging_map(as->table, va, pa, size, perms, ATTR_INDEX_NORMAL,
-			  SHAREABLE_INNER_SHAREABLE, NOT_EXECUTABLE, uxn);
 }
 
 void address_space_destroy(AddressSpace *as)
