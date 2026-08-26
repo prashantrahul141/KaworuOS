@@ -20,6 +20,7 @@ void process_init(Process *proc, usize pid, const i8 *name, AddressSpace *as)
 
 	intrusivelist_init(&proc->children);
 	intrusivelist_node_init(&proc->parent_node);
+	waitqueue_init(&proc->child_waiters, name);
 
 	proc->exiting = false;
 	proc->exit_code = 0;
@@ -55,6 +56,13 @@ void process_add_child(Process *parent, Process *child)
 	spinlock_acquire_scoped(&parent->lock);
 	spinlock_acquire_scoped(&child->lock);
 	intrusivelist_insert_tail(&parent->children, &child->parent_node);
+}
+
+void process_remove_child(Process *parent, Process *child)
+{
+	spinlock_acquire_scoped(&parent->lock);
+	spinlock_acquire_scoped(&child->lock);
+	intrusivelist_remove(&parent->children, &child->parent_node);
 }
 
 void process_set_parent(Process *parent, Process *child)

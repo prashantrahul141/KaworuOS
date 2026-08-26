@@ -4,6 +4,7 @@
 #include "ds/intrusivelist.h"
 #include "mm/address_space.h"
 #include "core/task.h"
+#include "sync/wait_queue.h"
 #include "types.h"
 #include "sync/spinlock.h"
 
@@ -31,6 +32,7 @@ typedef struct {
 
 	IntrusiveNode parent_node;
 	IntrusiveList children;
+	WaitQueue child_waiters;
 
 	bool exiting;
 	i64 exit_code;
@@ -52,6 +54,11 @@ usize process_thread_count(Process *proc);
 void process_add_child(Process *parent, Process *child);
 
 /*
+ * remove child proc as as child of the given parent process
+ */
+void process_remove_child(Process *parent, Process *child);
+
+/*
  * set parent of the given child process to the given parent process
  */
 void process_set_parent(Process *parent, Process *child);
@@ -60,5 +67,14 @@ void process_set_parent(Process *parent, Process *child);
  * get current process running
  */
 Process *process_get_current(void);
+
+#define process_foreach_child(parent, child, next_node)                    \
+	for (IntrusiveNode *_process_child_node = (parent)->children.head; \
+	     _process_child_node != nullptr &&                             \
+	     (((next_node) = _process_child_node->next),                   \
+	      ((child) = container_of(_process_child_node, Process,        \
+				      parent_node)),                       \
+	      true);                                                       \
+	     _process_child_node = (next_node))
 
 #endif // _PROCESS_H_

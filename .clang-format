@@ -70,9 +70,10 @@ FixNamespaceComments: false
 # Taken from:
 # rg define | rg foreach
 ForEachMacros:
+  - 'process_foreach_child'
   - 'cpu_foreach'
-  - 'intrusivelist_foreach'
   - 'linkedlist_foreach'
+  - 'intrusivelist_foreach'
 
 IncludeBlocks: Preserve
 IncludeCategories:

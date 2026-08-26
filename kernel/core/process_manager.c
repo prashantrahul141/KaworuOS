@@ -230,7 +230,7 @@ void proc_manager_remove_destroy(Process *proc)
 	DEBUG("destroying process: %s", proc->name);
 
 	usize thread_count = intrusivelist_count(&proc->threads);
-	ASSERT(thread_count > 0, "destroying task which has %d (> 0) threads",
+	ASSERT(thread_count == 0, "destroying task which has %d (> 0) threads",
 	       thread_count);
 
 	intrusivelist_remove(&proc_manager.process_list, &proc->manager_node);
