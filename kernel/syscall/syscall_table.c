@@ -4,6 +4,10 @@
 #include "syscall/sys_sched.h"
 #include "string.h"
 
+#define X(variant, num) [num] = #variant,
+static const i8 *syscall_table_as_strings[] = { SYSCALL_LIST };
+#undef X
+
 /* keep this sorted for sanity */
 static syscall_function_type global_syscall_table[MAX_SYSCALL_COUNT] = {};
 
@@ -29,4 +33,13 @@ void syscall_build_table(void)
 	S(SYS_EXIT, sys_exit);
 	S(SYS_GETPPID, sys_getppid);
 #undef S
+}
+
+const i8 *syscall_to_str(usize syscall)
+{
+	if (syscall >= ARRAY_SIZE(syscall_table_as_strings)) {
+		return "nil";
+	}
+
+	return syscall_table_as_strings[syscall];
 }

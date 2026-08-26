@@ -5,7 +5,7 @@
 
 bool syscall_dispatch(ExceptionFrame *frame)
 {
-	DEBUG("dispatching: %d", frame->x8);
+	DEBUG("dispatching: %s (%d)", syscall_to_str(frame->x8), frame->x8);
 	syscall_function_type fn = syscall_table_retrieve(frame->x8);
 	if (nullptr == fn) {
 		frame->x0 = (u64)-ENOSYS;
