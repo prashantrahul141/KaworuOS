@@ -3,6 +3,10 @@
 
 #include "types.h"
 
+constexpr usize STDIN = 0;
+constexpr usize STDOUT = 1;
+constexpr usize STDERR = 2;
+
 enum {
 	_IO_COLOR_BLACK = 0,
 	_IO_COLOR_RED = 1,
