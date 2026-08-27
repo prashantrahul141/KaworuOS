@@ -34,6 +34,7 @@ foreach file : [
     'sched/scheduler_policy.c',
     # sync
     'sync/mutex.c',
+    'sync/refcount.c',
     'sync/run_queue.c',
     'sync/semaphore.c',
     'sync/spinlock.c',
