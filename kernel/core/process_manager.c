@@ -1,5 +1,6 @@
 #include "core/process_manager.h"
 #include "aarch64/exception.h"
+#include "core/fd_table.h"
 #include "core/task.h"
 #include "core/task_manager.h"
 #include "debug/assert.h"
@@ -41,14 +42,22 @@ Process *proc_manager_create(const i8 *name)
 		return proc;
 	}
 
+	FDTable *table = fdtable_create();
+	if (IS_ERR(table)) {
+		kfree(proc);
+		WARN("failed to create fdtable from proc: %s", name);
+		return ERR_TO_PTR(-ENOMEM);
+	}
+
 	AddressSpace *as = address_space_create(name);
 	if (IS_ERR(as)) {
 		kfree(proc);
+		fdtable_destroy(table);
 		WARN("failed to create address space from proc: %s", name);
 		return ERR_TO_PTR(-ENOMEM);
 	}
 
-	process_init(proc, proc_manager.pid_count++, name, as);
+	process_init(proc, proc_manager.pid_count++, name, as, table);
 
 	intrusivelist_insert_tail(&proc_manager.process_list,
 				  &proc->manager_node);
@@ -87,9 +96,6 @@ Process *proc_manager_create_exec_from_elf(const i8 *name, const void *elf,
 		return ERR_TO_PTR(-ENOMEM);
 	}
 
-	intrusivelist_insert_tail(&proc_manager.process_list,
-				  &proc->manager_node);
-
 	process_add_thread(proc, task);
 	scheduler_enqueue(task);
 	return proc;
@@ -108,14 +114,22 @@ Process *proc_manager_create_exec(const i8 *name, usize program_pa,
 		return proc;
 	}
 
+	FDTable *table = fdtable_create();
+	if (IS_ERR(table)) {
+		kfree(proc);
+		WARN("failed to create fdtable from proc: %s", name);
+		return ERR_TO_PTR(-ENOMEM);
+	}
+
 	AddressSpace *as = address_space_create(name);
 	if (IS_ERR(as)) {
 		kfree(proc);
+		fdtable_destroy(table);
 		WARN("failed to create address space from proc: %s", name);
 		return ERR_TO_PTR(-ENOMEM);
 	}
 
-	process_init(proc, proc_manager.pid_count++, name, as);
+	process_init(proc, proc_manager.pid_count++, name, as, table);
 
 	void *ustack = address_space_alloc(as, USER_TASK_STACK_SIZE,
 					   EL1_READ_WRITE_EL0_READ_WRITE,
@@ -192,15 +206,23 @@ Process *proc_manager_create_exec_from(const Process *src_proc,
 		return dst;
 	}
 
+	FDTable *table = fdtable_create_from(src_proc->files);
+	if (IS_ERR(table)) {
+		kfree(dst);
+		WARN("failed to create fdtable from proc: %s", src_proc->name);
+		return ERR_TO_PTR(-ENOMEM);
+	}
+
 	AddressSpace *as = address_space_create_from(src_proc->address_space);
 	if (IS_ERR(as)) {
 		kfree(dst);
+		fdtable_destroy(table);
 		WARN("failed to copy address space from proc: %s",
 		     src_proc->name);
 		return ERR_TO_PTR(-ENOMEM);
 	}
 
-	process_init(dst, proc_manager.pid_count++, src_proc->name, as);
+	process_init(dst, proc_manager.pid_count++, src_proc->name, as, table);
 
 	Task *dst_task = task_manager_create_user_from((struct Process *)dst,
 						       src_task, src_frame);
@@ -237,6 +259,11 @@ void proc_manager_remove_destroy(Process *proc)
 
 	if (proc->address_space != nullptr) {
 		address_space_destroy(proc->address_space);
+	}
+
+	if (proc->files != nullptr) {
+		fdtable_close_all(proc->files);
+		fdtable_destroy(proc->files);
 	}
 
 	kfree(proc);

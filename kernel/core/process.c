@@ -1,12 +1,14 @@
 #include "core/process.h"
 #include "core/cpu.h"
+#include "core/fd_table.h"
 #include "ds/intrusivelist.h"
 #include "error.h"
 #include "mm/address_space.h"
 #include "core/task.h"
 #include "sync/spinlock.h"
 
-void process_init(Process *proc, usize pid, const i8 *name, AddressSpace *as)
+void process_init(Process *proc, usize pid, const i8 *name, AddressSpace *as,
+		  FDTable *fd_table)
 {
 	proc->pid = pid;
 	proc->name = name;
@@ -21,6 +23,8 @@ void process_init(Process *proc, usize pid, const i8 *name, AddressSpace *as)
 	intrusivelist_init(&proc->children);
 	intrusivelist_node_init(&proc->parent_node);
 	waitqueue_init(&proc->child_waiters, name);
+
+	proc->files = fd_table;
 
 	proc->exiting = false;
 	proc->exit_code = 0;

@@ -1,6 +1,7 @@
 #ifndef _PROCESS_H_
 #define _PROCESS_H_
 
+#include "core/fd_table.h"
 #include "ds/intrusivelist.h"
 #include "mm/address_space.h"
 #include "core/task.h"
@@ -34,11 +35,14 @@ typedef struct {
 	IntrusiveList children;
 	WaitQueue child_waiters;
 
+	FDTable *files;
+
 	bool exiting;
 	i64 exit_code;
 } Process;
 
-void process_init(Process *proc, usize pid, const i8 *name, AddressSpace *as);
+void process_init(Process *proc, usize pid, const i8 *name, AddressSpace *as,
+		  FDTable *fd_table);
 
 void process_exit(Process *proc, i64 exit_code);
 

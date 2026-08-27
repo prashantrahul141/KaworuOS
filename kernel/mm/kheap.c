@@ -37,6 +37,7 @@ void *kalloc(usize size)
 	}
 
 	if (IS_ERR(alloc)) {
+		ERROR("failed to allocate size = %d", size);
 		return ERR_TO_PTR(-ENOMEM);
 	}
 	return alloc;
