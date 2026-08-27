@@ -2,6 +2,8 @@
 #include "debug/assert.h"
 #include "debug/log.h"
 #include "error.h"
+#include "io/console.h"
+#include "io/io.h"
 #include "mm/kheap.h"
 #include "string.h"
 #include "fs/file.h"
@@ -319,6 +321,90 @@ errno_t fdtable_dup_at(FDTable *table, usize src_fd, usize dst_fd,
 	/* drop the replaced file's reference outside the lock */
 	if (nullptr != old) {
 		file_put(old);
+	}
+
+	return EOK;
+}
+
+static i64 std_write_op(File *file, const void *buf, usize buf_count)
+{
+	UNUSED_ARG(file);
+	IOEvent io = io_event_default(buf, buf_count);
+	console_write(io);
+	return (i64)buf_count;
+}
+
+static const FileOps stdwrite_ops = { .write = std_write_op };
+
+static i64 std_read_op(File *file, void *_buf, usize buf_count)
+{
+	UNUSED_ARG(file);
+	u8 *buf = _buf;
+	usize read_count = 0;
+	while (read_count < buf_count) {
+		u8 out;
+		if (!console_read(&out)) {
+			break;
+		}
+
+		buf[read_count++] = out;
+	}
+
+	return (i64)read_count;
+}
+
+static const FileOps stdread_ops = { .read = std_read_op };
+
+/*
+ * adds posix stdout, stderr to a fdtable
+ */
+errno_t fdtable_attach_std_files(FDTable *table)
+{
+	/* stdin */
+	usize stdin_fd = STDIN;
+	errno_t ret = fdtable_reserve(table, STDIN, &stdin_fd);
+	if (EOK != ret || stdin_fd != STDIN) {
+		WARN("failed to reserve fd = %d for stdin", STDIN);
+		return ret;
+	}
+
+	File *stdin_file = file_create(&stdread_ops, FILE_MODE_READ, nullptr);
+	ret = fdtable_install_at(table, stdin_file, stdin_fd);
+	if (EOK != ret) {
+		WARN("failed to install fd = %d for stdin", STDIN);
+		return ret;
+	}
+
+	/* stdout */
+	usize stdout_fd = STDOUT;
+	ret = fdtable_reserve(table, STDOUT, &stdout_fd);
+	if (EOK != ret || stdout_fd != STDOUT) {
+		WARN("failed to reserve fd = %d for stdout", STDOUT);
+		return ret;
+	}
+
+	File *stdout_file =
+		file_create(&stdwrite_ops, FILE_MODE_WRITE, nullptr);
+	ret = fdtable_install_at(table, stdout_file, stdout_fd);
+	if (EOK != ret) {
+		WARN("failed to install fd = %d for stdout", STDOUT);
+		return ret;
+	}
+
+	/* stderr */
+	usize stderr_fd = STDERR;
+	ret = fdtable_reserve(table, STDERR, &stderr_fd);
+	if (EOK != ret || stderr_fd != STDERR) {
+		WARN("failed to reserve fd = %d for stderr", STDERR);
+		return ret;
+	}
+
+	File *stderr_file =
+		file_create(&stdwrite_ops, FILE_MODE_WRITE, nullptr);
+	ret = fdtable_install_at(table, stderr_file, stderr_fd);
+	if (EOK != ret) {
+		WARN("failed to install fd = %d for stderr", STDERR);
+		return ret;
 	}
 
 	return EOK;

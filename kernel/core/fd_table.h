@@ -87,4 +87,9 @@ errno_t fdtable_dup_at(FDTable *table, usize src_fd, usize dst_fd,
  */
 errno_t fdtable_set_close_on_exec(FDTable *table, usize fd, bool close_on_exec);
 
+/*
+ * adds posix stdout, stderr to a fdtable
+ */
+errno_t fdtable_attach_std_files(FDTable *table);
+
 #endif // _FD_TABLE_H_
