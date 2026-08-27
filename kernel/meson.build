@@ -7,6 +7,7 @@ foreach file : [
     'boot/memmap.c',
     # core
     'core/cpu.c',
+    'core/fd_table.c',
     'core/process.c',
     'core/process_manager.c',
     'core/task.c',
