@@ -136,6 +136,7 @@ user_c_sources = []
 user_asm_sources = []
 
 subdir('kernel')
+subdir('fs')
 subdir('drivers')
 subdir('lib')
 subdir('thirdparty')
