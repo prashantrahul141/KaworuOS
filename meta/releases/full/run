@@ -1,4 +1,4 @@
-ISO_PATH=KaworuOS.iso
+ISO_PATH=kaworu.iso
 EFI_FIRMWARE=ovmf-code-aarch64.fd
 
 qemu-system-aarch64 -M virt,acpi=off -cpu cortex-a72 \
