@@ -5,6 +5,7 @@
 #include "core/task_manager.h"
 #include "debug/assert.h"
 #include "debug/log.h"
+#include "error.h"
 #include "exec/elf.h"
 #include "mm/address_space.h"
 #include "core/process.h"
@@ -31,11 +32,8 @@ void proc_manager_init(void)
 	proc_manager.pid_count = 1;
 }
 
-Process *proc_manager_create(const i8 *name)
+static Process *proc_manager_create_impl(const i8 *name)
 {
-	DEBUG("creating new empty process: %s", name);
-	spinlock_acquire_scoped(&proc_manager.lock);
-
 	Process *proc = kalloc(sizeof(Process));
 	if (IS_ERR(proc)) {
 		WARN("failed creating proc: %s", name);
@@ -47,6 +45,13 @@ Process *proc_manager_create(const i8 *name)
 		kfree(proc);
 		WARN("failed to create fdtable from proc: %s", name);
 		return ERR_TO_PTR(-ENOMEM);
+	}
+
+	if (EOK != fdtable_attach_std_files(table)) {
+		kfree(proc);
+		fdtable_destroy(table);
+		WARN("failed to create fdtable from proc: %s", name);
+		return ERR_TO_PTR(-EMFILE);
 	}
 
 	AddressSpace *as = address_space_create(name);
@@ -62,6 +67,13 @@ Process *proc_manager_create(const i8 *name)
 	intrusivelist_insert_tail(&proc_manager.process_list,
 				  &proc->manager_node);
 	return proc;
+}
+
+Process *proc_manager_create(const i8 *name)
+{
+	DEBUG("creating new empty process: %s", name);
+	spinlock_acquire_scoped(&proc_manager.lock);
+	return proc_manager_create_impl(name);
 }
 
 Process *proc_manager_create_exec_from_elf(const i8 *name, const void *elf,
@@ -108,34 +120,18 @@ Process *proc_manager_create_exec(const i8 *name, usize program_pa,
 	      program_size);
 	spinlock_acquire_scoped(&proc_manager.lock);
 
-	Process *proc = kalloc(sizeof(Process));
+	Process *proc = proc_manager_create_impl(name);
 	if (IS_ERR(proc)) {
-		WARN("failed creating process %s at %p", name, program_pa);
+		WARN("failed creating proc: %s", str_err(PTR_TO_ERR(proc)));
 		return proc;
 	}
 
-	FDTable *table = fdtable_create();
-	if (IS_ERR(table)) {
-		kfree(proc);
-		WARN("failed to create fdtable from proc: %s", name);
-		return ERR_TO_PTR(-ENOMEM);
-	}
-
-	AddressSpace *as = address_space_create(name);
-	if (IS_ERR(as)) {
-		kfree(proc);
-		fdtable_destroy(table);
-		WARN("failed to create address space from proc: %s", name);
-		return ERR_TO_PTR(-ENOMEM);
-	}
-
-	process_init(proc, proc_manager.pid_count++, name, as, table);
-
-	void *ustack = address_space_alloc(as, USER_TASK_STACK_SIZE,
+	void *ustack = address_space_alloc(proc->address_space,
+					   USER_TASK_STACK_SIZE,
 					   EL1_READ_WRITE_EL0_READ_WRITE,
 					   NOT_EXECUTABLE);
 	if (IS_ERR(ustack)) {
-		address_space_destroy(as);
+		address_space_destroy(proc->address_space);
 		kfree(proc);
 		WARN("failed to allocate mem in this address space for proc: "
 		     "%s",
@@ -144,12 +140,11 @@ Process *proc_manager_create_exec(const i8 *name, usize program_pa,
 	}
 	usize ustack_top = ((usize)ustack) + USER_TASK_STACK_SIZE;
 
-	errno_t err = address_space_map_owned(as, USER_PROGRAM_START_VM,
-					      program_pa, program_size,
-					      EL1_READ_ONLY_EL0_READ_ONLY,
-					      EXECUTABLE);
+	errno_t err = address_space_map_owned(
+		proc->address_space, USER_PROGRAM_START_VM, program_pa,
+		program_size, EL1_READ_ONLY_EL0_READ_ONLY, EXECUTABLE);
 	if (EOK != err) {
-		address_space_destroy(as);
+		address_space_destroy(proc->address_space);
 		kfree(proc);
 		WARN("failed to allocate mem in this address space for proc: "
 		     "%s",
@@ -160,14 +155,11 @@ Process *proc_manager_create_exec(const i8 *name, usize program_pa,
 	Task *task = task_manager_create_user((struct Process *)proc, entry,
 					      ustack_top, name);
 	if (IS_ERR(task)) {
-		address_space_destroy(as);
+		address_space_destroy(proc->address_space);
 		kfree(proc);
 		WARN("failed to create user task for user: %s", name);
 		return ERR_TO_PTR(-ENOMEM);
 	}
-
-	intrusivelist_insert_tail(&proc_manager.process_list,
-				  &proc->manager_node);
 
 	process_add_thread(proc, task);
 	scheduler_enqueue(task);
