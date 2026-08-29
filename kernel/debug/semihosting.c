@@ -38,7 +38,7 @@ static errno_t sh_output_remove(Device *device)
 }
 
 static const Driver sh_output_driver = { .name = "semihosting",
-					 .device_class = DEVICE_SEMIHOSTING,
+					 .device_class = DEVICE_CONSOLE,
 					 .probe = sh_output_probe,
 					 .remove = sh_output_remove };
 

@@ -53,8 +53,7 @@ void dmanager_init(void)
 		device->fdt_node_offset = offset;
 		device->driver = driver;
 
-		INFO("Discovered device = %s with driver = %s", device->name,
-		     driver->name);
+		INFO("Discovered device = %s", device->name);
 		insert_device(device);
 	}
 }
@@ -65,34 +64,28 @@ errno_t dmanager_ready_device(Device *device)
 		return EOK;
 	}
 
-	switch (device->driver->device_class) {
-	case DEVICE_FRAMEBUFFER:
-	case DEVICE_UART:
-	case DEVICE_IRQCHIP:
-	case DEVICE_TIMER:
-	case DEVICE_SEMIHOSTING: {
-		errno_t ret = device->driver->probe(device);
-		if (EOK == ret) {
-			device->state = DEVICE_READY;
-		}
-		return ret;
+	if (DEVICE_UNKNOWN == device->driver->device_class) {
+		return -ENODEV;
 	}
-	case DEVICE_UNKNOWN:
-	default: {
-		return -ENOENT;
+
+	errno_t ret = device->driver->probe(device);
+	if (EOK == ret) {
+		device->state = DEVICE_READY;
 	}
-	}
+	return ret;
 }
 
 Device *dmanager_get_by_class_and_ready(DeviceClass class)
 {
 	Device *device = dmanager_get_by_class(class);
 	if (IS_ERR(device)) {
+		WARN("get by class failed");
 		return device;
 	}
 
 	errno_t ret = dmanager_ready_device(device);
 	if (EOK != ret) {
+		WARN("probing failed");
 		return ERR_TO_PTR(ret);
 	}
 
@@ -128,11 +121,13 @@ static Driver *find_compat_driver(const i8 *req_compat)
 		while (nullptr != *compat) {
 			/* if found matching, return */
 			if (0 == strcmp(*compat, req_compat)) {
+				TRACE("found driver for %s", *compat);
 				return driver;
 			}
 			compat++;
 		}
 	}
+
 	return ERR_TO_PTR(-ENOENT);
 }
 

@@ -6,14 +6,15 @@
 #include "types.h"
 
 typedef struct Device Device;
-
 typedef enum : isize {
 	DEVICE_UNKNOWN = -1,
 	DEVICE_FRAMEBUFFER,
-	DEVICE_UART,
+	DEVICE_CONSOLE,
 	DEVICE_IRQCHIP,
 	DEVICE_TIMER,
-	DEVICE_SEMIHOSTING
+	DEVICE_BLOCK,
+	DEVICE_ENTROPY,
+	DEVICE_NETWORK,
 } DeviceClass;
 
 typedef struct {

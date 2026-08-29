@@ -204,6 +204,6 @@ static const Driver pl011_driver = { .name = "pl011",
 				     .probe = pl011_probe,
 				     .remove = pl011_remove,
 				     .compatible = pl011_compat,
-				     .device_class = DEVICE_UART };
+				     .device_class = DEVICE_CONSOLE };
 
 REGISTER_DEVICE_DRIVER(pl011_driver);

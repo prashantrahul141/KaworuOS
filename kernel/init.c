@@ -21,7 +21,7 @@ void kernel_main(void)
 	irq_controller_init();
 
 #ifndef CONFIG_ENABLE_SEMIHOSTING
-	Device *uart_device = dmanager_get_by_class_and_ready(DEVICE_UART);
+	Device *uart_device = dmanager_get_by_class_and_ready(DEVICE_CONSOLE);
 	if (!IS_ERR(uart_device)) {
 		console_register(uart_device);
 	}
