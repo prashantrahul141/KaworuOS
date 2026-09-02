@@ -15,6 +15,7 @@ typedef enum : isize {
 	DEVICE_BLOCK,
 	DEVICE_ENTROPY,
 	DEVICE_NETWORK,
+	DEVICE_VIRTIO_MMIO_DEVICE,
 } DeviceClass;
 
 typedef struct {
@@ -28,13 +29,15 @@ typedef struct {
 typedef struct {
 	void (*write)(Device *device, const IOEvent *event);
 	u8 (*read)(Device *device);
-} DriverOps;
+	void (*flush)(Device *device);
+} ConsoleOps;
 
 typedef struct {
-	void (*write)(Device *backend, const IOEvent *event);
-	u8 (*read)(Device *backend);
-	void (*flush)(Device *backend);
-} ConsoleOps;
+	errno_t (*write)(Device *device, usize sector, const void *buf);
+	errno_t (*read)(Device *device, usize sector, void *buf);
+	usize (*sector_size)(Device *device);
+	usize (*capacity)(Device *device);
+} BlockOps;
 
 typedef struct {
 	void (*cpu_init)(Device *device);
@@ -85,11 +88,13 @@ typedef enum {
 struct Device {
 	const i8 *name;
 	const Driver *driver;
+	DeviceClass class;
 	DeviceState state;
 	union {
 		const ConsoleOps *console_ops;
 		const IrqChipOps *irq_chip_ops;
 		const TimerOps *timer_ops;
+		const BlockOps *block_ops;
 	};
 	void *driver_data;
 	i32 fdt_node_offset;
@@ -98,6 +103,13 @@ struct Device {
 
 #define REGISTER_DEVICE_DRIVER(driver) \
 	USED SECTION(".driver") const Driver *driver##_ptr = &(driver)
+
+/*
+ * driver: pointer to a pointer to a driver
+ */
+#define dmanager_foreach_driver(driver)                                   \
+	for (Driver * *(driver) = (Driver **)__KERNEL_TEXT_DRIVERS_START; \
+	     (driver) < (Driver **)__KERNEL_TEXT_DRIVERS_END; (driver)++)
 
 #define ACCESS_DRIVER_DATA(type, device) ((type *)((device)->driver_data))
 
@@ -114,7 +126,12 @@ errno_t dmanager_ready_device(Device *device);
 /*
  * Get first device with a specific class
  */
-Device *dmanager_get_by_class(DeviceClass class);
+Device *dmanager_get_by_class_first(DeviceClass class);
+
+/*
+ * get device after skipping similar n devices
+ */
+Device *dmanager_get_by_class_skip(DeviceClass class, usize skip);
 
 /*
  * wrapper around dmanager_get_by_class and dmanager_ready_device

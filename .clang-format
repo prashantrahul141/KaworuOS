@@ -70,6 +70,7 @@ FixNamespaceComments: false
 # Taken from:
 # rg define | rg foreach
 ForEachMacros:
+  - 'dmanager_foreach_driver'
   - 'process_foreach_child'
   - 'cpu_foreach'
   - 'linkedlist_foreach'

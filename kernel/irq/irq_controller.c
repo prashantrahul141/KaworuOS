@@ -22,7 +22,7 @@ void irq_controller_init(void)
 {
 	INFO("Initializing irq controller");
 	spinlock_init(&irq_controller.lock, "irq controller");
-	Device *irq_device = dmanager_get_by_class(DEVICE_IRQCHIP);
+	Device *irq_device = dmanager_get_by_class_first(DEVICE_IRQCHIP);
 	if (IS_ERR(irq_device)) {
 		panic("no irq chip found");
 	}

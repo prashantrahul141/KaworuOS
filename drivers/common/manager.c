@@ -49,6 +49,7 @@ void dmanager_init(void)
 		/* create and prepopulate device */
 		Device *device = kalloc(sizeof(Device));
 		device->state = DEVICE_DISCOVERED;
+		device->class = driver->device_class;
 		device->name = driver->name;
 		device->fdt_node_offset = offset;
 		device->driver = driver;
@@ -77,7 +78,7 @@ errno_t dmanager_ready_device(Device *device)
 
 Device *dmanager_get_by_class_and_ready(DeviceClass class)
 {
-	Device *device = dmanager_get_by_class(class);
+	Device *device = dmanager_get_by_class_first(class);
 	if (IS_ERR(device)) {
 		WARN("get by class failed");
 		return device;
@@ -92,15 +93,19 @@ Device *dmanager_get_by_class_and_ready(DeviceClass class)
 	return device;
 }
 
-Device *dmanager_get_by_class(DeviceClass class)
+Device *dmanager_get_by_class_skip(DeviceClass class, usize skip)
 {
-	DEBUG("get by class = %d", class);
+	DEBUG("get by class = %d skip = %d", class, skip);
 	spinlock_acquire_scoped(&dmanager.lock);
 
 	Device *curr = dmanager.device_list;
+	usize count = 0;
 	while (nullptr != curr) {
-		if (curr->driver->device_class == class) {
-			return curr;
+		if (curr->class == class) {
+			count++;
+			if (count == skip + 1) {
+				return curr;
+			}
 		}
 		curr = curr->next;
 	}
@@ -108,12 +113,16 @@ Device *dmanager_get_by_class(DeviceClass class)
 	return ERR_TO_PTR(-ENOENT);
 }
 
+Device *dmanager_get_by_class_first(DeviceClass class)
+{
+	return dmanager_get_by_class_skip(class, 0);
+}
+
 static Driver *find_compat_driver(const i8 *req_compat)
 {
 	TRACE("finding compat driver, required = %s", req_compat);
 	/* for each driver */
-	for (Driver **_driver = (Driver **)__KERNEL_TEXT_DRIVERS_START;
-	     _driver < (Driver **)__KERNEL_TEXT_DRIVERS_END; _driver++) {
+	dmanager_foreach_driver(_driver) {
 		Driver *driver = *(_driver);
 
 		/* match against each compat of this driver */
