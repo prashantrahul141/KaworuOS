@@ -14,6 +14,9 @@ foreach file : [
 
   # uart
     'uart/pl011.c',
+
+  # virtio
+    'virtio/virtio_queue.c',
 ]
     kernel_c_sources += files(project_root / 'drivers' / file)
 endforeach
