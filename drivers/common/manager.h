@@ -19,32 +19,104 @@ typedef enum : isize {
 } DeviceClass;
 
 typedef struct {
+	/*
+	 * driver name
+	 */
 	const i8 *name;
+
+	/*
+	 * compat array
+	 */
 	const i8 *const *compatible;
+
+	/*
+	 * init aka probe function
+	 */
 	errno_t (*probe)(Device *);
+
+	/*
+	 * removal or destroying function
+	 */
 	errno_t (*remove)(Device *);
+
+	/*
+	 * type of device
+	 */
 	DeviceClass device_class;
 } Driver;
 
 typedef struct {
-	void (*write)(Device *device, const IOEvent *event);
+	/*
+	 * read one byte from the device
+	 */
 	u8 (*read)(Device *device);
+
+	/*
+	 * write an entire event to device
+	 */
+	void (*write)(Device *device, const IOEvent *event);
+
+	/*
+	 * flush device if it supports
+	 */
 	void (*flush)(Device *device);
 } ConsoleOps;
 
 typedef struct {
-	errno_t (*write)(Device *device, usize sector, const void *buf);
+	/*
+	 * read from given sector into buf
+	 *
+	 * buf should be atleast sector sized
+	 */
 	errno_t (*read)(Device *device, usize sector, void *buf);
+
+	/*
+	 * write given sector into buf
+	 *
+	 * buf should be atleast sector sized
+	 */
+	errno_t (*write)(Device *device, usize sector, const void *buf);
+
+	/*
+	 * returns sector size of the device
+	 */
 	usize (*sector_size)(Device *device);
+
+	/*
+	 * returns total capacity
+	 */
 	usize (*capacity)(Device *device);
 } BlockOps;
 
 typedef struct {
+	/*
+	 * init interrupt for this cpu
+	 */
 	void (*cpu_init)(Device *device);
+
+	/*
+	 * enable a given irq
+	 */
 	void (*enable)(const Device *device, u32 irq);
+
+	/*
+	 * disable a given irq
+	 */
 	void (*disable)(const Device *device, u32 irq);
+
+	/*
+	 * get currently active interrupt
+	 */
 	u32 (*get_active)(const Device *device);
+
+	/*
+	 * signal end of interrupt
+	 */
 	void (*signal_eoi)(const Device *device, u32 irq);
+
+	/*
+	 * total interrupt count
+	 */
 	u32 (*interrupts_count)(const Device *device);
 } IrqChipOps;
 
@@ -80,8 +152,19 @@ typedef struct {
 } TimerOps;
 
 typedef enum {
+	/*
+	 * deviec has been discovered but havent been probed yet
+	 */
 	DEVICE_DISCOVERED = 0,
+
+	/*
+	 * device was successfully probed and is ready to use
+	 */
 	DEVICE_READY,
+
+	/*
+	 * device was failed probing
+	 */
 	DEVICE_FAILED,
 } DeviceState;
 

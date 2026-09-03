@@ -18,6 +18,8 @@
 #include "debug/printf.h"
 #include "core/process_manager.h"
 #include "common/manager.h"
+#include "common/virtio.h"
+#include "core/process_manager.h"
 #include "boot/limine_responses.h"
 #include "boot/fdt.h"
 #include "core/timer.h"

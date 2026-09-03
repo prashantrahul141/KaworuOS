@@ -99,8 +99,10 @@ void *vm_map(TableDescriptor *table, usize pa, usize size, AllocRegion *region,
 
 {
 	if (!IS_PAGE_ALIGNED(size)) {
-		WARN("given size is not page aligned");
-		return ERR_TO_PTR(-EINVAL);
+		WARN("given size = %p is not page aligned, rounding up to = "
+		     "%p",
+		     size, round_up(size, PAGE_SIZE));
+		size = round_up(size, PAGE_SIZE);
 	}
 
 	usize page_count = size / PAGE_SIZE;
@@ -111,8 +113,8 @@ void *vm_map(TableDescriptor *table, usize pa, usize size, AllocRegion *region,
 				 underprivilege_execution);
 
 	if (EOK != err) {
-		WARN("failed mapping va = %p, pa = %p, size = %p", (usize)va,
-		     pa, size);
+		ERROR("failed mapping va = %p, pa = %p, size = %p", (usize)va,
+		      pa, size);
 		return ERR_TO_PTR(err);
 	}
 
@@ -149,8 +151,10 @@ errno_t vm_unmap(TableDescriptor *table, void *va, usize size,
 		 AllocRegion *region)
 {
 	if (!IS_PAGE_ALIGNED(size)) {
-		WARN("given size is not page aligned");
-		return -EINVAL;
+		WARN("given size = %p is not page aligned, rounding up to = "
+		     "%p",
+		     size, round_up(size, PAGE_SIZE));
+		size = round_up(size, PAGE_SIZE);
 	}
 
 	region_free(region, va);
@@ -172,7 +176,7 @@ void vm_mmio_unmap(void *addr, usize size)
 	vm_unmap(as.kernel_page_table, addr, size, &as.kernel_mmio_region);
 }
 
-/* allocates and map n virtual pages  */
+/* allocates and size bytes */
 void *vm_alloc(TableDescriptor *table, usize size, AllocRegion *region,
 	       PagePerms perms, AttrIndex attr_index,
 	       PageShareability shareability, ExecPerms privilege_execution,
@@ -181,8 +185,8 @@ void *vm_alloc(TableDescriptor *table, usize size, AllocRegion *region,
 	usize page_count = size / PAGE_SIZE;
 	u8 *start = region_alloc(region, page_count);
 	if (IS_ERR(start)) {
-		WARN("failed to allocate vm size = %d, region name = %s", size,
-		     region->name);
+		ERROR("failed to allocate vm size = %d, region name = %s", size,
+		      region->name);
 		return ERR_TO_PTR(-ENOMEM);
 	}
 
@@ -190,7 +194,8 @@ void *vm_alloc(TableDescriptor *table, usize size, AllocRegion *region,
 	for (usize page = 0; page < page_count; page++, va += PAGE_SIZE) {
 		usize pa = pmm_alloc();
 		if (IS_ERR_VALUE((void *)pa)) {
-			panic("ran out of physical memory");
+			ERROR("ran out of physical memory");
+			return ERR_TO_PTR(-ENOMEM);
 		}
 
 		errno_t err = paging_map(table, (usize)va, pa, PAGE_SIZE, perms,
@@ -199,8 +204,8 @@ void *vm_alloc(TableDescriptor *table, usize size, AllocRegion *region,
 					 underprivilege_execution);
 
 		if (EOK != err) {
-			WARN("failed mapping va = %p, pa = %p, size = %p",
-			     (usize)va, pa, size);
+			ERROR("failed mapping va = %p, pa = %p, size = %p",
+			      (usize)va, pa, size);
 			return ERR_TO_PTR(err);
 		}
 	}
@@ -235,7 +240,7 @@ void *vm_alloc_mmio(usize size)
 			NOT_EXECUTABLE);
 }
 
-/* frees and unmaps n virtual pages  */
+/* frees and unmaps n bytes */
 void vm_free(TableDescriptor *table, void *addr, AllocRegion *region)
 {
 	RegionAllocation *allocation = region_find(region, addr);

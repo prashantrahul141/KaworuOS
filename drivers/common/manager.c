@@ -61,6 +61,7 @@ void dmanager_init(void)
 
 errno_t dmanager_ready_device(Device *device)
 {
+	DEBUG("ready device = %s", device->name);
 	if (DEVICE_READY == device->state) {
 		return EOK;
 	}
