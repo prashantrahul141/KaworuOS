@@ -76,7 +76,8 @@ static inline void w_intrd_enable(void)
 /* any interrupts enabled? */
 static inline bool r_intrall_enabled(void)
 {
-	return r_daif() != 0;
+	return (r_daif() &
+		((1UL << 9) | (1UL << 8) | (1UL << 7) | (1UL << 6))) == 0;
 }
 
 /* disable all interrupts */
@@ -85,7 +86,7 @@ static inline void w_intrall_disable(void)
 	asm volatile("msr daifset, #0b1111");
 }
 
-/* disable all interrupts */
+/* enable all interrupts */
 static inline void w_intrall_enable(void)
 {
 	asm volatile("msr daifclr, #0b1111");
