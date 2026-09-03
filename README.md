@@ -82,8 +82,10 @@ https://github.com/mit-pdos/xv6-riscv \
 https://github.com/arryndoestech/adt_os                     # thank you @arryndoestech  \
 https://xv6-guide.github.io/xv6-riscv-book \
 https://github.com/gmarino2048/64bit-os-tutorial            # thank you @gmarino2048  \
+https://operating-system-in-1000-lines.vercel.app \
 https://lowenware.com/blog/aarch64-mmu-programming/ \
 https://developer.arm.com/documentation/ddi0487/latest \
 https://developer.arm.com/documentation/ddi0601/latest \
 https://cs140e.sergio.bz/docs/ARMv8-Reference-Manual.pdf \
-https://gist.github.com/x0nu11byt3/bcb35c3de461e5fb66173071a2379779 # thank you @x0nu11byt3
+https://gist.github.com/x0nu11byt3/bcb35c3de461e5fb66173071a2379779 # thank you @x0nu11byt3 \
+https://docs.oasis-open.org/virtio/virtio/v1.0/cs01/virtio-v1.0-cs01.html
