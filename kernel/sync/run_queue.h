@@ -18,4 +18,15 @@ bool runqueue_is_empty(RunQueue *rq);
 usize runqueue_count(RunQueue *rq);
 Task *runqueue_peek(RunQueue *rq);
 
+/*
+ * the callee should gurantee that it holds the internal lock before doing these
+ * operations
+ */
+void runqueue_enqueue_unlocked(RunQueue *rq, Task *task);
+Task *runqueue_dequeue_unlocked(RunQueue *rq);
+void runqueue_remove_unlocked(RunQueue *rq, Task *task);
+bool runqueue_is_empty_unlocked(RunQueue *rq);
+usize runqueue_count_unlocked(RunQueue *rq);
+Task *runqueue_peek_unlocked(RunQueue *rq);
+
 #endif // _RUN_QUEUE_H

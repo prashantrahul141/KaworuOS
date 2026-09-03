@@ -15,12 +15,50 @@ void runqueue_enqueue(RunQueue *rq, Task *task)
 	ASSERT(task->state == TASK_READY, "only READY tasks may enter "
 					  "runqueue");
 	spinlock_acquire_scoped(&rq->lock);
-	intrusivelist_insert_tail(&rq->runnables, &task->runnable_node);
+	runqueue_enqueue_unlocked(rq, task);
 }
 
 Task *runqueue_dequeue(RunQueue *rq)
 {
 	spinlock_acquire_scoped(&rq->lock);
+	return runqueue_dequeue_unlocked(rq);
+}
+
+void runqueue_remove(RunQueue *rq, Task *task)
+{
+	spinlock_acquire_scoped(&rq->lock);
+	runqueue_remove_unlocked(rq, task);
+}
+
+bool runqueue_is_empty(RunQueue *rq)
+{
+	spinlock_acquire_scoped(&rq->lock);
+	return runqueue_is_empty_unlocked(rq);
+}
+
+usize runqueue_count(RunQueue *rq)
+{
+	spinlock_acquire_scoped(&rq->lock);
+	return runqueue_count_unlocked(rq);
+}
+
+Task *runqueue_peek(RunQueue *rq)
+{
+	spinlock_acquire_scoped(&rq->lock);
+	return runqueue_peek_unlocked(rq);
+}
+
+void runqueue_enqueue_unlocked(RunQueue *rq, Task *task)
+{
+	ASSERT(task->state == TASK_READY, "only READY tasks may enter "
+					  "runqueue");
+	spinlock_assert_locked(&rq->lock);
+	intrusivelist_insert_tail(&rq->runnables, &task->runnable_node);
+}
+
+Task *runqueue_dequeue_unlocked(RunQueue *rq)
+{
+	spinlock_assert_locked(&rq->lock);
 	IntrusiveNode *run_node = intrusivelist_remove_head(&rq->runnables);
 	if (nullptr == run_node) {
 		return nullptr;
@@ -28,27 +66,27 @@ Task *runqueue_dequeue(RunQueue *rq)
 	return container_of(run_node, Task, runnable_node);
 }
 
-void runqueue_remove(RunQueue *rq, Task *task)
+void runqueue_remove_unlocked(RunQueue *rq, Task *task)
 {
-	spinlock_acquire_scoped(&rq->lock);
+	spinlock_assert_locked(&rq->lock);
 	intrusivelist_remove(&rq->runnables, &task->runnable_node);
 }
 
-bool runqueue_is_empty(RunQueue *rq)
+bool runqueue_is_empty_unlocked(RunQueue *rq)
 {
-	spinlock_acquire_scoped(&rq->lock);
+	spinlock_assert_locked(&rq->lock);
 	return intrusivelist_is_empty(&rq->runnables);
 }
 
-usize runqueue_count(RunQueue *rq)
+usize runqueue_count_unlocked(RunQueue *rq)
 {
-	spinlock_acquire_scoped(&rq->lock);
+	spinlock_assert_locked(&rq->lock);
 	return intrusivelist_count(&rq->runnables);
 }
 
-Task *runqueue_peek(RunQueue *rq)
+Task *runqueue_peek_unlocked(RunQueue *rq)
 {
-	spinlock_acquire_scoped(&rq->lock);
+	spinlock_assert_locked(&rq->lock);
 	IntrusiveNode *run_node = intrusivelist_peek_head(&rq->runnables);
 	if (nullptr == run_node) {
 		return nullptr;
