@@ -40,4 +40,10 @@ USED static void _spinlock_autocleanup(SpinLock **sp)
  */
 #define spinlock_acquire_scoped(sp) _SPINLOCK_SCOPED_IMPL(sp, __LINE__)
 
+#define spinlock_assert_locked(sp) \
+	ASSERT((sp)->locked, "requires lock = %s to be held", (sp)->name)
+
+#define spinlock_assert_unlocked(sp) \
+	ASSERT(!(sp)->locked, "requires lock = %s to be released", (sp)->name)
+
 #endif // _SPINLOCK_H_
