@@ -17,6 +17,8 @@ constexpr usize VIRTIO_OFFSET_DEVICEID = 0x8;
 constexpr usize VIRTIO_OFFSET_PAGE_SIZE = 0x28;
 constexpr usize VIRTIO_OFFSET_DEVICE_STATUS = 0x70;
 constexpr usize VIRTIO_OFFSET_DEVICE_CONFIG = 0x100;
+constexpr usize VIRTIO_OFFSET_INTERRUPT_STATUS = 0x60;
+constexpr usize VIRTIO_OFFSET_INTERRUPT_ACK = 0x64;
 
 typedef enum {
 	VIRTIO_MMIO_DEVICE_ID_UNKNOWN = 0,

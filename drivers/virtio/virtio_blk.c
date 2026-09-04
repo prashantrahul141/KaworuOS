@@ -8,6 +8,7 @@
 #include "mm/pmm.h"
 #include "mm/vmm.h"
 #include "register.h"
+#include "sync/completion.h"
 #include "virtio/virtio_mmio.h"
 #include "virtio/virtio_queue.h"
 #include "string.h"
@@ -25,6 +26,16 @@ static void virtio_blk_flush_notify_host(Device *device, u16 desc_index)
 	reg_write32(&data->base_addr, VIRTIO_OFFSET_QUEUE_NOTIFY,
 		    vq->queue_index);
 	vq->last_used_index++;
+}
+
+static void virtio_blk_submit_and_wait(Device *device)
+{
+	VirtIOBlkDriverData *data =
+		ACCESS_DRIVER_DATA(VirtIOBlkDriverData, device);
+	completion_reset(&data->irq_completion);
+	virtio_blk_flush_notify_host(device, 0);
+	completion_wait(&data->irq_completion);
+	dmb(BARRIER_ISH);
 }
 
 static void virtio_blk_add_requests(const VirtIOBlkDriverData *data,
@@ -85,12 +96,7 @@ static errno_t write(Device *device, usize sector, const void *buf)
 
 	virtio_blk_add_write_requests(data, blk_req, sector);
 
-	virtio_blk_flush_notify_host(device, 0);
-
-	VirtQ *vq = pmm_phys_to_virt((usize)data->virtq_phy);
-
-	while (virtq_is_busy(vq))
-		dmb(BARRIER_ISH);
+	virtio_blk_submit_and_wait(device);
 
 	if (0 != blk_req->status) {
 		ERROR("failed to write sector=%d status=%d", sector,
@@ -116,12 +122,7 @@ static errno_t read(Device *device, usize sector, void *buf)
 
 	virtio_blk_add_read_requests(data, blk_req, sector);
 
-	virtio_blk_flush_notify_host(device, 0);
-
-	VirtQ *vq = pmm_phys_to_virt((usize)data->virtq_phy);
-
-	while (virtq_is_busy(vq))
-		dmb(BARRIER_ISH);
+	virtio_blk_submit_and_wait(device);
 
 	if (0 != blk_req->status) {
 		ERROR("failed to read sector=%d status=%d", sector,
@@ -153,12 +154,19 @@ static const BlockOps virtio_block_ops = { .write = write,
 					   .sector_size = sector_size,
 					   .capacity = capacity };
 
-static void receive_irq_handle(void *_data)
+static void virtio_blk_irq_handler(void *_data)
 {
 	Device *device = _data;
-	VirtIOBlkDriverData *data =
+	VirtIOBlkDriverData *driver_data =
 		ACCESS_DRIVER_DATA(VirtIOBlkDriverData, device);
-	UNUSED_ARG(data);
+
+	u32 isr = reg_read32(&driver_data->base_addr,
+			     VIRTIO_OFFSET_INTERRUPT_STATUS);
+	if (isr & 1) {
+		reg_write32(&driver_data->base_addr,
+			    VIRTIO_OFFSET_INTERRUPT_ACK, 1);
+		completion_signal(&driver_data->irq_completion);
+	}
 }
 
 errno_t virtio_blk_probe(Device *device, Register base, u32 index)
@@ -182,6 +190,8 @@ errno_t virtio_blk_probe(Device *device, Register base, u32 index)
 	}
 
 	data->base_addr = base;
+
+	completion_init(&data->irq_completion, "virtio-blk");
 
 	/* reset device */
 	reg_write32(&base, VIRTIO_OFFSET_DEVICE_STATUS, 0);
@@ -222,9 +232,9 @@ errno_t virtio_blk_probe(Device *device, Register base, u32 index)
 	/* request irq */
 	FDTInterrupt fdt_interrupt;
 	fdt_get_interrupt_cells(device->fdt_node_offset, &fdt_interrupt, 1);
-
-	data->irq = fdt_interrupt.cells[1] + 32;
-	request_irq(data->irq, receive_irq_handle, device);
+	u32 irq_base = (0 == fdt_interrupt.cells[0]) ? 32 : 16;
+	data->irq = fdt_interrupt.cells[1] + irq_base;
+	request_irq(data->irq, virtio_blk_irq_handler, device);
 
 	device->driver_data = data;
 	device->name = "virtio-blk";

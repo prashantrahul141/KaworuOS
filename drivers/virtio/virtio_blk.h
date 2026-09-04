@@ -5,6 +5,7 @@
 #include "common_defs.h"
 #include "error.h"
 #include "register.h"
+#include "sync/completion.h"
 #include "types.h"
 #include "virtio/virtio_queue.h"
 
@@ -23,6 +24,7 @@ typedef struct {
 
 typedef struct {
 	u32 irq;
+	Completion irq_completion;
 	Register base_addr;
 	VirtQ *virtq_phy;
 	usize request_addr_phy;
