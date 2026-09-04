@@ -173,6 +173,10 @@ errno_t paging_map(TableDescriptor *table, usize va, usize pa, usize size,
 {
 	TRACE("Map va = %p, pa = %p, size = %p", va, pa, size);
 
+	if (!IS_PAGE_ALIGNED(pa)) {
+		panic("pa = %p is not page aligned (%p)", pa, PAGE_SIZE);
+	}
+
 	if (!IS_PAGE_ALIGNED(va)) {
 		panic("va = %p is not page aligned (%p)", va, PAGE_SIZE);
 	}
