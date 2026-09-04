@@ -81,14 +81,9 @@ static void virtio_blk_add_read_requests(const VirtIOBlkDriverData *data,
 
 static errno_t write(Device *device, usize sector, const void *buf)
 {
+	DEBUG("virtio-blk: write sector = %d", sector);
 	VirtIOBlkDriverData *data =
 		ACCESS_DRIVER_DATA(VirtIOBlkDriverData, device);
-
-	if (sector >= data->capacity / SECTOR_SIZE) {
-		WARN("sector (%d) bigger than capacity (%d) / SECTOR_SIZE (%d)",
-		     sector, data->capacity, SECTOR_SIZE);
-		return -EINVAL;
-	}
 
 	VirtIOBlkRequest *blk_req = pmm_phys_to_virt(data->request_addr_phy);
 
@@ -109,14 +104,9 @@ static errno_t write(Device *device, usize sector, const void *buf)
 
 static errno_t read(Device *device, usize sector, void *buf)
 {
+	DEBUG("virtio-blk: read sector = %d", sector);
 	VirtIOBlkDriverData *data =
 		ACCESS_DRIVER_DATA(VirtIOBlkDriverData, device);
-
-	if (sector >= data->capacity / SECTOR_SIZE) {
-		WARN("sector (%d) bigger than capacity (%d) / SECTOR_SIZE (%d)",
-		     sector, data->capacity, SECTOR_SIZE);
-		return -EINVAL;
-	}
 
 	VirtIOBlkRequest *blk_req = pmm_phys_to_virt(data->request_addr_phy);
 
