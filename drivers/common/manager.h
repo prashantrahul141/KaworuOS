@@ -78,12 +78,12 @@ typedef struct {
 	errno_t (*write)(Device *device, usize sector, const void *buf);
 
 	/*
-	 * returns sector size of the device
+	 * returns sector size of the device, in bits
 	 */
 	usize (*sector_size)(Device *device);
 
 	/*
-	 * returns total capacity
+	 * returns total capacity, in bits
 	 */
 	usize (*capacity)(Device *device);
 } BlockOps;
