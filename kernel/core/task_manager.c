@@ -8,6 +8,7 @@
 #include "debug/log.h"
 #include "ds/intrusivelist.h"
 #include "error.h"
+#include "irq/irq_controller.h"
 #include "mm/kheap.h"
 #include "sched/scheduler.h"
 #include "sync/spinlock.h"
@@ -213,6 +214,7 @@ void task_manager_set_state(Task *task, TaskState state)
 static void task_idle(void *arg)
 {
 	UNUSED_ARG(arg);
+	irq_local_enable();
 	for (;;) {
 		TRACE("idle task | cpuid = %d", this_cpu()->cpuid);
 		if (scheduler_cpu_has_runnable_tasks()) {
