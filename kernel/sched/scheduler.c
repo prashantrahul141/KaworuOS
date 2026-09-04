@@ -9,6 +9,7 @@
 #include "mm/address_space.h"
 #include "mm/paging.h"
 #include "mm/vmm.h"
+#include "sync/spinlock.h"
 #include "sync/wait_queue.h"
 #include "irq/irq_controller.h"
 #include "sched/scheduler_policy.h"
@@ -172,10 +173,11 @@ void scheduler_wake_blocked(Task *blocked)
  */
 void scheduler_wake_all(WaitQueue *wq)
 {
-	DEBUG("waking up %d tasks in %s waitqueue", waitqueue_count(wq),
-	      wq->lock.name);
+	spinlock_acquire_scoped(&wq->lock);
+	DEBUG("waking up %d tasks in %s waitqueue",
+	      waitqueue_count_unlocked(wq), wq->lock.name);
 	for (;;) {
-		Task *blocked = waitqueue_dequeue(wq);
+		Task *blocked = waitqueue_dequeue_unlocked(wq);
 		if (nullptr == blocked) {
 			return;
 		}
@@ -352,7 +354,10 @@ Cpu *scheduler_pick_cpu(void)
 			continue;
 		}
 
-		usize task_count = runqueue_count(&cpu->runnable_tasks);
+		spinlock_acquire_scoped(&cpu->runnable_tasks.lock);
+
+		usize task_count =
+			runqueue_count_unlocked(&cpu->runnable_tasks);
 		if (task_count < best_count) {
 			best_cpu = cpu;
 			best_count = task_count;

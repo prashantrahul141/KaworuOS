@@ -38,7 +38,7 @@ void completion_signal(Completion *cm)
 	cm->done = true;
 	Task *task;
 
-	while ((task = waitqueue_dequeue(&cm->waiters)) != nullptr) {
+	while ((task = waitqueue_dequeue_unlocked(&cm->waiters)) != nullptr) {
 		scheduler_wake_blocked(task);
 	}
 }
