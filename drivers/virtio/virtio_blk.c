@@ -128,7 +128,7 @@ static errno_t read(Device *device, usize sector, void *buf)
 static usize sector_size(Device *device)
 {
 	UNUSED_ARG(device);
-	return SECTOR_SIZE;
+	return SECTOR_SIZE_BITS;
 }
 
 static usize capacity(Device *device)

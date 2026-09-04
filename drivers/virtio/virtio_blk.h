@@ -10,6 +10,7 @@
 #include "virtio/virtio_queue.h"
 
 constexpr usize SECTOR_SIZE = 512;
+constexpr usize SECTOR_SIZE_BITS = SECTOR_SIZE * 8;
 constexpr usize VIRTIO_BLOCK_TYPE_IN = 0;
 constexpr usize VIRTIO_BLOCK_TYPE_OUT = 1;
 
