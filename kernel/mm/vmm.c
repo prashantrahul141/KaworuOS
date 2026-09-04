@@ -136,10 +136,23 @@ void *vm_mem_map(usize pa, usize size)
 void *vm_mmio_map(usize pa, usize size)
 {
 	DEBUG("mapping mmio: pa = %p size = %d", pa, size);
+
 	spinlock_acquire_scoped(&as.lock);
-	return vm_map(as.kernel_page_table, pa, size, &as.kernel_mmio_region,
-		      EL1_READ_WRITE_EL0_NONE, ATTR_INDEX_DEVICE,
-		      SHAREABLE_NON_SHAREABLE, NOT_EXECUTABLE, NOT_EXECUTABLE);
+
+	/* not all pas page aligned, but causes it to be normalised due to page
+	 * descriptor */
+	usize page_base = round_down(pa, PAGE_SIZE);
+	usize offset = pa - page_base;
+
+	void *va = vm_map(as.kernel_page_table, page_base, size + offset,
+			  &as.kernel_mmio_region, EL1_READ_WRITE_EL0_NONE,
+			  ATTR_INDEX_DEVICE, SHAREABLE_NON_SHAREABLE,
+			  NOT_EXECUTABLE, NOT_EXECUTABLE);
+	if (IS_ERR(va)) {
+		return va;
+	}
+
+	return (u8 *)va + offset;
 }
 
 /*
@@ -173,7 +186,10 @@ void vm_mem_unmap(void *addr, usize size)
 void vm_mmio_unmap(void *addr, usize size)
 {
 	spinlock_acquire_scoped(&as.lock);
-	vm_unmap(as.kernel_page_table, addr, size, &as.kernel_mmio_region);
+	usize va = (usize)addr;
+	usize offset = va & (PAGE_SIZE - 1);
+	vm_unmap(as.kernel_page_table, (void *)(va - offset),
+		 round_up(size + offset, PAGE_SIZE), &as.kernel_mmio_region);
 }
 
 /* allocates and size bytes */
