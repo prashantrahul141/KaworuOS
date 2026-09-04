@@ -11,6 +11,7 @@ void completion_init(Completion *cm, const i8 *name)
 
 void completion_wait(Completion *cm)
 {
+	TRACE("completion wait = %s", cm->waiters.lock.name);
 	for (;;) {
 		spinlock_acquire(&cm->waiters.lock);
 
@@ -33,6 +34,7 @@ void completion_wait(Completion *cm)
 
 void completion_signal(Completion *cm)
 {
+	TRACE("completion signal = %s", cm->waiters.lock.name);
 	ASSERT(!cm->done, "completion already marked done");
 	spinlock_acquire_scoped(&cm->waiters.lock);
 	cm->done = true;

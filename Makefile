@@ -21,6 +21,8 @@ ISO = $(NAME).iso
 
 # qemu flags for virt
 # dont forget to update in release/run scripts
+QEMU_BLOCK_FILE_SIZE_MB = 128
+QEMU_BLOCK_FILE = "block"
 QEMU_MACHINE := virt,acpi=off
 QEMU_FLAGS := -cpu cortex-a72 \
 			-m $(CONFIG_QEMU_PHYSICAL_MEMORY_MB)M \
@@ -29,6 +31,8 @@ QEMU_FLAGS := -cpu cortex-a72 \
 			-device usb-kbd \
 			-device usb-tablet \
 			-drive if=pflash,unit=0,format=raw,file=$(UEFI_FIRMWARE),readonly=on \
+			-drive id=drive0,file=$(QEMU_BLOCK_FILE),format=raw,if=none \
+			-device virtio-blk-device,drive=drive0,bus=virtio-mmio-bus.0 \
 			-cdrom $(ISO) \
 			-smp $(CONFIG_QEMU_CPU_COUNT)
 
@@ -106,7 +110,7 @@ iso/EFI/BOOT:
 
 # running ---------------------
 .PHONY: run
-run: $(ISO) ## Run the kernel inside qemu
+run: $(ISO) $(QEMU_BLOCK_FILE) ## Run the kernel inside qemu
 	qemu-system-aarch64 -M $(QEMU_MACHINE) $(QEMU_FLAGS)
 
 .PHONY: rund
@@ -117,6 +121,10 @@ rund: $(ISO) ## Run the kernel inside qemu with a gdb stub
 qemu_dump_dts: ## Dump the qemu virt device tree
 	qemu-system-aarch64 -machine $(QEMU_MACHINE),dumpdtb=virt.dtb $(QEMU_FLAGS)
 	dtc -I dtb -O dts -o virt.dts virt.dtb
+
+$(QEMU_BLOCK_FILE):
+	@printf "\tDD %sMB > %s\n" $(QEMU_BLOCK_FILE_SIZE_MB) $(QEMU_BLOCK_FILE)
+	@dd count=$(QEMU_BLOCK_FILE_SIZE_MB) bs=1M if=/dev/zero of=$@
 
 # hacking ------------------
 .PHONY: clang-tidy
