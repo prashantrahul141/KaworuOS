@@ -28,7 +28,20 @@ static void virtio_blk_flush_notify_host(Device *device, u16 desc_index)
 	vq->last_used_index++;
 }
 
+/* doesnt block current task, wait for requests to complete */
 static void virtio_blk_submit_and_wait(Device *device)
+{
+	VirtIOBlkDriverData *data =
+		ACCESS_DRIVER_DATA(VirtIOBlkDriverData, device);
+	completion_reset(&data->irq_completion);
+	virtio_blk_flush_notify_host(device, 0);
+	VirtQ *vq = pmm_phys_to_virt((usize)data->virtq_phy);
+	while (virtq_is_busy(vq))
+		dmb(BARRIER_ISH);
+}
+
+/* blocks current task */
+static void virtio_blk_submit_and_block(Device *device)
 {
 	VirtIOBlkDriverData *data =
 		ACCESS_DRIVER_DATA(VirtIOBlkDriverData, device);
@@ -91,6 +104,29 @@ static errno_t write(Device *device, usize sector, const void *buf)
 
 	virtio_blk_add_write_requests(data, blk_req, sector);
 
+	virtio_blk_submit_and_block(device);
+
+	if (0 != blk_req->status) {
+		ERROR("failed to write sector=%d status=%d", sector,
+		      blk_req->status);
+		return -ENODEV;
+	}
+
+	return EOK;
+}
+
+static errno_t write_sync(Device *device, usize sector, const void *buf)
+{
+	DEBUG("virtio-blk: write_sync sector = %d", sector);
+	VirtIOBlkDriverData *data =
+		ACCESS_DRIVER_DATA(VirtIOBlkDriverData, device);
+
+	VirtIOBlkRequest *blk_req = pmm_phys_to_virt(data->request_addr_phy);
+
+	memcpy(blk_req->data, buf, SECTOR_SIZE);
+
+	virtio_blk_add_write_requests(data, blk_req, sector);
+
 	virtio_blk_submit_and_wait(device);
 
 	if (0 != blk_req->status) {
@@ -105,6 +141,29 @@ static errno_t write(Device *device, usize sector, const void *buf)
 static errno_t read(Device *device, usize sector, void *buf)
 {
 	DEBUG("virtio-blk: read sector = %d", sector);
+	VirtIOBlkDriverData *data =
+		ACCESS_DRIVER_DATA(VirtIOBlkDriverData, device);
+
+	VirtIOBlkRequest *blk_req = pmm_phys_to_virt(data->request_addr_phy);
+
+	virtio_blk_add_read_requests(data, blk_req, sector);
+
+	virtio_blk_submit_and_block(device);
+
+	if (0 != blk_req->status) {
+		ERROR("failed to read sector=%d status=%d", sector,
+		      blk_req->status);
+		return -ENODEV;
+	}
+
+	memcpy(buf, blk_req->data, SECTOR_SIZE);
+
+	return EOK;
+}
+
+static errno_t read_sync(Device *device, usize sector, void *buf)
+{
+	DEBUG("virtio-blk: read_sync sector = %d", sector);
 	VirtIOBlkDriverData *data =
 		ACCESS_DRIVER_DATA(VirtIOBlkDriverData, device);
 
@@ -128,7 +187,7 @@ static errno_t read(Device *device, usize sector, void *buf)
 static usize sector_size(Device *device)
 {
 	UNUSED_ARG(device);
-	return SECTOR_SIZE_BITS;
+	return SECTOR_SIZE;
 }
 
 static usize capacity(Device *device)
@@ -139,7 +198,9 @@ static usize capacity(Device *device)
 	return data->capacity;
 }
 
-static const BlockOps virtio_block_ops = { .write = write,
+static const BlockOps virtio_block_ops = { .write_sync = write_sync,
+					   .write = write,
+					   .read_sync = read_sync,
 					   .read = read,
 					   .sector_size = sector_size,
 					   .capacity = capacity };
