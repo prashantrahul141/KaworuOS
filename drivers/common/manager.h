@@ -67,6 +67,15 @@ typedef struct {
 	 * read from given sector into buf
 	 *
 	 * buf should be atleast sector sized
+	 * blocks until read is finished
+	 */
+	errno_t (*read_sync)(Device *device, usize sector, void *buf);
+
+	/*
+	 * read from given sector into buf
+	 *
+	 * buf should be atleast sector sized
+	 * adds the calling task to a waitqueue
 	 */
 	errno_t (*read)(Device *device, usize sector, void *buf);
 
@@ -74,16 +83,25 @@ typedef struct {
 	 * write given sector into buf
 	 *
 	 * buf should be atleast sector sized
+	 * blocks until write is finished
+	 */
+	errno_t (*write_sync)(Device *device, usize sector, const void *buf);
+
+	/*
+	 * write given sector into buf
+	 *
+	 * buf should be atleast sector sized
+	 * adds the calling task to a waitqueue
 	 */
 	errno_t (*write)(Device *device, usize sector, const void *buf);
 
 	/*
-	 * returns sector size of the device, in bits
+	 * returns sector size of the device, in bytes
 	 */
 	usize (*sector_size)(Device *device);
 
 	/*
-	 * returns total capacity, in bits
+	 * returns total capacity, in bytes
 	 */
 	usize (*capacity)(Device *device);
 } BlockOps;
