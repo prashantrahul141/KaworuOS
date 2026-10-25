@@ -11,8 +11,23 @@
 /*
  * read n blocks starting from given sector
  * the buf should be large enough to be able to fil n * block_size bytes
+ * blocks until read is finished
+ */
+errno_t block_read_sync(Device *device, usize sector, usize count, void *buf);
+
+/*
+ * read n blocks starting from given sector
+ * the buf should be large enough to be able to fil n * block_size bytes
  */
 errno_t block_read(Device *device, usize sector, usize count, void *buf);
+
+/*
+ * write n blocks starting from given sector
+ * the buf should be large enough to be able to fil n * block_size bytes
+ * waits until write is finished
+ */
+errno_t block_write_sync(Device *device, usize sector, usize count,
+			 const void *buf);
 
 /*
  * write n blocks starting from given sector
